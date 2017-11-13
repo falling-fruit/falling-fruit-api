@@ -6,24 +6,24 @@ class Types {
     this.pgp = pgp;
   }
 
-  findById(id, task) {
-    return (task || this.db).oneOrNone(
+  findById(id) {
+    return this.db.oneOrNone(
       'SELECT * FROM types WHERE id = $1', +id
     );
   }
 
-  all(task) {
-    return (task || this.db).any(
+  all() {
+    return this.db.any(
       'SELECT * FROM types ORDER BY scientific_name, taxonomic_rank, en_name'
     );
   }
 
-  cluster(values, task) {
+  cluster(values) {
     values.bounds = _.parse_bounds(values.bounds);
     values.muni = _.parse_muni(values.muni);
     values.types = _.parse_types(values.types);
     values.locales = _.parse_locales(values.locales);
-    return (task || this.db).any(sql.cluster, values);
+    return this.db.any(sql.cluster, values);
   }
 }
 

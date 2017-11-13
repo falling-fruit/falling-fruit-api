@@ -6,8 +6,8 @@ class Locations {
     this.pgp = pgp;
   }
 
-  findById(id, task) {
-    return (task || this.db).oneOrNone(
+  findById(id) {
+    return this.db.oneOrNone(
       'SELECT * FROM locations WHERE id = $1', +id
     );
   }
