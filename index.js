@@ -27,15 +27,15 @@ function GET(url, handler) {
 }
 
 function GET_with_key(url, handler) {
-  GET(url, req => check_api_key(req, handler))
+  GET(url, req => check_key(req, handler))
 }
 
-function check_api_key(req, handler) {
+function check_key(req, handler) {
   return db.task(t => {
-    return t.any("SELECT id FROM api_keys WHERE api_key=${api_key};", req.query)
+    return t.any("SELECT id FROM api_keys WHERE api_key=${key};", req.query)
       .then(keys => {
         if (keys.length == 0) {
-          throw Error('api_key is invalid');
+          throw Error('key is invalid');
         }
         return handler(req, t);
       })
