@@ -7,10 +7,10 @@ config.temp_dir = './temp/'+config.port;
 
 // Postgres
 config.rails_env = "development";
-config.db_config_file = '../config/database.yml';
+config.db_config_file = 'database.yml';
 
 // S3
-config.s3_config_file = '../config/s3.yml';
+config.s3_config_file = 's3.yml';
 config.s3_host = 's3-us-west-2.amazonaws.com';
 config.s3_thumb_size = 100;
 config.s3_medium_size = 300;

@@ -3,3 +3,10 @@ node_modules/
 
 # Mac OS
 .DS_Store
+
+# Derived config files
+s3.yml
+database.yml
+
+# Temporary files
+temp/

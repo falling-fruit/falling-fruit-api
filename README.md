@@ -22,6 +22,16 @@ nvm use 0.12
 npm install
 ```
 
+* Initialize configuration files:
+
+```bash
+cp database.yml.dist database.yml
+cp s3.yml.dist s3.yml
+```
+
+Edit `database.yml` with your development database, username, and password.
+You will need to add Amazon S3 credentials to `s3.yml`.
+
 ### Usage
 
 Start the API:
