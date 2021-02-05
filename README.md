@@ -40,6 +40,4 @@ Start the API:
 pm2 start app.js
 ```
 
-You can test the API by visiting http://localhost:3100/api/0.2/
-
-Calls to the API will require an api_key parameter that matches an entry in the api_keys database table.
+Calls to the API will require an `api_key` query parameter that matches an entry in the `api_keys` database table.

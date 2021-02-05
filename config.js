@@ -2,7 +2,7 @@ var config = {};
 
 // Basic Configuration
 config.version = '0.2';
-config.port = 3100;
+config.port = 3200;
 config.temp_dir = './temp/'+config.port;
 
 // Postgres

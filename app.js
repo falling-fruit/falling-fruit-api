@@ -69,7 +69,7 @@ router.get('/locations/:id(\\d+)/reviews.json', reviews.list);
 // Note: only logs change as addition (not review too, when both are done)
 router.post('/locations/:id(\\d+)/review.json',reviews.add);
 
-app.use("/api/"+config.version,router);
+app.use("/test-api/"+config.version,router);
 
 var server = app.listen(config.port, function () {
 
