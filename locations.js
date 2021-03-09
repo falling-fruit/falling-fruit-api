@@ -295,7 +295,9 @@ locations.show = function (req, res) {
       function(callback){ common.check_api_key(req,client,callback) },
       function(callback){
         client.query("SELECT access, address, author, city, state, country, description, \
-                      id, lat, lng, muni, type_ids, unverified, \
+                      id, lat, lng, muni, \
+                      season_start, season_stop, no_season, type_ids, unverified, \
+                      created_at, updated_at, \
                       (SELECT ARRAY_AGG(COALESCE("+name+",en_name)) FROM types t \
                        WHERE ARRAY[t.id] <@ l.type_ids) as type_names, \
                       (SELECT COUNT(*) FROM observations o WHERE o.location_id=l.id) as num_reviews \
