@@ -86,7 +86,7 @@ reviews.list = function (req, res) {
     async.waterfall([
       function(callback){ common.check_api_key(req,client,callback) },
       function(callback){
-        client.query("SELECT id, location_id, comment, observed_on, \
+        client.query("SELECT id, location_id, user_id, comment, observed_on, \
                       TO_CHAR(created_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') as created_at, \
                       TO_CHAR(updated_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') as updated_at, \
                       photo_file_name, fruiting, quality_rating, yield_rating, author, photo_caption \
