@@ -19,7 +19,6 @@ reviews.add = function (req, res) {
       function(callback){ common.check_api_key(req,client,callback); },
       function(callback){ common.authenticate_by_token(req,client,callback); },
       function(user,callback){
-        var author = req.query.author ? req.query.author : (user.add_anonymously ? null : user.name);
         // change log
         client.query("INSERT INTO changes (location_id,user_id,description,created_at,updated_at) \
                       VALUES ($1,$2,$3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);",
@@ -31,12 +30,13 @@ reviews.add = function (req, res) {
       function(user,callback){
         if(__.some([req.query.comment,req.query.fruiting,req.query.quality_rating,
                     req.query.yield_rating,req.query.photo_data])){
+          var author = req.query.author ? req.query.author : (user.add_anonymously ? null : user.name);
           // FIXME: parse photo data and upload to amazon (recreate paperclip!?)
-          client.query("INSERT INTO observations (location_id,author,comment,yield_rating,\
+          client.query("INSERT INTO observations (location_id,user_id,author,comment,yield_rating,\
                         quality_rating,fruiting,photo_file_name,observed_on,created_at,updated_at) \
-                        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,\
+                        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,\
                         CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);",
-                       [location_id,req.query.author,req.query.comment,
+                       [location_id,user.id,author,req.query.comment,
                         req.query.yield_rating,req.query.quality_rating,
                         req.query.fruiting,req.query.photo_file_name,req.query.observed_on],
                        function(err,result){
