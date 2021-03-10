@@ -297,7 +297,8 @@ locations.show = function (req, res) {
         client.query("SELECT access, address, author, city, state, country, description, \
                       id, lat, lng, muni, \
                       season_start, season_stop, no_season, type_ids, unverified, \
-                      created_at, updated_at, \
+                      TO_CHAR(created_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') as created_at, \
+                      TO_CHAR(updated_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') as updated_at, \
                       (SELECT ARRAY_AGG(COALESCE("+name+",en_name)) FROM types t \
                        WHERE ARRAY[t.id] <@ l.type_ids) as type_names, \
                       (SELECT COUNT(*) FROM observations o WHERE o.location_id=l.id) as num_reviews \
@@ -307,7 +308,9 @@ locations.show = function (req, res) {
           if (result.rowCount == 0) return res.send({});
           location = result.rows[0];
           location.num_reviews = parseInt(location.num_reviews);
-          client.query("SELECT id, photo_updated_at, photo_file_name FROM observations \
+          client.query("SELECT id, \
+                        TO_CHAR(photo_updated_at, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') as photo_updated_at, \
+                        photo_file_name FROM observations \
                         WHERE photo_file_name IS NOT NULL AND location_id=$1;",
                        [id],function(err, result) {
             if (err) return callback(err,'error running query');
