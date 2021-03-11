@@ -1,7 +1,7 @@
 Falling Fruit API
 =================
 
-This is a Node.js + Express API that accesses the Falling Fruit PostgreSQL + PostGIS database served up at https://fallingfruit.org/api/.
+This is a Node.js + Express API that currently accesses the Falling Fruit PostgreSQL + PostGIS test database served up at https://fallingfruit.org/test-api/0.2.
 The API is documented at https://github.com/falling-fruit/api-docs.
 
 ## Development
