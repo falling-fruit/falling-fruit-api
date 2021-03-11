@@ -16,7 +16,7 @@ config.s3_thumb_size = 100;
 config.s3_medium_size = 300;
 
 // i18n
-config.i18n_languages = ['de', 'el', 'en', 'es', 'fr', 'he', 'it', 'nl', 'pl', 'pt-br'];
+config.i18n_languages = ['de', 'el', 'en', 'es', 'fr', 'he', 'it', 'nl', 'pl', 'pt_br', 'zh_tw'];
 
 // Misc
 config.cats = ["forager","freegan","honeybee","grafter"];
