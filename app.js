@@ -34,6 +34,9 @@ var locations = require('./locations');
 var clusters = require('./clusters');
 var reviews = require('./reviews');
 
+var users = require('./users');
+router.post('/users.json', users.add);
+
 // Note: takes email/password, returns authentication_token (in hash) -- protocol may have changed
 router.get('/login.json',auth.login);
 router.get('/logout.json',auth.logout);
