@@ -123,6 +123,121 @@ types.list = function (req, res) {
   });
 };
 
+types.count = function (req, res) {
+  var filters = {}
+  // Zoom
+  var has_zoom = req.query.zoom || req.query.zoom == 0
+  var zoom = null;
+  if (has_zoom) {
+    zoom = parseInt(req.query.zoom);
+    if (zoom > 12 || zoom < 0) {
+      return common.send_error(res, 'Zoom must be in the interval [0, 12]');
+    }
+    if (zoom > 3) {
+      zoom += 1;
+    }
+    filters.zoom = "c.zoom = " + zoom;
+  }
+  // Muni
+  if (req.query.muni !== "1") {
+    filters.muni = has_zoom ? "NOT c.muni" : "NOT l.muni"
+  }
+  // Pending
+  if (req.query.pending !== "1") {
+    filters.pending = "NOT t.pending";
+  }
+  // Bounds
+  var bounds = [req.query.swlng, req.query.nelng, req.query.swlat, req.query.nelat];
+  if (!__.every(bounds)) {
+    return common.send_error(res, 'Bounds must be specified');
+  }
+  bounds = bounds.map(function(x) { return parseFloat(x) });
+  if (has_zoom) {
+    sw_xy = common.wgs84_to_web_mercator(bounds[0], bounds[2]);
+    ne_xy = common.wgs84_to_web_mercator(bounds[1], bounds[3]);
+    bounds = [sw_xy[0], ne_xy[0], sw_xy[1], ne_xy[1]];
+    filters.bounds = [
+      "(c.x > " + bounds[0] +
+      (bounds[1] > bounds[0] ? " AND " : " OR ") +
+      "c.x < " + bounds[1] + ")",
+      "c.y > " + bounds[2], "c.y < " + bounds[3]
+    ].join(" AND ");
+  } else {
+    filters.bounds = [
+      "(l.lng > " + bounds[0] + (bounds[1] > bounds[0] ? " AND " : " OR ") + "l.lng < " + bounds[1] + ")",
+      "l.lat > " + bounds[2],
+      "l.lat < " + bounds[3]
+    ].join(" AND ");
+  }
+  // Categories
+  var category_mask = common.default_catmask;
+  if (req.query.c) {
+    category_mask = common.catmask(req.query.c.split(","));
+  }
+  filters.categories = "((t.category_mask & " + category_mask + ") > 0" + (req.query.uncategorized == "1" ? " OR t.category_mask = 0 OR t.category_mask IS NULL" : "") + ")"
+  var filter_str = __.reject(filters, __.isNull).join(" AND ");
+  // Query
+  db.pg.connect(db.conString, function(err, client, done) {
+    if (err) {
+      common.send_error(res, 'error fetching client from pool', err);
+      return done();
+    }
+    async.waterfall([
+      function(callback) {
+        common.check_api_key(req, client, callback)
+      },
+      function(callback) {
+        if (has_zoom) {
+          client.query(
+            [
+              "SELECT t.id, SUM(count) as count",
+              "FROM types t, clusters c WHERE c.type_id = t.id AND ",
+              filter_str,
+              "GROUP BY t.id"
+            ].join(" "),
+            function(err, result) {
+              if (err) {
+                return callback(err, 'Error running query');
+              }
+              res.send(__.map(result.rows, function(x) {
+                x.count = parseInt(x.count);
+                return x;
+              }));
+              return callback(null);
+            }
+          );
+        } else {
+          client.query(
+            [
+              "SELECT t.id, COUNT(*) as count",
+              "FROM types t, locations l WHERE l.type_ids && ARRAY[t.id] AND ",
+              filter_str,
+              "GROUP BY t.id"
+            ].join(" "),
+            function(err, result) {
+              if (err) {
+                return callback(err, 'Error running query');
+              }
+              res.send(__.map(result.rows, function(x) {
+                x.count = parseInt(x.count);
+                return x;
+              }));
+              return callback(null);
+            }
+          );
+        }
+      }
+    ],
+    function(err, message) {
+      done();
+      if (message) {
+        common.send_error(res, message, err);
+      }
+    }
+  );
+  });
+};
+
 types.show = function (req, res) {
   var id = parseInt(req.params.id);
   db.pg.connect(db.conString, function(err, client, done) {

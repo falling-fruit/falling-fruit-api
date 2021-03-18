@@ -47,6 +47,7 @@ router.get('/logout.json',auth.logout);
 router.get('/types.json', types.list);
 // Note: renaming name => en_name, synonyms => en_synonyms, edability => edibility
 router.get('/types/:id(\\d+).json', types.show);
+router.get('/types/counts.json', types.count);
 
 // Note: GET /locations.json replaces both /markers.json and nearby.json
 // Note: types renamed to type_ids
