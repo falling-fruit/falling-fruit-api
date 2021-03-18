@@ -48,7 +48,7 @@ types.list = function (req, res) {
   // Fields
   var name = req.query.locale ? common.i18n_name(req.query.locale) : "en_name";
   var fields = [
-    "id",
+    "id", "parent_id",
     "scientific_name", "scientific_synonyms",
     "COALESCE(" + name + ") as name", "en_name", "en_synonyms",
     "es_name", "he_name", "pl_name", "fr_name", "pt_br_name",
