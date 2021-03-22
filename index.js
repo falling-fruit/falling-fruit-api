@@ -5,9 +5,10 @@ _ = require('./helpers');
 
 // Routes
 GET_with_key('/clusters', req => db.clusters.list(req.query));
-GET_with_key('/types', req => db.types.list());
+GET_with_key('/types', () => db.types.list());
 GET_with_key('/types/:id', req => db.types.show(req.params.id));
 GET_with_key('/types/cluster', req => db.types.list(req.query));
+GET_with_key('/locations', req => db.locations.list(req.query));
 GET_with_key('/locations/:id', req => db.locations.show(req.params.id));
 
 // Generic handlers

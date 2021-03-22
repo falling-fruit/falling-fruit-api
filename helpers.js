@@ -17,6 +17,16 @@ _.parse_types = function(value) {
     return 'IS NOT NULL';
   }
 }
+
+_.parse_types_array = function(value) {
+  // '1,2,3'
+  if (value) {
+    return `&& ARRAY[${value}]`
+  } else {
+    return 'IS NOT NULL'
+  }
+}
+
 _.parse_bounds = function(value) {
   // 'wlng,elng,slat,nlat'
   value = value.split(",").map(x => parseFloat(x));
@@ -29,6 +39,18 @@ _.parse_bounds = function(value) {
     "x < " + xy[1][0] + ")",
     "y > " + xy[0][1],
     "y < " + xy[1][1]
+  ].join(" AND ");
+}
+
+_.parse_bounds_wgs84 = function(value) {
+  // 'wlng,elng,slat,nlat'
+  value = value.split(",").map(x => parseFloat(x));
+  xy = [[value[0], value[2]], [value[1], value[3]]]
+    .map(x => _.clip_wgs84(x));
+  return [
+    "(lng > " + xy[0][0] + (xy[1][0] > xy[0][0] ? " AND " : " OR ") + "lng < " + xy[1][0] + ")",
+    "lat > " + xy[0][1],
+    "lat < " + xy[1][1]
   ].join(" AND ");
 }
 
