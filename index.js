@@ -4,12 +4,13 @@ const app = express();
 _ = require('./helpers');
 
 // Routes
-GET_with_key('/clusters', req => db.clusters.list(req.query));
-GET_with_key('/types', () => db.types.list());
-GET_with_key('/types/:id', req => db.types.show(req.params.id));
-GET_with_key('/types/cluster', req => db.types.list(req.query));
-GET_with_key('/locations', req => db.locations.list(req.query));
-GET_with_key('/locations/:id', req => db.locations.show(req.params.id));
+const base = '/test-api/0.3'
+GET_with_key(`${base}/clusters`, req => db.clusters.list(req.query));
+GET_with_key(`${base}/types`, () => db.types.list());
+GET_with_key(`${base}/types:id`, req => db.types.show(req.params.id));
+GET_with_key(`${base}/types/cluster`, req => db.types.list(req.query));
+GET_with_key(`${base}/locations`, req => db.locations.list(req.query));
+GET_with_key(`${base}/locations/:id`, req => db.locations.show(req.params.id));
 
 // Generic handlers
 function GET(url, handler) {
@@ -43,7 +44,7 @@ function check_key(req, handler) {
 }
 
 // Start server
-const port = 3100;
+const port = 3300;
 app.listen(port, () => {
     console.log('Ready for GET requests on http://localhost:' + port);
 });
