@@ -1,7 +1,10 @@
 const db = require('./db');
 const express = require('express');
 const app = express();
+const cors = require('cors');
 _ = require('./helpers');
+
+app.use(cors())
 
 // Routes
 const base = '/test-api/0.3'
