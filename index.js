@@ -4,10 +4,11 @@ const app = express();
 _ = require('./helpers');
 
 // Routes
-GET_with_key('/clusters/cluster', req => db.clusters.cluster(req.query));
-GET_with_key('/types/find/:id', req => db.types.findById(req.params.id));
-GET_with_key('/types/all', req => db.types.all());
-GET_with_key('/types/cluster', req => db.types.cluster(req.query));
+GET_with_key('/clusters', req => db.clusters.list(req.query));
+GET_with_key('/types', req => db.types.list());
+GET_with_key('/types/:id', req => db.types.show(req.params.id));
+GET_with_key('/types/cluster', req => db.types.list(req.query));
+GET_with_key('/locations/:id', req => db.locations.show(req.params.id));
 
 // Generic handlers
 function GET(url, handler) {

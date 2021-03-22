@@ -6,9 +6,9 @@ class Locations {
     this.pgp = pgp;
   }
 
-  findById(id) {
+  show(id) {
     return this.db.oneOrNone(
-      'SELECT * FROM locations WHERE id = $1', +id
+      `SELECT * FROM locations WHERE id = ${id}`
     );
   }
 }

@@ -6,15 +6,15 @@ class Types {
     this.pgp = pgp;
   }
 
-  findById(id) {
+  show(id) {
     return this.db.oneOrNone(
-      'SELECT * FROM types WHERE id = $1', +id
+      `SELECT * FROM types WHERE id = ${id}`
     );
   }
 
-  all() {
+  list() {
     return this.db.any(
-      'SELECT * FROM types ORDER BY scientific_name, taxonomic_rank, en_name'
+      'SELECT * FROM types'
     );
   }
 
