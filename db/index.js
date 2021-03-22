@@ -1,5 +1,8 @@
 const promise = require('bluebird');
 const repos = require('./repos');
+const yaml = require('yaml');
+const fs = require('fs');
+
 const options = {
   promiseLib: promise,
   extend: (obj, dc) => {
@@ -10,11 +13,6 @@ const options = {
   }
 };
 const pgp = require('pg-promise')(options);
-const config = {
-  host: 'localhost',
-  database: 'fallingfruit_new_db',
-  user: 'fallingfruit_user',
-  password: 'stonehenge'
-};
+const config = yaml.parse(fs.readFileSync('config.yml', 'utf8'));
 const db = pgp(config);
 module.exports = db;

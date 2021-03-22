@@ -11,6 +11,7 @@
     "cookie-parser": "^1.4.5",
     "express": "~4.15.2",
     "morgan": "^1.10.0",
-    "pg-promise": "^6.5.4"
+    "pg-promise": "^6.5.4",
+    "yaml": "^1.10.2"
   }
 }
