@@ -86,29 +86,29 @@ common.scale_postgis_bbox = function(nelat,nelng,swlat,swlng,max_zoom,srid){
     swlat = nelat;
     nelat = tmp;
   }
-  var max_width = 360.0/Math.pow(2,max_zoom);
-  var lng_range = Math.abs(nelng-swlng);
-  var lat_range = Math.abs(nelat-swlat);
-  var lng_scale = lng_range > max_width ? max_width/lng_range : 1.0;
-  var lat_scale = lat_range > max_width ? max_width/lat_range : 1.0;
-  console.log("Prior area (degrees^2): "+lat_range*lng_range);
-  console.log("Lng Range: "+lng_range+", Lat Range: "+lat_range);
-  if(lng_scale < 1.0){
-    var lng_center = (lng_range/2 + swlng);
-    swlng = lng_center - (lng_scale*lng_range)/2;
-    nelng = lng_center + (lng_scale*lng_range)/2;
-  }
-  if(lat_scale < 1.0){
-    swlat = (lat_range/2 + swlng) - (lat_scale*lat_range)/2;
-    nelat = (lat_range/2 + swlng) + (lat_scale*lat_range)/2;
-  }
-  console.log("Coords [w/Scale]: ("+swlng+","+swlat+") ("+nelng+","+nelat+")");
-  lng_range = Math.abs(nelng-swlng);
-  lat_range = Math.abs(nelat-swlat);
-  console.log("Max width: ",max_width);
-  console.log("Lng scale",lng_scale,"Lat scale",lat_scale);
-  console.log("Lng Range: "+lng_range+", Lat Range: "+lat_range);
-  console.log("New area (degrees^2): "+Math.abs((nelat-swlat)*(nelng-swlng)));
+  // var max_width = 360.0/Math.pow(2,max_zoom);
+  // var lng_range = Math.abs(nelng-swlng);
+  // var lat_range = Math.abs(nelat-swlat);
+  // var lng_scale = lng_range > max_width ? max_width/lng_range : 1.0;
+  // var lat_scale = lat_range > max_width ? max_width/lat_range : 1.0;
+  // console.log("Prior area (degrees^2): "+lat_range*lng_range);
+  // console.log("Lng Range: "+lng_range+", Lat Range: "+lat_range);
+  // if(lng_scale < 1.0){
+  //   var lng_center = (lng_range/2 + swlng);
+  //   swlng = lng_center - (lng_scale*lng_range)/2;
+  //   nelng = lng_center + (lng_scale*lng_range)/2;
+  // }
+  // if(lat_scale < 1.0){
+  //   swlat = (lat_range/2 + swlng) - (lat_scale*lat_range)/2;
+  //   nelat = (lat_range/2 + swlng) + (lat_scale*lat_range)/2;
+  // }
+  // console.log("Coords [w/Scale]: ("+swlng+","+swlat+") ("+nelng+","+nelat+")");
+  // lng_range = Math.abs(nelng-swlng);
+  // lat_range = Math.abs(nelat-swlat);
+  // console.log("Max width: ",max_width);
+  // console.log("Lng scale",lng_scale,"Lat scale",lat_scale);
+  // console.log("Lng Range: "+lng_range+", Lat Range: "+lat_range);
+  // console.log("New area (degrees^2): "+Math.abs((nelat-swlat)*(nelng-swlng)));
   if(srid == 900913){
     var ne_wgs = common.wgs84_to_web_mercator(nelng,nelat);
     var sw_wgs = common.wgs84_to_web_mercator(swlng,swlat);
