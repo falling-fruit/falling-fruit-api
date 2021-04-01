@@ -184,14 +184,9 @@ locations.list = function (req, res) {
     return common.send_error(res,'bounding box not defined');
   }
 
-  var sorted = "1 as sort";
+  var tfilter = "";
   if (req.query.t) {
-    var tids = __.map(req.query.t.split(","), function(x) {
-      return parseInt(x)
-    });
-
-    sorted = "CASE WHEN array_agg(t.id) @> ARRAY["
-      + tids + "] THEN 0 ELSE 1 END as sort";
+    tfilter = "AND t.id IN (" + req.query.t + ")"
   }
 
   var limit = req.query.limit ?
@@ -202,18 +197,20 @@ locations.list = function (req, res) {
     parseInt(req.query.offset) :
     0;
 
-  var filters = __.reject([bfilter,mfilter,ifilter,hfilter], __.isUndefined)
+  var filters = __.reject([tfilter,bfilter,mfilter,ifilter,hfilter], __.isUndefined)
     .join(" ");
 
+  var sort = "";
   var distance = "";
   if(__.every([req.query.lat,req.query.lng])){
     var coords = common.sanitize_wgs84_coords(req.query.lat,req.query.lng);
-    distance = ",ST_Distance(l.location,ST_SETSRID(ST_POINT("+coords[1]+
+    distance = ", ST_Distance(l.location,ST_SETSRID(ST_POINT("+coords[1]+
                ","+coords[0]+"),4326)) as distance";
+    sort = " ORDER BY distance "
   }
   var reviews = "";
   if(req.query.reviews == 1) {
-    reviews = ",(SELECT COUNT(*) FROM observations o1 WHERE o1.location_id=l.id) AS num_reviews,\
+    reviews = ", (SELECT COUNT(*) FROM observations o1 WHERE o1.location_id=l.id) AS num_reviews,\
                (SELECT photo_file_name || '/' || id FROM observations o2 WHERE o2.location_id=l.id AND \
                 photo_file_name IS NOT NULL \
                 ORDER BY photo_file_name DESC LIMIT 1) as photo_file_name";
@@ -245,10 +242,10 @@ locations.list = function (req, res) {
       function(total_count,callback) {
         client.query("SELECT l.id, l.lat, l.lng, l.unverified, l.type_ids, \
                       l.description, l.author, \
-                      ARRAY_AGG(COALESCE("+name+",en_name)) AS type_names, \
-                      "+sorted+distance+reviews+" FROM locations l, types t\
+                      ARRAY_AGG(COALESCE("+name+",en_name)) AS type_names \
+                      "+distance+reviews+" FROM locations l, types t\
                       WHERE t.id=ANY(l.type_ids) "+filters+" GROUP BY l.id, l.lat, l.lng, l.unverified \
-                      HAVING "+cfilter+" ORDER BY sort LIMIT $1 OFFSET $2;",
+                      HAVING "+cfilter + sort + "LIMIT $1 OFFSET $2;",
                      [limit,offset],function(err, result) {
           if (err) return callback(err,'error running query');
 
