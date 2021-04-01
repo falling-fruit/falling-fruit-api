@@ -64,7 +64,7 @@ types.list = function (req, res) {
   }
   var field_str = fields.join(", ");
   // Order
-  var order_str = ["scientific_name", "taxonomic_rank", "name"].join(", ");
+  var order_str = ["scientific_name", "taxonomic_rank", name].join(", ");
   // Query
   db.pg.connect(db.conString, function(err, client, done) {
     if (err) {
