@@ -27,6 +27,14 @@ _.parse_types_array = function(value) {
   }
 }
 
+_.parse_latlng = function(value) {
+  // 'lat,lng'
+  if (value) {
+    const latlng = value.split(',').map(parseFloat)
+    return {x: latlng[1], y: latlng[0]}
+  }
+}
+
 _.parse_bounds = function(value) {
   // 'wlng,elng,slat,nlat'
   value = value.split(",").map(x => parseFloat(x));
@@ -44,8 +52,8 @@ _.parse_bounds = function(value) {
 
 _.parse_bounds_wgs84 = function(value) {
   // 'slat,wlng|nlat,elng'
-  yx = value.split("|").map(x => x.split(",").map(parseFloat));
-  return `ST_MakeEnvelope(${yx[0][1]}, ${yx[0][0]}, ${yx[1][1]}, ${yx[1][0]})`;
+  const pts = value.split("|").map(_.parse_latlng)
+  return `ST_MakeEnvelope(${pts[0].x}, ${pts[0].y}, ${pts[1].x}, ${pts[1].y})`;
 }
 
 _.clip_wgs84 = function(lnglat) {
