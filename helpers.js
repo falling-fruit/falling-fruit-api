@@ -43,15 +43,9 @@ _.parse_bounds = function(value) {
 }
 
 _.parse_bounds_wgs84 = function(value) {
-  // 'wlng,elng,slat,nlat'
-  value = value.split(",").map(x => parseFloat(x));
-  xy = [[value[0], value[2]], [value[1], value[3]]]
-    .map(x => _.clip_wgs84(x));
-  return [
-    "(lng > " + xy[0][0] + (xy[1][0] > xy[0][0] ? " AND " : " OR ") + "lng < " + xy[1][0] + ")",
-    "lat > " + xy[0][1],
-    "lat < " + xy[1][1]
-  ].join(" AND ");
+  // 'slat,wlng|nlat,elng'
+  yx = value.split("|").map(x => x.split(",").map(parseFloat));
+  return `ST_MakeEnvelope(${yx[0][1]}, ${yx[0][0]}, ${yx[1][1]}, ${yx[1][0]})`;
 }
 
 _.clip_wgs84 = function(lnglat) {
