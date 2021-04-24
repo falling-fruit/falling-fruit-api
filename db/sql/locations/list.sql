@@ -5,4 +5,5 @@ WHERE
   muni ${muni:raw} AND
   type_ids ${types:raw} AND
   NOT hidden
-LIMIT 1000
+LIMIT ${limit}
+OFFSET ${offset}

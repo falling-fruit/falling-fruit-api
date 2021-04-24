@@ -16,6 +16,8 @@ class Locations {
     values.muni = _.parse_muni(values.muni);
     values.types = _.parse_types_array(values.types);
     values.bounds = _.parse_bounds_wgs84(values.bounds);
+    values.limit = values.limit || 1000;
+    values.offset = values.offset || 0;
     return this.db.any(sql.list, values);
   }
 }
