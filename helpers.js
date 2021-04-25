@@ -1,29 +1,23 @@
 var _ = {}
 
-_.parse_muni = function(muni) {
-  // 'true' or 'false'
-  if (muni == 'false') {
-    return 'IS FALSE';
-  } else {
-    return 'IS NOT NULL';
+_.parse_muni = function(value) {
+  // 'false' or 'true' (default)
+  if (value == 'false') {
+    return 'NOT muni'
   }
 }
 
 _.parse_types = function(value) {
   // '1,2,3'
   if (value) {
-    return 'IN (' + value.toString() + ')';
-  } else {
-    return 'IS NOT NULL';
+    return `type_id IN (${value})`
   }
 }
 
 _.parse_types_array = function(value) {
   // '1,2,3'
   if (value) {
-    return `&& ARRAY[${value}]`
-  } else {
-    return 'IS NOT NULL'
+    return `type_ids && ARRAY[${value}]`
   }
 }
 
@@ -52,8 +46,10 @@ _.parse_bounds = function(value) {
 
 _.parse_bounds_wgs84 = function(value) {
   // 'slat,wlng|nlat,elng'
-  const pts = value.split("|").map(_.parse_latlng)
-  return `ST_MakeEnvelope(${pts[0].x}, ${pts[0].y}, ${pts[1].x}, ${pts[1].y})`;
+  if (value) {
+    const box = value.split('|').map(_.parse_latlng)
+    return `location && ST_MakeEnvelope(${box[0].x}, ${box[0].y}, ${box[1].x}, ${box[1].y})`  
+  }
 }
 
 _.clip_wgs84 = function(lnglat) {
