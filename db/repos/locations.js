@@ -7,9 +7,7 @@ class Locations {
   }
 
   show(id) {
-    return this.db.oneOrNone(
-      `SELECT * FROM locations WHERE id = ${id}`
-    );
+    return this.db.oneOrNone(sql.show, {id: id})
   }
 
   list(query) {
