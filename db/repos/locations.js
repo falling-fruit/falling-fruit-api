@@ -29,6 +29,13 @@ class Locations {
     }
     return this.db.any(sql.list, values);
   }
+
+  count(values) {
+    values.muni = _.parse_muni(values.muni);
+    values.types = _.parse_types_array(values.types);
+    values.bounds = _.parse_bounds_wgs84(values.bounds);
+    return this.db.one(sql.count, values, res => parseInt(res.count));
+  }
 }
 
 module.exports = Locations;
