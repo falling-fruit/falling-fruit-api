@@ -6,6 +6,18 @@ class Locations {
     this.pgp = pgp;
   }
 
+  add(body) {
+    const values = {
+      season_start: null,
+      season_stop: null,
+      access: null,
+      description: null,
+      unverified: false,
+      ...body
+    }
+    return this.db.one(sql.add, values)
+  }
+
   show(id) {
     return this.db.oneOrNone(sql.show, {id: id})
   }

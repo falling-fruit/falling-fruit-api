@@ -1,10 +1,14 @@
 const db = require('./db');
 const express = require('express');
-const app = express();
 const cors = require('cors');
+const multer = require('multer')
+const uploader = multer({ dest: 'uploads' })
 _ = require('./helpers');
 
+const app = express();
 app.use(cors())
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
 const base = '/test-api/0.3'
@@ -14,11 +18,28 @@ GET_with_key(`${base}/types/:id`, req => db.types.show(req.params.id));
 GET_with_key(`${base}/types/cluster`, req => db.types.list(req.query));
 GET_with_key(`${base}/locations`, req => db.locations.list(req.query));
 GET_with_key(`${base}/locations/count`, req => db.locations.count(req.query));
+POST(`${base}/locations`, uploader.none(), req => db.locations.add(req.body));
 GET_with_key(`${base}/locations/:id`, req => db.locations.show(req.params.id));
 
 // Generic handlers
 function GET(url, handler) {
   app.get(url, (req, res) => {
+    handler(req)
+      .then(data => {
+        res.status(200).json(
+          data
+        );
+      })
+      .catch(error => {
+        res.status(400).json({
+          error: error.message || error
+        });
+      });
+  });
+}
+
+function POST(url, uploader, handler) {
+  app.post(url, uploader, (req, res) => {
     handler(req)
       .then(data => {
         res.status(200).json(
