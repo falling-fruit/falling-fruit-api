@@ -5,7 +5,6 @@ Exploratory attempt to rewrite and simplify the Falling Fruit NodeJS API using [
 ### File structure
 
 - `index.js`: Define routes and generic handlers. Start server.
-- `app.js`: Load `express`.
 - `helpers.js`: Define helper functions.
 - `db/`
   - `index.js`: Define database connection. Load `pg-promise` with repos:
@@ -25,15 +24,15 @@ Exploratory attempt to rewrite and simplify the Falling Fruit NodeJS API using [
 2. Clone this repo, `cd` into the directory, and install node modules:
 
 ```bash
-git clone https://github.com/falling-fruit/api-test.git
-cd api-test
+git clone https://github.com/falling-fruit/api.git
+cd api
 npm install
 ```
 
 ### Usage
 
 1. Run `npm start`
-2. Visit http://localhost:3100
+2. Visit http://localhost:3300
 
 ## Core Schema
 

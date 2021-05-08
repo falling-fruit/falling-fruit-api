@@ -1,19 +1,29 @@
 {
-  "name": "api-test",
-  "version": "0.0.0",
+  "name": "falling-fruit-api",
+  "description": "Falling Fruit API",
+  "version": "0.3.0",
   "private": true,
+  "author": {
+    "name": "Ethan Welty",
+    "email": "ethan@fallingfruit.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/falling-fruit/api.git"
+  },
+  "engines": {
+    "node": "^16.1",
+    "npm": "^7.11"
+  },
+  "license": "GPL-3.0",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "bluebird": "^3.5.0",
-    "body-parser": "^1.19.0",
-    "cookie-parser": "^1.4.5",
+    "bluebird": "^3.7.2",
     "cors": "^2.8.5",
-    "express": "~4.16",
-    "morgan": "^1.10.0",
-    "multer": "^1.4.2",
-    "pg-promise": "^6.5.4",
+    "express": "^4.17.1",
+    "pg-promise": "^10.10.2",
     "yaml": "^1.10.2"
   }
 }

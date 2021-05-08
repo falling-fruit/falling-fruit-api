@@ -1,30 +1,31 @@
-const sql = require('../sql').types;
+const sql = require('../sql').types
+const _ = require('../../helpers')
 
 class Types {
   constructor(db, pgp) {
-    this.db = db;
-    this.pgp = pgp;
+    this.db = db
+    this.pgp = pgp
   }
 
-  show(id) {
-    return this.db.oneOrNone(
-      `SELECT * FROM types WHERE id = ${id}`
-    );
+  async show(id) {
+    const type = await this.db.one(sql.show, {id: parseInt(id)})
+    return _.format_type(type)
   }
 
-  list() {
-    return this.db.any(
-      'SELECT * FROM types'
-    );
+  async list() {
+    const types = await this.db.any(sql.list)
+    return types.map(_.format_type)
   }
 
-  cluster(values) {
-    values.bounds = _.parse_bounds(values.bounds);
-    values.muni = _.parse_muni(values.muni);
-    values.types = _.parse_types(values.types);
-    values.locales = _.parse_locales(values.locales);
-    return this.db.any(sql.cluster, values);
+  count({bounds, muni = 'true'}) {
+    const filters = [
+      "NOT hidden",
+      _.bounds_to_sql(_.parse_bounds(bounds)),
+      _.muni_to_sql(muni)
+    ]
+    const values = {where: filters.filter(Boolean).join(' AND ')}
+    return this.db.any(sql.count, values)
   }
 }
 
-module.exports = Types;
+module.exports = Types

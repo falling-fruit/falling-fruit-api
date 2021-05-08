@@ -1,75 +1,70 @@
-const db = require('./db');
-const express = require('express');
-const cors = require('cors');
-const multer = require('multer')
-const uploader = multer({ dest: 'uploads' })
-_ = require('./helpers');
+const db = require('./db')
+const helpers = require('./helpers').default
+const express = require('express')
+const cors = require('cors')
+// const multer = require('multer')
+// const uploader = multer({ dest: 'uploads' })
 
-const app = express();
+// Constants
+const PORT = 3300
+const BASE = '/test-api/0.3'
+
+// Configuration
+const app = express()
 app.use(cors())
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 // Routes
-const base = '/test-api/0.3'
-GET_with_key(`${base}/clusters`, req => db.clusters.list(req.query));
-GET_with_key(`${base}/types`, () => db.types.list());
-GET_with_key(`${base}/types/:id`, req => db.types.show(req.params.id));
-GET_with_key(`${base}/types/cluster`, req => db.types.list(req.query));
-GET_with_key(`${base}/locations`, req => db.locations.list(req.query));
-GET_with_key(`${base}/locations/count`, req => db.locations.count(req.query));
-POST(`${base}/locations`, uploader.none(), req => db.locations.add(req.body));
-GET_with_key(`${base}/locations/:id`, req => db.locations.show(req.params.id));
+get(`${BASE}/clusters`, req => db.clusters.list(req.query))
+get(`${BASE}/types`, () => db.types.list())
+get(`${BASE}/types/counts`, req => db.types.count(req.query))
+get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
+get(`${BASE}/locations`, req => db.locations.list(req.query))
+get(`${BASE}/locations/count`, req => db.locations.count(req.query))
+get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
+get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
+// POST(`${BASE}/locations`, uploader.none(), req => db.locations.add(req.body))
 
 // Generic handlers
-function GET(url, handler) {
-  app.get(url, (req, res) => {
-    handler(req)
-      .then(data => {
-        res.status(200).json(
-          data
-        );
+function get(url, handler) {
+  app.get(url, async (req, res) => {
+    try {
+      await check_key(req)
+      const data = await handler(req)
+      res.status(200).json(data)
+    } catch (error) {
+      res.status(400).json({
+        error: error.message || error
       })
-      .catch(error => {
-        res.status(400).json({
-          error: error.message || error
-        });
-      });
-  });
+    }
+  })
 }
 
-function POST(url, uploader, handler) {
-  app.post(url, uploader, (req, res) => {
-    handler(req)
-      .then(data => {
-        res.status(200).json(
-          data
-        );
-      })
-      .catch(error => {
-        res.status(400).json({
-          error: error.message || error
-        });
-      });
-  });
-}
+// function POST(url, uploader, handler) {
+//   app.post(url, uploader, (req, res) => {
+//     handler(req)
+//       .then(data => {
+//         res.status(200).json(
+//           data
+//         )
+//       })
+//       .catch(error => {
+//         res.status(400).json({
+//           error: error.message || error
+//         })
+//       })
+//   })
+// }
 
-function GET_with_key(url, handler) {
-  GET(url, req => check_key(req, handler))
-}
-
-function check_key(req, handler) {
-  return db.any("SELECT id FROM api_keys WHERE api_key=${key};", req.query)
-    .then(keys => {
-      if (keys.length == 0) {
-        throw Error('key is invalid');
-      }
-      return handler(req, handler);
-    })
+async function check_key(req) {
+  const keys = await db.any("SELECT id FROM api_keys WHERE api_key=${key}", req.query)
+  if (keys.length == 0) {
+    throw Error('key is invalid')
+  }
 }
 
 // Start server
-const port = 3300;
-app.listen(port, () => {
-    console.log('Ready for GET requests on http://localhost:' + port);
-});
+app.listen(PORT, () => {
+    console.log('Ready for requests on http://localhost:' + PORT)
+})

@@ -1,3 +1,4 @@
 .DS_Store
 node_modules
-config.yml
+db.yml
+s3.yml

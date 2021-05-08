@@ -3,4 +3,4 @@ module.exports = {
   Types: require('./types'),
   Locations: require('./locations'),
   Reviews: require('./reviews')
-};
+}

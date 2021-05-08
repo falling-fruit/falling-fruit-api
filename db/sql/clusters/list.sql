@@ -7,6 +7,6 @@ FROM (
       SUM(count * y) / SUM(count)
     ), 900913), 4326) as center
   FROM clusters
-  WHERE zoom = ${zoom:raw} AND muni ${muni:raw} AND type_id ${types:raw} AND ${bounds:raw}
+  WHERE ${where:raw}
   GROUP BY geohash
 ) subq
