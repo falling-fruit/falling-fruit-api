@@ -24,7 +24,8 @@ get(`${BASE}/locations`, req => db.locations.list(req.query))
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
-post(`${BASE}/locations`, uploader.array('photo'), req => db.locations.add(req))
+post(`${BASE}/locations`, uploader.none(), req => db.locations.add(req))
+post(`${BASE}/locations/:id/reviews`, uploader.array('photo'), req => db.reviews.add(req))
 
 // Generic handlers
 function get(url, handler) {

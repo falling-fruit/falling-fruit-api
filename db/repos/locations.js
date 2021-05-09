@@ -16,8 +16,6 @@ class Locations {
       unverified: false,
       ...JSON.parse(req.body.json)
     }
-    // TEMP: Print photos
-    console.log(req.files)
     const location = await this.db.one(sql.add, values)
     return _.format_location(location)
   }
