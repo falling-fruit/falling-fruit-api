@@ -2,8 +2,8 @@ const db = require('./db')
 const helpers = require('./helpers').default
 const express = require('express')
 const cors = require('cors')
-// const multer = require('multer')
-// const uploader = multer({ dest: 'uploads' })
+const multer = require('multer')
+const uploader = multer({ dest: 'uploads' })
 
 // Constants
 const PORT = 3300
@@ -24,7 +24,7 @@ get(`${BASE}/locations`, req => db.locations.list(req.query))
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
-// POST(`${BASE}/locations`, uploader.none(), req => db.locations.add(req.body))
+post(`${BASE}/locations`, uploader.array('photo'), req => db.locations.add(req))
 
 // Generic handlers
 function get(url, handler) {
@@ -41,21 +41,19 @@ function get(url, handler) {
   })
 }
 
-// function POST(url, uploader, handler) {
-//   app.post(url, uploader, (req, res) => {
-//     handler(req)
-//       .then(data => {
-//         res.status(200).json(
-//           data
-//         )
-//       })
-//       .catch(error => {
-//         res.status(400).json({
-//           error: error.message || error
-//         })
-//       })
-//   })
-// }
+function post(url, uploader, handler) {
+  app.post(url, uploader, async (req, res) => {
+    try {
+      await check_key(req)
+      const data = await handler(req)
+      res.status(200).json(data)
+    } catch (error) {
+      res.status(400).json({
+        error: error.message || error
+      })
+    }
+  })
+}
 
 async function check_key(req) {
   const keys = await db.any("SELECT id FROM api_keys WHERE api_key=${key}", req.query)

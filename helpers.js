@@ -202,4 +202,14 @@ _.format_review = function(review) {
   return review
 }
 
+_.format_location = function(location) {
+  // TEMP: Replace no_season=true with season=[0, 11]
+  if (location.no_season) {
+    location.season_start = 0
+    location.season_stop = 11
+  }
+  delete location.no_season
+  return location
+}
+
 module.exports = _

@@ -7,27 +7,24 @@ class Locations {
     this.pgp = pgp
   }
 
-  // add(body) {
-  //   const values = {
-  //     season_start: null,
-  //     season_stop: null,
-  //     access: null,
-  //     description: null,
-  //     unverified: false,
-  //     ...body
-  //   }
-  //   return this.db.one(sql.add, values)
-  // }
+  async add(req) {
+    const values = {
+      season_start: null,
+      season_stop: null,
+      access: null,
+      description: null,
+      unverified: false,
+      ...JSON.parse(req.body.json)
+    }
+    // TEMP: Print photos
+    console.log(req.files)
+    const location = await this.db.one(sql.add, values)
+    return _.format_location(location)
+  }
 
   async show(id) {
     const location = await this.db.one(sql.show, {id: parseInt(id)})
-    // TEMP: Replace no_season=true with season=[0, 11]
-    if (location.no_season) {
-      location.season_start = 0
-      location.season_stop = 11
-    }
-    delete location.no_season
-    return location
+    return _.format_location(location)
   }
 
   list({bounds, center = null, muni = 'true', types = '', limit = '1000', offset = '0'}) {
