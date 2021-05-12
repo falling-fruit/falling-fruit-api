@@ -23,6 +23,7 @@ get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
 get(`${BASE}/locations`, req => db.locations.list(req.query))
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
+put(`${BASE}/locations/:id`, uploader.none(), req => db.locations.edit(req))
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
 post(`${BASE}/locations`, uploader.none(), req => db.locations.add(req))
 post(`${BASE}/locations/:id/reviews`, uploader.array('photo'), req => db.reviews.add(req))
@@ -44,6 +45,20 @@ function get(url, handler) {
 
 function post(url, uploader, handler) {
   app.post(url, uploader, async (req, res) => {
+    try {
+      await check_key(req)
+      const data = await handler(req)
+      res.status(200).json(data)
+    } catch (error) {
+      res.status(400).json({
+        error: error.message || error
+      })
+    }
+  })
+}
+
+function put(url, uploader, handler) {
+  app.put(url, uploader, async (req, res) => {
     try {
       await check_key(req)
       const data = await handler(req)

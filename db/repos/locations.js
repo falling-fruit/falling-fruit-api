@@ -20,6 +20,15 @@ class Locations {
     return _.format_location(location)
   }
 
+  async edit(req) {
+    const values = {
+      id: req.id,
+      ...req.body
+    }
+    const location = await this.db.one(sql.edit, values)
+    return _.format_location(location)
+  }
+
   async show(id) {
     const location = await this.db.one(sql.show, {id: parseInt(id)})
     return _.format_location(location)
