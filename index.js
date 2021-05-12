@@ -18,15 +18,15 @@ app.use(express.urlencoded({ extended: true }))
 // Routes
 get(`${BASE}/clusters`, req => db.clusters.list(req.query))
 get(`${BASE}/types`, () => db.types.list())
-get(`${BASE}/types/counts`, req => db.types.count(req.query))
 get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
+get(`${BASE}/types/counts`, req => db.types.count(req.query))
 get(`${BASE}/locations`, req => db.locations.list(req.query))
-get(`${BASE}/locations/count`, req => db.locations.count(req.query))
+post(`${BASE}/locations`, uploader.none(), req => db.locations.add(req))
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
 put(`${BASE}/locations/:id`, uploader.none(), req => db.locations.edit(req))
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
-post(`${BASE}/locations`, uploader.none(), req => db.locations.add(req))
 post(`${BASE}/locations/:id/reviews`, uploader.array('photo'), req => db.reviews.add(req))
+get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 
 // Generic handlers
 function get(url, handler) {
