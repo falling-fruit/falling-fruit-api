@@ -22,7 +22,7 @@ class Locations {
 
   async edit(req) {
     const values = {
-      id: req.id,
+      id: req.params.id,
       ...req.body
     }
     const location = await this.db.one(sql.edit, values)
