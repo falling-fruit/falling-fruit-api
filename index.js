@@ -26,6 +26,7 @@ get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
 put(`${BASE}/locations/:id`, uploader.none(), req => db.locations.edit(req))
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
 post(`${BASE}/locations/:id/reviews`, uploader.array('photo'), req => db.reviews.add(req))
+put(`${BASE}/locations/:id/reviews/:rid`, uploader.array('photo'), req => db.reviews.edit(req))
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 
 // Generic handlers

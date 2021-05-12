@@ -18,9 +18,18 @@ class Reviews {
       ...JSON.parse(req.body.json),
       location_id: parseInt(req.params.id)
     }
-    // TEMP: Print photos
-    console.log(req.files)
     const review = await this.db.one(sql.add, values)
+    return _.format_review(review)
+  }
+
+  async edit(req) {
+    const values = {
+      ...JSON.parse(req.body.json),
+      // IDs in path take precedence
+      id: parseInt(req.params.rid),
+      location_id: parseInt(req.params.id)
+    }
+    const review = await this.db.one(sql.edit, values)
     return _.format_review(review)
   }
 
