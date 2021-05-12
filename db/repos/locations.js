@@ -14,7 +14,7 @@ class Locations {
       access: null,
       description: null,
       unverified: false,
-      ...JSON.parse(req.body.json)
+      ...req.body
     }
     const location = await this.db.one(sql.add, values)
     return _.format_location(location)
