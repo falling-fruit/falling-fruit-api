@@ -3,7 +3,7 @@ const helpers = require('./helpers').default
 const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
-const uploader = multer({ dest: 'uploads' })
+const uploads = multer({ dest: 'uploads' })
 
 // Constants
 const PORT = 3300
@@ -21,14 +21,14 @@ get(`${BASE}/types`, () => db.types.list())
 get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
 get(`${BASE}/types/counts`, req => db.types.count(req.query))
 get(`${BASE}/locations`, req => db.locations.list(req.query))
-post(`${BASE}/locations`, uploader.none(), req => db.locations.add(req))
+post(`${BASE}/locations`, req => db.locations.add(req))
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
-put(`${BASE}/locations/:id`, uploader.none(), req => db.locations.edit(req))
+put(`${BASE}/locations/:id`, req => db.locations.edit(req))
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
-post(`${BASE}/locations/:id/reviews`, uploader.array('photo'), req => db.reviews.add(req))
-put(`${BASE}/locations/:id/reviews/:rid`, uploader.array('photo'), req => db.reviews.edit(req))
+post(`${BASE}/locations/:id/reviews`, req => db.reviews.add(req), uploads.array('photo'))
+put(`${BASE}/locations/:id/reviews/:rid`, req => db.reviews.edit(req), uploads.array('photo'))
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
-post(`${BASE}/users`, uploader.none(), req => db.users.add(req))
+post(`${BASE}/users`, req => db.users.add(req))
 
 // Generic handlers
 function get(url, handler) {
@@ -45,7 +45,8 @@ function get(url, handler) {
   })
 }
 
-function post(url, uploader, handler) {
+function post(url, handler, uploader) {
+  uploader = uploader || uploads.none()
   app.post(url, uploader, async (req, res) => {
     try {
       await check_key(req)
@@ -59,7 +60,8 @@ function post(url, uploader, handler) {
   })
 }
 
-function put(url, uploader, handler) {
+function put(url, handler, uploader) {
+  uploader = uploader || uploads.none()
   app.put(url, uploader, async (req, res) => {
     try {
       await check_key(req)
