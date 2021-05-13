@@ -20,6 +20,8 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "base64url": "^3.0.1",
+    "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
     "cors": "^2.8.5",
     "express": "^4.17.1",
