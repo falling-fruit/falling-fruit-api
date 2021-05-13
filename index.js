@@ -21,7 +21,13 @@ get(`${BASE}/types`, () => db.types.list())
 get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
 get(`${BASE}/types/counts`, req => db.types.count(req.query))
 get(`${BASE}/locations`, req => db.locations.list(req.query))
-post(`${BASE}/locations`, req => db.locations.add(req))
+post(`${BASE}/locations`, async req => {
+  req.body.user_id = null
+  if (req.query.token) {
+    req.body.user_id = await db.users.find_user_by_token(req.query.token)
+  }
+  return db.locations.add(req.body)
+})
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
 put(`${BASE}/locations/:id`, req => db.locations.edit(req))
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))

@@ -7,14 +7,14 @@ class Locations {
     this.pgp = pgp
   }
 
-  async add(req) {
+  async add(obj) {
     const values = {
       season_start: null,
       season_stop: null,
       access: null,
       description: null,
       unverified: false,
-      ...req.body
+      ...obj
     }
     const location = await this.db.one(sql.add, values)
     return _.format_location(location)
