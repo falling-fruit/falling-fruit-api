@@ -39,8 +39,25 @@ get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 
 // Routes: Reviews
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
-post(`${BASE}/locations/:id/reviews`, req => db.reviews.add(req), uploads.array('photo'))
-put(`${BASE}/locations/:id/reviews/:rid`, req => db.reviews.edit(req), uploads.array('photo'))
+post(`${BASE}/locations/:id/reviews`, async req => {
+  const obj = JSON.parse(req.body.json)
+  obj.user_id = null
+  if (req.query.token) {
+    // Link location to logged-in user
+    obj.user_id = await db.users.find_user_by_token(req.query.token)
+  }
+  return db.reviews.add(req.params.id, obj)
+}, uploads.array('photo'))
+get(`${BASE}/reviews/:id`, req => db.reviews.show(req.params.id))
+put(`${BASE}/reviews/:id`, async req => {
+  // Restrict to linked user
+  const user_id = await db.users.find_user_by_token(req.query.token)
+  const review = await db.reviews.show(req.params.id)
+  if (user_id != review.user_id) {
+    throw Error('Not authorized')
+  }
+  return db.reviews.edit(req.params.id, JSON.parse(req.body.json))
+}, uploads.array('photo'))
 
 // Routes: Users
 post(`${BASE}/users`, req => db.users.add(req))

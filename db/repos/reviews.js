@@ -7,28 +7,27 @@ class Reviews {
     this.pgp = pgp
   }
 
-  async add(req) {
+  async add(id, obj) {
     const values = {
-      author: null,
       observed_on: null,
       comment: null,
       fruiting: null,
       quality_rating: null,
       yield_rating: null,
-      ...JSON.parse(req.body.json),
-      location_id: parseInt(req.params.id)
+      ...obj,
+      location_id: parseInt(id)
     }
     const review = await this.db.one(sql.add, values)
     return _.format_review(review)
   }
 
-  async edit(req) {
-    const values = {
-      ...JSON.parse(req.body.json),
-      // IDs in path take precedence
-      id: parseInt(req.params.rid),
-      location_id: parseInt(req.params.id)
-    }
+  async show(id) {
+    const review = await this.db.one(sql.show, {id: parseInt(id)})
+    return _.format_review(review)
+  }
+
+  async edit(id, obj) {
+    const values = {...obj, id: parseInt(id)}
     const review = await this.db.one(sql.edit, values)
     return _.format_review(review)
   }

@@ -4,4 +4,4 @@ SELECT
   comment, fruiting, quality_rating, yield_rating,
   photo_file_name
 FROM observations
-WHERE location_id = ${id}
+WHERE id = ${id}
