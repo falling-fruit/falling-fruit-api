@@ -29,6 +29,7 @@ post(`${BASE}/locations/:id/reviews`, req => db.reviews.add(req), uploads.array(
 put(`${BASE}/locations/:id/reviews/:rid`, req => db.reviews.edit(req), uploads.array('photo'))
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 post(`${BASE}/users`, req => db.users.add(req))
+get(`${BASE}/users/token`, req => db.users.get_token(req.query))
 
 // Generic handlers
 function get(url, handler) {
