@@ -15,25 +15,34 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Routes
+// Routes: Clusters
 get(`${BASE}/clusters`, req => db.clusters.list(req.query))
+
+// Routes: Types
 get(`${BASE}/types`, () => db.types.list())
 get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
 get(`${BASE}/types/counts`, req => db.types.count(req.query))
+
+// Routes: Locations
 get(`${BASE}/locations`, req => db.locations.list(req.query))
 post(`${BASE}/locations`, async req => {
   req.body.user_id = null
   if (req.query.token) {
+    // Link location to logged-in user
     req.body.user_id = await db.users.find_user_by_token(req.query.token)
   }
   return db.locations.add(req.body)
 })
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
-put(`${BASE}/locations/:id`, req => db.locations.edit(req))
+put(`${BASE}/locations/:id`, req => db.locations.edit(req.params.id, req.body))
+get(`${BASE}/locations/count`, req => db.locations.count(req.query))
+
+// Routes: Reviews
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
 post(`${BASE}/locations/:id/reviews`, req => db.reviews.add(req), uploads.array('photo'))
 put(`${BASE}/locations/:id/reviews/:rid`, req => db.reviews.edit(req), uploads.array('photo'))
-get(`${BASE}/locations/count`, req => db.locations.count(req.query))
+
+// Routes: Users
 post(`${BASE}/users`, req => db.users.add(req))
 get(`${BASE}/users/token`, req => db.users.get_token(req.query))
 put(`${BASE}/users/:id`, req => db.users.edit(req))

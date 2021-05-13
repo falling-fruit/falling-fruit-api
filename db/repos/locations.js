@@ -20,11 +20,8 @@ class Locations {
     return _.format_location(location)
   }
 
-  async edit(req) {
-    const values = {
-      id: req.params.id,
-      ...req.body
-    }
+  async edit(id, obj) {
+    const values = {...obj, id: parseInt(id)}
     const location = await this.db.one(sql.edit, values)
     return _.format_location(location)
   }
