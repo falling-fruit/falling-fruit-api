@@ -20,9 +20,27 @@ class Users {
     }
     // Store encrypted password
     values.password = await bcrypt.hash(values.password, SALT_ROUNDS)
-    // Store URL-friendly authentication token for next session
+    // Store URL-friendly authentication token
     values.token = base64url(crypto.randomBytes(TOKEN_BYTES))
     return this.db.one(sql.add, values)
+  }
+
+  async edit(req) {
+    const values = {
+      ...req.body,
+      // IDs in path take precedence
+      id: parseInt(req.params.id)
+    }
+    // Must be authorized as user
+    if (
+      !req.query.token ||
+      (await this.find_user_by_token(req.query.token) != values.id)
+    ) {
+      throw Error('Not authorized')
+    }
+    // Store encrypted password
+    values.password = await bcrypt.hash(values.password, SALT_ROUNDS)
+    return this.db.one(sql.edit, values)
   }
 
   async get_token({email, password}) {
@@ -41,17 +59,18 @@ class Users {
     return data.authentication_token
   }
 
-  async find_user_by_token({token}) {
-    let data
+  async find_user_by_token(token) {
+    let id
     try {
-      data = await this.db.one(
+      id = await this.db.one(
         'SELECT id FROM users WHERE authentication_token = ${token}',
-        {token: token}
+        {token: token},
+        x => x.id
       )
     } catch (error) {
       throw Error('Invalid token')
     }
-    return data.id
+    return id
   }
 }
 

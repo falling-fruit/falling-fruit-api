@@ -30,6 +30,7 @@ put(`${BASE}/locations/:id/reviews/:rid`, req => db.reviews.edit(req), uploads.a
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 post(`${BASE}/users`, req => db.users.add(req))
 get(`${BASE}/users/token`, req => db.users.get_token(req.query))
+put(`${BASE}/users/:id`, req => db.users.edit(req))
 
 // Generic handlers
 function get(url, handler) {
