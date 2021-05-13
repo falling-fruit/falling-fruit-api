@@ -3,6 +3,7 @@ const repos = require('./repos')
 const yaml = require('yaml')
 const fs = require('fs')
 const {types} = require('pg')
+const monitor = require('pg-monitor')
 
 const options = {
   promiseLib: promise,
@@ -15,6 +16,7 @@ const options = {
   }
 }
 const pgp = require('pg-promise')(options)
+monitor.attach(options)
 // Return BIGINT or BIGSERIAL as JSON integers (https://stackoverflow.com/a/39176670)
 pgp.pg.types.setTypeParser(types.builtins.INT8, parseInt)
 // Return DATE without timestamp (YYYY-MM-DD)
