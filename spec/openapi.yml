@@ -7,10 +7,10 @@ info:
     ### General usage
 
     - GET requests rely on path and query parameters.
-    - POST and PUT requests rely on path parameters and body content. If the request includes file(s), a `multipart/form-data` body is used with a `json` key whose value is a JSON-formatted string; otherwise, raw JSON is used. 
+    - POST and PUT requests rely on path parameters and body content. If the request includes file(s), a `multipart/form-data` body is used with a `json` key whose value is a JSON-formatted string; otherwise, raw JSON is used.
     - The values of array query parameters are comma-delimited, e.g. `types=1,2,3`, and arrays of arrays are pipe-delimited, e.g. `bounds=-85,-180|85,180`.
     - All endpoints return JSON responses.
-    - Success and error responses use conventional HTTP status codes: `2xx` for success, `4xx` for incorrect requests, and `5xx` for server errors. `4xx` errors will typically include additional details as JSON. See the `Error` schema for more details.
+    - Success and error responses use conventional HTTP status codes: `2xx` for success (implemented: `200`), `4xx` for incorrect requests (implemented: `400`), and `5xx` for server errors (not implemented). `4xx` errors will typically include an error message.
 
     ### Authentication
 
@@ -436,6 +436,7 @@ paths:
         - key: []
           token: []
       summary: Review a Location.
+      description: Uploaded photos are currently ignored.
       parameters:
         - $ref: '#/components/parameters/location_id'
       requestBody:
@@ -444,11 +445,14 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - json
               properties:
                 json:
                   $ref: "#/components/schemas/EditReview"
                 photos:
                   type: array
+                  description: Photos to upload.
                   items:
                     type: string
                     format: binary
@@ -478,6 +482,7 @@ paths:
       tags:
         - Reviews
       summary: Edit a Review (author only).
+      description: Uploaded photos are currently ignored.
       security:
         - key: []
           token: []
@@ -489,11 +494,14 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - json
               properties:
                 json:
                   $ref: "#/components/schemas/EditReview"
                 photos:
                   type: array
+                  description: Photos to upload.
                   items:
                     type: string
                     format: binary
@@ -1008,7 +1016,7 @@ components:
               example: false
     EditReview:
       title: Review (editable)
-      description: Review properties that can be edited. Properties `comment`, `fruiting`, `quality_rating`, `yield_rating` and `photos` cannot all be empty.
+      description: Review properties that can be edited.
       type: object
       properties:
         # author:
@@ -1135,37 +1143,37 @@ components:
               description: Whether the display `name` should be displayed on Locations and Reviews added by this user.
               type: boolean
               example: false
-    Error:
-      title: Error
-      description: |
-        Error response returned with one of the following status codes:
-        - `400 Bad Request`: Request was unacceptable, often due to missing a required parameter.
-        - `401 Unauthorized`: Request was not properly authenticated.
-        - `402 Request Failed`: Parameters were valid but the request failed.
-        - `403 Forbidden`: Request is not permitted given the provided authentication.
-        - `404 Not Found`: The requested resource doesn't exist.
-        - `500 Internal Server Error`: Something went wrong on the server.
-      type: object
-      properties:
-        code:
-          description: Error code for errors that could be handled programmatically.
-          type: string
-          enum:
-            - wrong_key
-            - wrong_token
-            - wrong_email_password
-            - missing_parameter
-            - invalid_parameter
-            - resource_missing
-          example: missing_parameter
-        param:
-          type: string
-          description: If applicable, the request parameter related to the error.
-          example: key
-        message:
-          type: string
-          description: Human-readable error message in English.
-          example: An API key is required.
+    # Error:
+    #   title: Error
+    #   description: |
+    #     Error response returned with one of the following status codes:
+    #     - `400 Bad Request`: Request was unacceptable, often due to missing a required parameter.
+    #     - `401 Unauthorized`: Request was not properly authenticated.
+    #     - `402 Request Failed`: Parameters were valid but the request failed.
+    #     - `403 Forbidden`: Request is not permitted given the provided authentication.
+    #     - `404 Not Found`: The requested resource doesn't exist.
+    #     - `500 Internal Server Error`: Something went wrong on the server.
+    #   type: object
+    #   properties:
+    #     code:
+    #       description: Error code for errors that could be handled programmatically.
+    #       type: string
+    #       enum:
+    #         - wrong_key
+    #         - wrong_token
+    #         - wrong_email_password
+    #         - missing_parameter
+    #         - invalid_parameter
+    #         - resource_missing
+    #       example: missing_parameter
+    #     param:
+    #       type: string
+    #       description: If applicable, the request parameter related to the error.
+    #       example: key
+    #     message:
+    #       type: string
+    #       description: Human-readable error message in English.
+    #       example: An API key is required.
 servers:
   - description: Falling Fruit test server.
     url: https://fallingfruit.org/test-api/0.3
