@@ -183,7 +183,7 @@ const partition_id = function(id) {
   return [s.substr(0, 3), s.substr(3, 3), s.substr(6, 3)].join('/')
 }
 
-const build_photo_urls = function(id, filename) {
+_.build_photo_urls = function(id, filename) {
   const base = `https://${s3.host}/${s3.bucket}/observations/photos/${partition_id(id)}`
   return {
     thumb: `${base}/thumb/${filename}`,
@@ -196,7 +196,7 @@ _.format_review = function(review) {
   // TEMP: Move old-style photo to photos array
   review.photos = []
   if (review.photo_file_name) {
-    review.photos.push(build_photo_urls(review.id, review.photo_file_name))
+    review.photos.push(_.build_photo_urls(review.id, review.photo_file_name))
   }
   delete review.photo_file_name
   return review

@@ -328,6 +328,12 @@ paths:
               minimum: -180
               maximum: 180
             example: [1.359, 103.807]
+        - name: photo
+          in: query
+          description: Whether to include the path to a review photo thumbnail, if available.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Success
@@ -915,6 +921,8 @@ components:
               type: number
               minimum: 0
               example: 47.915
+            photo:
+              description: Path to review photo thumbnail, if available.
     EditLocation:
       title: Location (editable)
       description: Location properties that can be edited.
