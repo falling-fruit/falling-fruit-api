@@ -3,5 +3,6 @@ module.exports = {
   Types: require('./types'),
   Locations: require('./locations'),
   Reviews: require('./reviews'),
-  Users: require('./users')
+  Users: require('./users'),
+  Reports: require('./reports')
 }

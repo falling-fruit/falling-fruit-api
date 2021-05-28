@@ -34,7 +34,7 @@ class Users {
     // Must be authorized as user
     if (
       !req.query.token ||
-      (await this.find_user_by_token(req.query.token) != values.id)
+      (await this.find_user_by_token(req.query.token).id != values.id)
     ) {
       throw Error('Not authorized')
     }
@@ -59,18 +59,15 @@ class Users {
     return data.authentication_token
   }
 
-  async find_user_by_token(token) {
-    let id
+  find_user_by_token(token) {
     try {
-      id = await this.db.one(
-        'SELECT id FROM users WHERE authentication_token = ${token}',
-        {token: token},
-        x => x.id
+      return this.db.one(
+        'SELECT * FROM users WHERE authentication_token = ${token}',
+        {token: token}
       )
     } catch (error) {
       throw Error('Invalid token')
     }
-    return id
   }
 }
 

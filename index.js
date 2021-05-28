@@ -29,7 +29,7 @@ post(`${BASE}/locations`, async req => {
   req.body.user_id = null
   if (req.query.token) {
     // Link location to logged-in user
-    req.body.user_id = await db.users.find_user_by_token(req.query.token)
+    req.body.user_id = await db.users.find_user_by_token(req.query.token).id
   }
   return db.locations.add(req.body)
 })
@@ -44,16 +44,16 @@ post(`${BASE}/locations/:id/reviews`, async req => {
   obj.user_id = null
   if (req.query.token) {
     // Link location to logged-in user
-    obj.user_id = await db.users.find_user_by_token(req.query.token)
+    obj.user_id = await db.users.find_user_by_token(req.query.token).id
   }
   return db.reviews.add(req.params.id, obj)
 }, uploads.array('photo'))
 get(`${BASE}/reviews/:id`, req => db.reviews.show(req.params.id))
 put(`${BASE}/reviews/:id`, async req => {
   // Restrict to linked user
-  const user_id = await db.users.find_user_by_token(req.query.token)
+  const user = await db.users.find_user_by_token(req.query.token)
   const review = await db.reviews.show(req.params.id)
-  if (user_id != review.user_id) {
+  if (user.id != review.user_id) {
     throw Error('Not authorized')
   }
   return db.reviews.edit(req.params.id, JSON.parse(req.body.json))
@@ -63,6 +63,19 @@ put(`${BASE}/reviews/:id`, async req => {
 post(`${BASE}/users`, req => db.users.add(req))
 get(`${BASE}/users/token`, req => db.users.get_token(req.query))
 put(`${BASE}/users/:id`, req => db.users.edit(req))
+
+// Routes: Reports
+post(`${BASE}/reports`, async req => {
+  if (req.query.token) {
+    const user = await db.users.find_user_by_token(req.query.token)
+    req.body.reporter_id = user.id
+    req.body.email = req.body.email || user.email
+    req.body.name = req.body.name || user.name
+  } else {
+    req.body.reporter_id = null
+  }
+  return db.reports.add(req.body)
+})
 
 // Generic handlers
 function get(url, handler) {

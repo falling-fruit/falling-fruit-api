@@ -55,6 +55,8 @@ tags:
     description: Types describe the plants, fungi, or other resources present at a Location.
   - name: Reviews
     description: Reviews describe observations of, and opinions about, a Location.
+  - name: Reports
+    description: Users can submit problem reports for admin review.
 paths:
   /users:
     post:
@@ -505,6 +507,51 @@ paths:
               properties:
                 json:
                   $ref: "#/components/schemas/EditReview"
+                photos:
+                  type: array
+                  description: Photos to upload.
+                  items:
+                    type: string
+                    format: binary
+                  nullable: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+  /reports:
+    # get:
+    #   tags:
+    #     - Reports
+    #   summary: Fetch Reports.
+    #   responses:
+    #     '200':
+    #       description: Success
+    #       content:
+    #         application/json:
+    #           schema:
+    #             $ref: '#/components/schemas/Report'      
+    post:
+      tags:
+        - Reports
+      summary: Create a Report.
+      security:
+        - key: []
+        - key: []
+          token: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - json
+              properties:
+                json:
+                  $ref: "#/components/schemas/EditReport"
                 photos:
                   type: array
                   description: Photos to upload.
@@ -1151,6 +1198,84 @@ components:
               description: Whether the display `name` should be displayed on Locations and Reviews added by this user.
               type: boolean
               example: false
+    EditReport:
+      title: Report (editable)
+      description: Report properties that can be edited.
+      type: object
+      required:
+        - location_id
+        - problem_code
+      properties:
+        location_id:
+          description: Location ID.
+          type: integer
+          minimum: 0
+          example: 3383
+        problem_code:
+          description: |
+            Problem code.
+            - 0: Location is spam
+            - 1: Location does not exist
+            - 2: Location is a duplicate
+            - 3: Inappropriate review photo
+            - 4: Inappropriate review comment
+            - 5: Other (explain below)
+          type: integer
+          enum: [0, 1, 2, 3, 4, 5]
+          example: 1
+        comment:
+          description: Comment.
+          type: string
+          nullable: true
+          example: This tree was cut down.
+        email:
+          description: Email to use for correspondence. If authenticated, defaults to the user's email. Otherwise, it is required.
+          type: string
+          format: email
+          example: foo@bar.com
+        name:
+          description: Name to use for correspondence. If authenticated, defaults to the user's author name.
+          type: string
+          nullable: true
+          example: Ethan
+    Report:
+      title: Report
+      description: Report of a problem with a Location.
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/EditReport'
+        - $ref: '#/components/schemas/DateFields'
+        - type: object
+          properties:
+            reporter_id:
+              description: ID of reporting User (if authenticated).
+              type: integer
+              minimum: 0
+              nullable: true
+              example: 321
+            resolution_code:
+              description: |
+                Resolution code.
+                - 0: Made no changes
+                - 1: Edited the location
+                - 2: Deleted the location
+                - 3: Deleted the photo
+                - 4: Deleted the review
+                - 5: Hid the location
+              type: integer
+              enum: [0, 1, 2, 3, 4, 5]
+              nullable: true
+              example: 2
+            response:
+              description: Response comment.
+              type: string
+              nullable: true
+              example: Thank you for alerting us!
+            responder_id:
+              description: ID of responding User.
+              type: integer
+              minimum: 0
+              nullable: true
     # Error:
     #   title: Error
     #   description: |
