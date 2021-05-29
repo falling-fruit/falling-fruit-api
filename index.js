@@ -33,9 +33,9 @@ post(`${BASE}/locations`, async req => {
   }
   return db.locations.add(req.body)
 })
+get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
 put(`${BASE}/locations/:id`, req => db.locations.edit(req.params.id, req.body))
-get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 
 // Routes: Reviews
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
