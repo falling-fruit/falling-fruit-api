@@ -28,8 +28,11 @@ get(`${BASE}/locations`, req => db.locations.list(req.query))
 post(`${BASE}/locations`, async req => {
   req.body.user_id = null
   if (req.query.token) {
-    // Link location to logged-in user
-    req.body.user_id = await db.users.find_user_by_token(req.query.token).id
+    const user = await db.users.find_user_by_token(req.query.token)
+    if (!user.add_anonymously) {
+      // Link location to logged-in user
+      req.body.user_id = user.id
+    }
   }
   return db.locations.add(req.body)
 })
@@ -43,8 +46,11 @@ post(`${BASE}/locations/:id/reviews`, async req => {
   const obj = JSON.parse(req.body.json)
   obj.user_id = null
   if (req.query.token) {
-    // Link location to logged-in user
-    obj.user_id = await db.users.find_user_by_token(req.query.token).id
+    const user = await db.users.find_user_by_token(req.query.token)
+    if (!user.add_anonymously) {
+      // Link review to logged-in user
+      obj.user_id = user.id
+    }
   }
   return db.reviews.add(req.params.id, obj)
 }, uploads.array('photo'))
