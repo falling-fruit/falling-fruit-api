@@ -10,7 +10,7 @@ const MAX_LATITUDE = 85.0511  // degrees
 
 /**
  * Point coordinates.
- * 
+ *
  * @typedef {object} Point
  * @property {number} x - Easting (m) or longitude (degrees).
  * @property {number} y - Northing (m) or latitude (degrees).
@@ -18,7 +18,7 @@ const MAX_LATITUDE = 85.0511  // degrees
 
 /**
  * Parse point coordinates.
- * 
+ *
  * @param {string} value - Coordinates in the format 'lat,lng' (WGS84 decimal degrees).
  * Expects longitude in interval [-180, 180] and latitude in interval [-90, 90].
  * @param {boolean} [mercator=false] - Whether to limit latitude to Web Mercator
@@ -43,7 +43,7 @@ _.parse_point = function(value, mercator = false) {
 
 /**
  * Parse bounding box coordinates.
- * 
+ *
  * @param {string} value - Bounds in the format 'swlat,swlng|nelat,nelng'
  * (WGS84 decimal degrees).
  * @param {boolean} [mercator=false] - Whether to limit latitude to Web Mercator
@@ -60,9 +60,9 @@ _.parse_point = function(value, mercator = false) {
 
 /**
  * Convert bounding box to SQL condition.
- * 
+ *
  * @param {Point[]} bounds - Bounding box (WGS84).
- * @param {boolean} mercator - Whether to use filter on `location` (WGS84 geometry) 
+ * @param {boolean} mercator - Whether to use filter on `location` (WGS84 geometry)
  * or `x` and `y` (cached mercator coordinates).
  * @returns {string} SQL condition.
  */
@@ -81,7 +81,7 @@ _.bounds_to_sql = function(bounds, mercator = false) {
 
 /**
  * Transform point from WGS84 to Web Mercator.
- * 
+ *
  * @param {Point} point - Point (WGS84) with latitude in interval [-85.0511, 85.0511].
  * @returns {Point} Point (Web Mercator).
  */

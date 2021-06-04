@@ -3,7 +3,7 @@ info:
   title: Falling Fruit API
   description: |
     Falling Fruit is an open-technology nonprofit mapping the world's edible plants and developing online platforms to promote urban foraging and hyperlocal food. This API provides access to the Falling Fruit database. It is a work in progress and does not provide access to all possible database tables or fields. Many features on the website (https://fallingfruit.org) still rely on the older Rails API.
-  
+
     ### General usage
 
     - GET requests rely on path and query parameters.
@@ -24,9 +24,9 @@ info:
     - Require a reCAPTCHA for POST and PUT requests without a `token`.
     - Pass `token` in the HTTP header (https://swagger.io/docs/specification/authentication/bearer-authentication).
     - Get help from someone who understands web security.
-    
+
     ### TODO: Endpoints
-  
+
     - Add, view and resolve problems (https://fallingfruit.org/problems).
     - Merge types (https://fallingfruit.org/types).
     - Add, view, and edit imports (https://fallingfruit.org/datasets, https://fallingfruit.org/imports/436).
@@ -312,7 +312,7 @@ paths:
             default: 1000
         - name: offset
           in: query
-          description: Offset from which to apply `limit`. 
+          description: Offset from which to apply `limit`.
           schema:
             type: integer
             minimum: 0
@@ -485,7 +485,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Review'      
+                $ref: '#/components/schemas/Review'
     put:
       tags:
         - Reviews
@@ -532,7 +532,7 @@ paths:
     #       content:
     #         application/json:
     #           schema:
-    #             $ref: '#/components/schemas/Report'      
+    #             $ref: '#/components/schemas/Report'
     post:
       tags:
         - Reports
@@ -744,7 +744,7 @@ components:
       in: query
       description: |
         Quality rating.
-        - 0: Poor. 
+        - 0: Poor.
         - 1: Fair.
         - 2: Good.
         - 3: Very good.
@@ -757,7 +757,7 @@ components:
       in: query
       description: |
         Yield rating.
-        - 0: Poor. 
+        - 0: Poor.
         - 1: Fair.
         - 2: Good.
         - 3: Very good.
