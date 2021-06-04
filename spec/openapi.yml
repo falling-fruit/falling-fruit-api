@@ -1021,6 +1021,11 @@ components:
               minimum: 0
               maximum: 11
               example: 8
+            author:
+              description: Author name. Either the `author` set when the Location was created (typically in an unauthenticated session) or the current `name` of the associated User, if that user was not anonymous when adding the location. Cannot be changed once set.
+              type: string
+              nullable: true
+              example: Ethan
     Location:
       title: Location
       description: All Location properties.
@@ -1074,11 +1079,11 @@ components:
       description: Review properties that can be edited.
       type: object
       properties:
-        # author:
-        #   description: Author name.
-        #   type: string
-        #   nullable: true
-        #   example: Ethan
+        author:
+          description: Author name. Either the `author` set when the Review was created (typically in an unauthenticated session) or the current `name` of the associated User, if that user was not anonymous when adding the location. Cannot be changed once set.
+          type: string
+          nullable: true
+          example: Ethan
         comment:
           description: Comment.
           type: string
@@ -1119,7 +1124,7 @@ components:
           required:
             - location_id
             - user_id
-            # - author
+            - author
             - comment
             - fruiting
             - quality_rating
