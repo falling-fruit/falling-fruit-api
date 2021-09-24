@@ -2,7 +2,7 @@
 
 Exploratory attempt to rewrite and simplify the Falling Fruit NodeJS API using [express](https://github.com/expressjs/express), [pg-promise](https://github.com/vitaly-t/pg-promise), and [bluebird](https://github.com/petkaantonov/bluebird). The code structure is inspired by this [pg-promise demo](https://github.com/vitaly-t/pg-promise-demo) and this more general [tutorial](http://mherman.org/blog/2016/03/13/designing-a-restful-api-with-node-and-postgres/#.WgOMrhNSyEI).
 
-You can view the [OpenAPI documentation](docs/openapi.yml) on the main branch using Swagger's live demo [here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/falling-fruit/api/main/docs/openapi.yml).
+You can browse the OpenAPI definition for the main branch [here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/falling-fruit/api/main/docs/openapi.yml), and for the live API [here](https://petstore.swagger.io/?url=https://fallingfruit.org/test-api/0.3/openapi.yml).
 
 ### File structure
 
@@ -36,7 +36,7 @@ npm install
 1. Run `npm start`
 2. Visit http://localhost:3300
 
-## Core Schema
+## Core Schema (draft)
 
 Attributes common to all models:
 
