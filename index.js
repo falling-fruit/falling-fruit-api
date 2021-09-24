@@ -14,6 +14,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(BASE, express.static('docs'))
 
 // Routes: Clusters
 get(`${BASE}/clusters`, req => db.clusters.list(req.query))
@@ -36,6 +37,7 @@ post(`${BASE}/locations`, async req => {
   }
   return db.locations.add(req.body)
 })
+get(`${BASE}/locations/random`, req => db.locations.random())
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
 put(`${BASE}/locations/:id`, req => db.locations.edit(req.params.id, req.body))
@@ -81,6 +83,19 @@ post(`${BASE}/reports`, async req => {
     req.body.reporter_id = null
   }
   return db.reports.add(req.body)
+})
+
+// Routes: Tiles
+app.get(`${BASE}/tiles/:z/:x/:y.pbf`, async (req, res) => {
+  try {
+    await check_key(req)
+    const data = await db.tiles.show(req.params)
+    res.status(200).end(data)
+  } catch (error) {
+    res.status(400).json({
+      error: error.message || error
+    })
+  }
 })
 
 // Generic handlers
