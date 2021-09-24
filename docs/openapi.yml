@@ -107,6 +107,8 @@ paths:
       security:
         - key: []
           token: []
+      parameters:
+        - $ref: '#/components/parameters/user_id'
       requestBody:
         required: true
         content:
@@ -765,6 +767,14 @@ components:
       schema:
         type: integer
         enum: [0, 1, 2, 3, 4]
+    user_id:
+      name: id
+      in: path
+      description: User ID.
+      required: true
+      schema:
+        type: integer
+        minimum: 0
     observed_on:
       name: observed_on
       in: query
