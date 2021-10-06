@@ -1328,6 +1328,12 @@ components:
         - $ref: '#/components/schemas/IdField'
         - $ref: '#/components/schemas/DateFields'
         - type: object
+          required:
+            - name
+            - url
+            - comments
+            - license
+            - muni
           properties:
             name:
               description: Name.
