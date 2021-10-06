@@ -4,6 +4,7 @@ const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
 const uploads = multer({ dest: 'uploads' })
+const compression = require('compression')
 
 // Constants
 const PORT = 3300
@@ -11,6 +12,7 @@ const BASE = '/test-api/0.3'
 
 // Configuration
 const app = express()
+app.use(compression())
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
