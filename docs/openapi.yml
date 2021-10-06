@@ -583,21 +583,21 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Type"
+                  $ref: "#/components/schemas/Import"
   /imports/{id}:
     get:
       tags:
         - Imports
       summary: Fetch Import.
       parameters:
-        - $ref: '#/components/parameters/type_id'
+        - $ref: '#/components/parameters/import_id'
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Type"
+                $ref: "#/components/schemas/Import"
 components:
   securitySchemes:
     key:
@@ -812,6 +812,14 @@ components:
       schema:
         type: string
         format: date
+    import_id:
+      name: id
+      in: path
+      description: Import ID.
+      required: true
+      schema:
+        type: integer
+        minimum: 0
   schemas:
     IdField:
       required:
@@ -1088,6 +1096,8 @@ components:
             - description
             - season_start
             - season_stop
+            - muni
+            - import_id
           properties:
             address:
               description: Address. Either provided for imported locations whose coordinates had to be geocoded from the address or reverse-geocoded from coordinates.
