@@ -4,5 +4,6 @@ module.exports = {
   Locations: require('./locations'),
   Reviews: require('./reviews'),
   Users: require('./users'),
-  Reports: require('./reports')
+  Reports: require('./reports'),
+  Tiles: require('./tiles')
 }
