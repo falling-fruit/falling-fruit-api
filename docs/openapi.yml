@@ -57,6 +57,8 @@ tags:
     description: Reviews describe observations of, and opinions about, a Location.
   - name: Reports
     description: Users can submit problem reports for admin review.
+  - name: Imports
+    description: Import datasets.
 paths:
   /users:
     post:
@@ -568,6 +570,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Review'
+  /imports:
+    get:
+      tags:
+        - Imports
+      summary: Fetch Imports.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Type"
+  /imports/{id}:
+    get:
+      tags:
+        - Imports
+      summary: Fetch Import.
+      parameters:
+        - $ref: '#/components/parameters/type_id'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Type"
 components:
   securitySchemes:
     key:
@@ -1291,6 +1321,39 @@ components:
               type: integer
               minimum: 0
               nullable: true
+    Import:
+      title: Import
+      description: Imported dataset.
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/DateFields'
+        - type: object
+          properties:
+            name:
+              description: Name.
+              type: string
+              nullable: false
+              example: Les arbres de Grenoble
+            url:
+              description: Path to a description of the data.
+              type: string
+              nullable: true
+              example: http://data.metropolegrenoble.fr/ckan/dataset/les-arbres-de-grenoble
+            comments:
+              description: Description and import comments.
+              type: string
+              nullable: true
+              example: Tree inventory of Grenoble, France.
+            license:
+              description: License.
+              type: string
+              nullable: true
+              example: Open Data Commons Open Database License (https://opendefinition.org/licenses/odc-odbl)
+            muni:
+              description: Whether a municipal or university tree inventory.
+              type: boolean
+              nullable: false
+              example: true
     # Error:
     #   title: Error
     #   description: |
@@ -1327,3 +1390,5 @@ servers:
     url: https://fallingfruit.org/test-api/0.3
   - description: SwaggerHub mock server.
     url: https://virtserver.swaggerhub.com/ezwelty/falling-fruit-api/0.3
+  - description: Localhost.
+    url: http://localhost:3300/test-api/0.3

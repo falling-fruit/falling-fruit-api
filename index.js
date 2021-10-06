@@ -85,18 +85,9 @@ post(`${BASE}/reports`, async req => {
   return db.reports.add(req.body)
 })
 
-// Routes: Tiles
-app.get(`${BASE}/tiles/:z/:x/:y.pbf`, async (req, res) => {
-  try {
-    await check_key(req)
-    const data = await db.tiles.show(req.params)
-    res.status(200).end(data)
-  } catch (error) {
-    res.status(400).json({
-      error: error.message || error
-    })
-  }
-})
+// Routes: Imports
+get(`${BASE}/imports`, () => db.imports.list())
+get(`${BASE}/imports/:id`, req => db.imports.show(req.params.id))
 
 // Generic handlers
 function get(url, handler) {
