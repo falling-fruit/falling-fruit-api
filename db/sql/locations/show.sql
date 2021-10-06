@@ -1,5 +1,5 @@
 SELECT
-  l.id, l.lat, l.lng, l.type_ids, l.user_id,
+  l.id, l.lat, l.lng, l.type_ids, l.user_id, l.import_id,
   COALESCE(l.author, u.name) as author,
   l.created_at, l.updated_at,
   l.address, l.city, l.state, l.country,

@@ -16,7 +16,6 @@ WITH l AS (
     season_start, season_stop, no_season,
     access,
     description,
-    muni,
     unverified
 )
 SELECT
@@ -27,7 +26,6 @@ SELECT
   l.season_start, l.season_stop, l.no_season,
   l.access,
   l.description,
-  l.muni,
   l.unverified
 FROM l
 LEFT JOIN users u

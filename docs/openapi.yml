@@ -1086,7 +1086,6 @@ components:
             - state
             - country
             - description
-            - muni
             - season_start
             - season_stop
           properties:
@@ -1113,7 +1112,14 @@ components:
             muni:
               description: Whether imported from a municipal tree inventory.
               type: boolean
+              nullable: false
               example: false
+            import_id:
+              description: Import ID.
+              type: integer
+              nullable: true
+              minimum: 0
+              example: 23
     EditReview:
       title: Review (editable)
       description: Review properties that can be edited.
