@@ -1350,6 +1350,7 @@ components:
             - comments
             - license
             - muni
+            - location_count
           properties:
             name:
               description: Name.
@@ -1376,6 +1377,12 @@ components:
               type: boolean
               nullable: false
               example: true
+            location_count:
+              description: Number of imported locations.
+              type: integer
+              minimum: 0
+              nullable: false
+              example: 1273
     # Error:
     #   title: Error
     #   description: |
