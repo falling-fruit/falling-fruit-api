@@ -10,7 +10,7 @@ WITH l AS (
     ${access}, ${description}, ${unverified}
   )
   RETURNING
-    id, lat, lng, type_ids, user_id, l.import_id, author,
+    id, lat, lng, type_ids, user_id, import_id, author,
     created_at, updated_at,
     address, city, state, country,
     season_start, season_stop, no_season,
