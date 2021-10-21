@@ -548,21 +548,9 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              required:
-                - json
-              properties:
-                json:
-                  $ref: "#/components/schemas/EditReport"
-                photos:
-                  type: array
-                  description: Photos to upload.
-                  items:
-                    type: string
-                    format: binary
-                  nullable: true
+              $ref: '#/components/schemas/EditReport'
       responses:
         '200':
           description: Success
