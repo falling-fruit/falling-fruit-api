@@ -33,7 +33,10 @@ class Locations {
     return _.format_location(location)
   }
 
-  async list({bounds, center = null, muni = 'true', types = '', limit = '1000', offset = '0', photo = 'false'}) {
+  async list({bounds, center = null, muni = 'true', types = null, limit = '1000', offset = '0', photo = 'false'}) {
+    if (types === '') {
+      return []
+    }
     const filters = [
       'NOT hidden',
       _.bounds_to_sql(_.parse_bounds(bounds)),

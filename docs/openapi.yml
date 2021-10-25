@@ -642,16 +642,15 @@ components:
         default: false
     types:
       name: types
-      description: IDs of Types to include (or all if empty).
+      description: IDs of Types to include (all by default).
       in: query
       explode: false
-      style: pipeDelimited
       schema:
         type: array
         items:
           type: integer
           minimum: 0
-        default: []
+        default: null
     location_id:
       name: id
       in: path
