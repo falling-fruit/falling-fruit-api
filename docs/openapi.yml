@@ -394,6 +394,17 @@ paths:
       summary: Fetch a Location.
       parameters:
         - $ref: '#/components/parameters/location_id'
+        - name: embed
+          description: |
+            Additional information to include.
+            - reviews: Location reviews.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [reviews]
+            default: null
       responses:
         '200':
           description: Success
@@ -1117,6 +1128,11 @@ components:
               nullable: true
               minimum: 0
               example: 23
+            reviews:
+              description: Location reviews.
+              type: array
+              items:
+                $ref: '#/components/schemas/Review'
     EditReview:
       title: Review (editable)
       description: Review properties that can be edited.
