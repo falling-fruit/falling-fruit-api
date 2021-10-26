@@ -1,5 +1,4 @@
 .DS_Store
 node_modules
-db.yml
-s3.yml
 uploads
+.env

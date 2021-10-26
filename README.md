@@ -31,6 +31,12 @@ cd api
 npm install
 ```
 
+3. Copy `.env.example` to `.env` and update the values as needed.
+
+```bash
+cp .env.example .env
+```
+
 ### Usage
 
 1. Run `npm start`

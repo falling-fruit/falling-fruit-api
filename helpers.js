@@ -1,7 +1,3 @@
-const yaml = require('yaml')
-const fs = require('fs')
-const s3 = yaml.parse(fs.readFileSync('s3.yml', 'utf8'))
-
 var _ = {}
 
 const EARTH_RADIUS = 6378137  // m
@@ -184,7 +180,7 @@ const partition_id = function(id) {
 }
 
 _.build_photo_urls = function(id, filename) {
-  const base = `https://${s3.host}/${s3.bucket}/observations/photos/${partition_id(id)}`
+  const base = `https://${process.env.S3_HOST}/${process.env.S3_BUCKET}/observations/photos/${partition_id(id)}`
   return {
     thumb: `${base}/thumb/${filename}`,
     medium: `${base}/medium/${filename}`,

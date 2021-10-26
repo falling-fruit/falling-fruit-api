@@ -1,3 +1,4 @@
+require('dotenv').config()
 const db = require('./db')
 const helpers = require('./helpers').default
 const express = require('express')
