@@ -353,6 +353,7 @@ paths:
       tags:
         - Locations
       summary: Create a Location.
+      description: A `review` can be included, in which case the result includes the `reviews` property.
       security:
         - key: []
         - key: []
@@ -362,7 +363,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditLocation'
+              $ref: '#/components/schemas/AddLocation'
       responses:
         '200':
           description: Success
@@ -892,7 +893,7 @@ components:
           minimum: 1
           example: 12
     EditType:
-      title: Type (editable)
+      title: Type (edit)
       description: Type properties that can be edited. Properties `scientific_names` and `common_names['en']` cannot both be empty.
       type: object
       properties:
@@ -1017,7 +1018,7 @@ components:
             photo:
               description: Path to review photo thumbnail, if available.
     EditLocation:
-      title: Location (editable)
+      title: Location (edit)
       description: Location properties that can be edited.
       allOf:
         - $ref: "#/components/schemas/LatLngFields"
@@ -1072,6 +1073,15 @@ components:
               type: string
               nullable: true
               example: Ethan
+    AddLocation:
+      title: Location (add)
+      description: Location properties that can be added.
+      allOf:
+        - $ref: "#/components/schemas/EditLocation"
+        - type: object
+          properties:
+            review:
+              $ref: '#/components/schemas/EditReview'
     Location:
       title: Location
       description: All Location properties.
@@ -1134,7 +1144,7 @@ components:
               items:
                 $ref: '#/components/schemas/Review'
     EditReview:
-      title: Review (editable)
+      title: Review (edit)
       description: Review properties that can be edited.
       type: object
       properties:
@@ -1263,7 +1273,7 @@ components:
               type: boolean
               example: false
     EditReport:
-      title: Report (editable)
+      title: Report (edit)
       description: Report properties that can be edited.
       type: object
       required:

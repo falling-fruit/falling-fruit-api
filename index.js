@@ -35,9 +35,17 @@ post(`${BASE}/locations`, async req => {
     if (!user.add_anonymously) {
       // Link location to logged-in user
       req.body.user_id = user.id
+      if (req.body.review) {
+        req.body.review.user_id = user.id
+      }
     }
   }
-  return db.locations.add(req.body)
+  const location = await db.locations.add(req.body)
+  if (req.body.review) {
+    const review = await db.reviews.add(location.id, req.body.review)
+    location.reviews = [review]
+  }
+  return location
 })
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, async req => {
