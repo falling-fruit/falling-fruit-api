@@ -39,7 +39,6 @@ post(`${BASE}/locations`, async req => {
   }
   return db.locations.add(req.body)
 })
-get(`${BASE}/locations/random`, req => db.locations.random())
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, req => db.locations.show(req.params.id))
 put(`${BASE}/locations/:id`, req => db.locations.edit(req.params.id, req.body))
