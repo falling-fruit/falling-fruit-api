@@ -1078,11 +1078,6 @@ components:
               minimum: 0
               maximum: 11
               example: 8
-            author:
-              description: Author name. Either the `author` set when the Location was created (typically in an unauthenticated session) or the current `name` of the associated User, if that user was not anonymous when adding the location. Cannot be changed once set.
-              type: string
-              nullable: true
-              example: Ethan
     AddLocation:
       title: Location (add)
       description: Location properties that can be added.
@@ -1117,6 +1112,11 @@ components:
             - muni
             - import_id
           properties:
+            author:
+              description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+              type: string
+              nullable: true
+              example: Ethan
             address:
               description: Address. Either provided for imported locations whose coordinates had to be geocoded from the address or reverse-geocoded from coordinates.
               type: string
@@ -1158,11 +1158,6 @@ components:
       description: Review properties that can be edited.
       type: object
       properties:
-        author:
-          description: Author name. Either the `author` set when the Review was created (typically in an unauthenticated session) or the current `name` of the associated User, if that user was not anonymous when adding the location. Cannot be changed once set.
-          type: string
-          nullable: true
-          example: Ethan
         comment:
           description: Comment.
           type: string
@@ -1224,6 +1219,11 @@ components:
               nullable: true
               minimum: 0
               example: 1
+            author:
+              description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+              type: string
+              nullable: true
+              example: Ethan
             photos:
               type: array
               items:
@@ -1318,7 +1318,7 @@ components:
           format: email
           example: foo@bar.com
         name:
-          description: Name to use for correspondence. If authenticated, defaults to the user's author name.
+          description: Name to use for correspondence. If authenticated, defaults to the user's name.
           type: string
           nullable: true
           example: Ethan

@@ -15,7 +15,6 @@ class Locations {
       description: null,
       unverified: false,
       user_id: null,
-      author: null,
       ...obj
     }
     const location = await this.db.one(sql.add, values)

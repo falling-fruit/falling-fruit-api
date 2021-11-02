@@ -1,11 +1,11 @@
 WITH l AS (
   INSERT INTO locations (
-    lat, lng, type_ids, user_id, author,
+    lat, lng, type_ids, user_id,
     season_start, season_stop,
     access, description, unverified
   )
   VALUES (
-    ${lat}, ${lng}, ${type_ids}, ${user_id}, ${author},
+    ${lat}, ${lng}, ${type_ids}, ${user_id},
     ${season_start}, ${season_stop},
     ${access}, ${description}, ${unverified}
   )
