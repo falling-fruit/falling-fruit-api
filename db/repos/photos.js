@@ -12,6 +12,7 @@ class Photos {
   }
 
   insert(id, urls) {
+    if (urls.length == 0) return []
     // https://github.com/vitaly-t/pg-promise/wiki/Data-Imports
     const cs = new this.pgp.helpers.ColumnSet([
       {name: 'observation_id', def: id},

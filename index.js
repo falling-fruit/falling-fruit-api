@@ -31,27 +31,14 @@ get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
 get(`${BASE}/locations`, req => db.locations.list(req.query))
 post(`${BASE}/locations`, async req => {
   const obj = JSON.parse(req.body.json)
-  obj.user_id = null
-  if (req.query.token) {
-    const user = await db.users.find_user_by_token(req.query.token)
-    if (!user.add_anonymously) {
-      // Link location to logged-in user
-      obj.user_id = user.id
-      if (obj.review) {
-        obj.review.user_id = user.id
-      }
-    }
-  }
-  const location = await db.locations.add(obj)
+  const user = await db.users.find_user_by_token(req.query.token)
+  const location = await db.locations.add({...obj, user_id: user.id})
   if (obj.review) {
-    let urls
-    if (req.files) {
-      urls = await _.resize_and_upload_photos(req.files.map(f => f.path))
-    }
-    const review = await db.reviews.add(location.id, obj.review)
-    if (urls) {
-      review.photos = await db.photos.insert(review.id, urls)
-    }
+    const urls = await _.resize_and_upload_photos(req.files.map(f => f.path))
+    const review = await db.reviews.add(
+      location.id, {...obj.review, user_id: user.id}
+    )
+    review.photos = await db.photos.insert(review.id, urls)
     location.reviews = [review]
   }
   return location
@@ -70,22 +57,10 @@ put(`${BASE}/locations/:id`, req => db.locations.edit(req.params.id, req.body))
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
 post(`${BASE}/locations/:id/reviews`, async req => {
   const obj = JSON.parse(req.body.json)
-  obj.user_id = null
-  if (req.query.token) {
-    const user = await db.users.find_user_by_token(req.query.token)
-    if (!user.add_anonymously) {
-      // Link review to logged-in user
-      obj.user_id = user.id
-    }
-  }
-  let urls
-  if (req.files) {
-    urls = await _.resize_and_upload_photos(req.files.map(f => f.path))
-  }
-  const review = await db.reviews.add(req.params.id, obj)
-  if (urls) {
-    review.photos = await db.photos.insert(review.id, urls)
-  }
+  const user = await db.users.find_user_by_token(req.query.token)
+  const urls = await _.resize_and_upload_photos(req.files.map(f => f.path))
+  const review = await db.reviews.add(req.params.id, {...obj, user_id: user.id})
+  review.photos = await db.photos.insert(review.id, urls)
   return review
 }, uploads.array('photos'))
 get(`${BASE}/reviews/:id`, req => db.reviews.show(req.params.id))
@@ -106,14 +81,13 @@ put(`${BASE}/users/:id`, req => db.users.edit(req))
 
 // Routes: Reports
 post(`${BASE}/reports`, async req => {
-  if (req.query.token) {
-    const user = await db.users.find_user_by_token(req.query.token)
-    req.body.reporter_id = user.id
-    req.body.email = req.body.email || user.email
-    req.body.name = req.body.name || user.name
-  } else {
-    req.body.reporter_id = null
+  const user = await db.users.find_user_by_token(req.query.token)
+  req.body.email = req.body.email || user.email
+  if (!req.body.email) {
+    throw Error('An email is required')
   }
+  req.body.name = req.body.name || user.name
+  req.body.reporter_id = user.id
   return db.reports.add(req.body)
 })
 

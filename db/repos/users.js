@@ -60,6 +60,7 @@ class Users {
   }
 
   find_user_by_token(token) {
+    if (!token) return {}
     try {
       return this.db.one(
         'SELECT * FROM users WHERE authentication_token = ${token}',

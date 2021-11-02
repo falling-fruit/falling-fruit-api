@@ -89,10 +89,6 @@ paths:
                   description: Display name.
                   type: string
                   default: null
-                add_anonymously:
-                  description: Whether the display `name` should be displayed on Locations and Reviews added by this user.
-                  type: boolean
-                  default: false
       responses:
         '200':
           description: Success
@@ -121,7 +117,6 @@ paths:
                 - email
                 - password
                 - name
-                - add_anonymously
               properties:
                 email:
                   description: Email.
@@ -136,10 +131,6 @@ paths:
                   description: Display name.
                   type: string
                   default: null
-                add_anonymously:
-                  description: Whether the display `name` should be displayed on Locations and Reviews added by this user.
-                  type: boolean
-                  default: false
       responses:
         '200':
           description: Success
@@ -718,7 +709,7 @@ components:
     author:
       name: author
       in: query
-      description: Author name. If not provided, defaults to the User's name if the user has not opted to add locations anonymously.
+      description: Author name.
       schema:
         type: string
     description:
@@ -1267,7 +1258,6 @@ components:
           required:
             - email
             - name
-            - add_anonymously
           properties:
             email:
               description: Email.
@@ -1278,10 +1268,7 @@ components:
               description: Display name.
               type: string
               example: Ethan
-            add_anonymously:
-              description: Whether the display `name` should be displayed on Locations and Reviews added by this user.
-              type: boolean
-              example: false
+              nullable: true
     EditReport:
       title: Report (edit)
       description: Report properties that can be edited.
