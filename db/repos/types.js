@@ -7,6 +7,28 @@ class Types {
     this.pgp = pgp
   }
 
+  async add(obj) {
+    let values = {
+      parent_id: null,
+      common_names: {},
+      scientific_names: [],
+      taxonomic_rank: null,
+      notes: null,
+      ...obj,
+      pending: true
+    }
+    if (
+      !Object.keys(values.common_names).length &&
+      !values.scientific_names.length
+    ) {
+      throw Error('At least one common or scientific name is required')
+    }
+    // TODO: Check for existing matching types
+    values = _.deconstruct_type(values)
+    const type = await this.db.one(sql.add, values)
+    return _.format_type(type)
+  }
+
   async show(id) {
     const type = await this.db.one(sql.show, {id: parseInt(id)})
     return _.format_type(type)

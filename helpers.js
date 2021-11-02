@@ -184,6 +184,23 @@ _.format_type = function(type) {
   return type
 }
 
+_.deconstruct_type = function(type) {
+  // TODO: Handle additional locales
+  if (type.common_names) {
+    if ('en' in type.common_names) {
+      type.en_name = type.common_names.en[0]
+      type.en_synonyms = type.common_names.en.slice(1).join(', ')
+    }
+    delete type.common_names
+  }
+  if (type.scientific_names) {
+    type.scientific_name = type.scientific_names[0]
+    type.scientific_synonyms = type.scientific_names.slice(1).join(', ')
+    delete type.scientific_names
+  }
+  return type
+}
+
 _.format_location = function(location) {
   // TEMP: Replace no_season=true with season=[0, 11]
   if (location.no_season) {

@@ -198,28 +198,25 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Type"
-    # post:
-    #   tags:
-    #     - Types
-    #   summary: Create Type (admin only).
-    #   security:
-    #     - key: []
-    #       token: []
-    #   requestBody:
-    #     required: true
-    #     content:
-    #       application/json:
-    #         schema:
-    #           $ref: '#/components/schemas/EditType'
-    #   responses:
-    #     '200':
-    #       description: Success
-    #       content:
-    #         application/json:
-    #           schema:
-    #             type: array
-    #             items:
-    #               $ref: "#/components/schemas/Type"
+    post:
+      tags:
+        - Types
+      summary: Submit new Type.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitType'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Type"
   /types/{id}:
     get:
       tags:
@@ -893,9 +890,9 @@ components:
           description: Number of Locations with that Type ID.
           minimum: 1
           example: 12
-    EditType:
-      title: Type (edit)
-      description: Type properties that can be edited. Properties `scientific_names` and `common_names['en']` cannot both be empty.
+    BaseType:
+      title: Type (base)
+      description: Type properties that can be edited.
       type: object
       properties:
         parent_id:
@@ -905,10 +902,10 @@ components:
           minimum: 0
           example: 114
         pending:
-          description: Whether pending admin review.
+          description: Whether pending admin review. This is always true unless set to false by an admin (not implemented).
           type: boolean
-          example: false
-          default: false
+          example: true
+          default: true
         scientific_names:
           description: |
             Scientific names, starting with the preferred synonym.
@@ -941,7 +938,7 @@ components:
           nullable: true
           example: 8
         common_names:
-          description: Common names, starting with the preferred synonym, by language code (e.g. `en`) and optional region code (e.g. `en_us`).
+          description: Common names, starting with the preferred synonym, by language code (e.g. `en`) and optional region code (e.g. `en_us`). Currently, only `en` can be set.
           type: object
           additionalProperties:
             type: array
@@ -963,28 +960,25 @@ components:
             sv: ['Jabolko']
             tr: ['Elma']
             zh_tw: ['蘋果']
-        urls:
-          description: |
-            Links to more information, by resource code.
-            - wikipedia: English Wikipedia (https://en.wikipedia.org)
-            - eat_the_weeds: Eat the Weeds (https://www.eattheweeds.com)
-            - foraging_texas: Foraging Texas (https://www.foragingtexas.com)
-            - urban_mushrooms: Urban Mushrooms (http://urbanmushrooms.com)
-            - fruitipedia: Fruitipedia (http://www.fruitipedia.com)
-            - usda: USDA Plants Database (https://plants.usda.gov)
-          type: object
-          additionalProperties:
-            type: string
-          example:
-            wikipedia: https://en.wikipedia.org/wiki/Malus_domestica
-            eat_the_weeds: https://www.eattheweeds.com/apples-wild-crabapples
+    SubmitType:
+      title: Type (submit)
+      description: Type properties that can be submitted. At least one name (in `common_names` or `scientific_names`) is required.
+      allOf:
+        - $ref: "#/components/schemas/BaseType"
+        - type: object
+          properties:
+            notes:
+              description: Submission notes.
+              type: string
+              nullable: true
+              example: The fruit are edible once cooked.
     Type:
       title: Type
       description: All Type properties.
       allOf:
         - $ref: "#/components/schemas/IdField"
         - $ref: "#/components/schemas/DateFields"
-        - $ref: "#/components/schemas/EditType"
+        - $ref: "#/components/schemas/BaseType"
         - type: object
           required:
             - parent_id
@@ -993,6 +987,22 @@ components:
             - taxonomic_rank
             - common_names
             - urls
+          properties:
+            urls:
+              description: |
+                Links to more information, by resource code.
+                - wikipedia: English Wikipedia (https://en.wikipedia.org)
+                - eat_the_weeds: Eat the Weeds (https://www.eattheweeds.com)
+                - foraging_texas: Foraging Texas (https://www.foragingtexas.com)
+                - urban_mushrooms: Urban Mushrooms (http://urbanmushrooms.com)
+                - fruitipedia: Fruitipedia (http://www.fruitipedia.com)
+                - usda: USDA Plants Database (https://plants.usda.gov)
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                wikipedia: https://en.wikipedia.org/wiki/Malus_domestica
+                eat_the_weeds: https://www.eattheweeds.com/apples-wild-crabapples
     ListLocation:
       title: Location (list)
       allOf:

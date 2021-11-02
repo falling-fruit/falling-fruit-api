@@ -24,6 +24,7 @@ get(`${BASE}/clusters`, req => db.clusters.list(req.query))
 
 // Routes: Types
 get(`${BASE}/types`, () => db.types.list())
+post(`${BASE}/types`, req => db.types.add(req.body))
 get(`${BASE}/types/counts`, req => db.types.count(req.query))
 get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
 
