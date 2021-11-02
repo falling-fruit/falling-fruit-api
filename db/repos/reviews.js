@@ -1,5 +1,4 @@
 const sql = require('../sql').reviews
-const _ = require('../../helpers')
 
 class Reviews {
   constructor(db, pgp) {
@@ -7,7 +6,7 @@ class Reviews {
     this.pgp = pgp
   }
 
-  async add(id, obj) {
+  add(id, obj) {
     const values = {
       observed_on: null,
       comment: null,
@@ -19,24 +18,20 @@ class Reviews {
       ...obj,
       location_id: parseInt(id)
     }
-    const review = await this.db.one(sql.add, values)
-    return _.format_review(review)
+    return this.db.one(sql.add, values)
   }
 
-  async show(id) {
-    const review = await this.db.one(sql.show, {id: parseInt(id)})
-    return _.format_review(review)
+  show(id) {
+    return this.db.one(sql.show, {id: parseInt(id)})
   }
 
-  async edit(id, obj) {
+  edit(id, obj) {
     const values = {...obj, id: parseInt(id)}
-    const review = await this.db.one(sql.edit, values)
-    return _.format_review(review)
+    return this.db.one(sql.edit, values)
   }
 
-  async list(id) {
-    const reviews = await this.db.any(sql.list, {id: parseInt(id)})
-    return reviews.map(_.format_review)
+  list(id) {
+    return this.db.any(sql.list, {id: parseInt(id)})
   }
 }
 

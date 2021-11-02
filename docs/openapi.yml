@@ -361,9 +361,21 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AddLocation'
+              type: object
+              required:
+                - json
+              properties:
+                json:
+                  $ref: "#/components/schemas/AddLocation"
+                photos:
+                  type: array
+                  description: Photos to upload.
+                  items:
+                    type: string
+                    format: binary
+                  nullable: true
       responses:
         '200':
           description: Success
@@ -460,7 +472,6 @@ paths:
         - key: []
           token: []
       summary: Review a Location.
-      description: Uploaded photos are currently ignored.
       parameters:
         - $ref: '#/components/parameters/location_id'
       requestBody:
@@ -506,7 +517,6 @@ paths:
       tags:
         - Reviews
       summary: Edit a Review (author only).
-      description: Uploaded photos are currently ignored.
       security:
         - key: []
           token: []
@@ -1234,17 +1244,17 @@ components:
         #   minimum: 0
         #   example: 2745
         thumb:
-          description: Path to thumbnail.
+          description: Path to thumbnail (longest dimension <= 100 px).
           type: string
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/thumb/open-uri20131213-3992-1szjh9k.jpg'
         medium:
-          description: Path to medium size file.
+          description: Path to medium size file (longest dimension <= 300 px).
           type: string
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
         original:
-          description: Path to original file.
+          description: Path to original size file.
           type: string
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'

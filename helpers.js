@@ -1,3 +1,15 @@
+require('dotenv').config()
+const fs = require('fs')
+const path = require('path')
+const aws = require('aws-sdk')
+const s3 = new aws.S3({
+  region: process.env.S3_REGION,
+  accessKeyId: process.env.S3_ACCESS_KEY_ID,
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  apiVersion: '2006-03-01'
+})
+const sharp = require('sharp')
+
 var _ = {}
 
 const EARTH_RADIUS = 6378137  // m
@@ -172,32 +184,6 @@ _.format_type = function(type) {
   return type
 }
 
-// rails paperclip paths are :bucket/observations/photos/:a/:b/:c/medium|thumb|original/whatever.jpg
-// :a/:b/:c is from this function and is based on the observation.id
-const partition_id = function(id) {
-  const s = String(id).padStart(9, '0')
-  return [s.substr(0, 3), s.substr(3, 3), s.substr(6, 3)].join('/')
-}
-
-_.build_photo_urls = function(id, filename) {
-  const base = `https://${process.env.S3_HOST}/${process.env.S3_BUCKET}/observations/photos/${partition_id(id)}`
-  return {
-    thumb: `${base}/thumb/${filename}`,
-    medium: `${base}/medium/${filename}`,
-    original: `${base}/original/${filename}`
-  }
-}
-
-_.format_review = function(review) {
-  // TEMP: Move old-style photo to photos array
-  review.photos = []
-  if (review.photo_file_name) {
-    review.photos.push(_.build_photo_urls(review.id, review.photo_file_name))
-  }
-  delete review.photo_file_name
-  return review
-}
-
 _.format_location = function(location) {
   // TEMP: Replace no_season=true with season=[0, 11]
   if (location.no_season) {
@@ -206,6 +192,58 @@ _.format_location = function(location) {
   }
   delete location.no_season
   return location
+}
+
+const resize_photo = function(input, output, size = null) {
+  return sharp(input)
+    // https://sharp.pixelplumbing.com/api-resize#resize
+    .resize({width: size, height: size, fit: 'inside', withoutEnlargement: true})
+    .rotate()
+    .withMetadata()
+    // Convert to JPEG
+    .jpeg()
+    .toFile(output)
+}
+
+const upload_photo = function(input, output) {
+  return s3.upload({
+    ACL: 'public-read',
+    Bucket: process.env.S3_BUCKET,
+    Body: fs.createReadStream(input),
+    Key: output,
+    ContentType: 'image/jpeg'
+  }).promise()
+}
+
+const resize_and_upload_photo = async function(input) {
+  sizes = {
+    thumb: 100,
+    medium: 300,
+    original: null
+  }
+  const promises = []
+  for (const style in sizes) {
+    const job = async function() {
+      const resized = `${input}-${style}.jpg`
+      await resize_photo(input, resized, sizes[style])
+      const output = path.join('photos', path.basename(input), `${style}.jpg`)
+      const upload = await upload_photo(resized, output, 'image/jpeg')
+      await fs.promises.unlink(resized)
+      return upload.Location
+    }
+    promises.push(job())
+  }
+  const urls = await Promise.all(promises)
+  await fs.promises.unlink(input)
+  return Object.fromEntries(Object.keys(sizes).map((k, i) => [k, urls[i]]))
+}
+
+_.resize_and_upload_photos = function(inputs) {
+  const promises = []
+  for (const input of inputs) {
+    promises.push(resize_and_upload_photo(input))
+  }
+  return Promise.all(promises)
 }
 
 module.exports = _

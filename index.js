@@ -1,6 +1,6 @@
 require('dotenv').config()
 const db = require('./db')
-const helpers = require('./helpers').default
+const _ = require('./helpers')
 const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
@@ -30,24 +30,32 @@ get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
 // Routes: Locations
 get(`${BASE}/locations`, req => db.locations.list(req.query))
 post(`${BASE}/locations`, async req => {
-  req.body.user_id = null
+  const obj = JSON.parse(req.body.json)
+  obj.user_id = null
   if (req.query.token) {
     const user = await db.users.find_user_by_token(req.query.token)
     if (!user.add_anonymously) {
       // Link location to logged-in user
-      req.body.user_id = user.id
-      if (req.body.review) {
-        req.body.review.user_id = user.id
+      obj.user_id = user.id
+      if (obj.review) {
+        obj.review.user_id = user.id
       }
     }
   }
-  const location = await db.locations.add(req.body)
-  if (req.body.review) {
-    const review = await db.reviews.add(location.id, req.body.review)
+  const location = await db.locations.add(obj)
+  if (obj.review) {
+    let urls
+    if (req.files) {
+      urls = await _.resize_and_upload_photos(req.files.map(f => f.path))
+    }
+    const review = await db.reviews.add(location.id, obj.review)
+    if (urls) {
+      review.photos = await db.photos.insert(review.id, urls)
+    }
     location.reviews = [review]
   }
   return location
-})
+}, uploads.array('photos'))
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, async req => {
   const location = await db.locations.show(req.params.id)
@@ -70,8 +78,16 @@ post(`${BASE}/locations/:id/reviews`, async req => {
       obj.user_id = user.id
     }
   }
-  return db.reviews.add(req.params.id, obj)
-}, uploads.array('photo'))
+  let urls
+  if (req.files) {
+    urls = await _.resize_and_upload_photos(req.files.map(f => f.path))
+  }
+  const review = await db.reviews.add(req.params.id, obj)
+  if (urls) {
+    review.photos = await db.photos.insert(review.id, urls)
+  }
+  return review
+}, uploads.array('photos'))
 get(`${BASE}/reviews/:id`, req => db.reviews.show(req.params.id))
 put(`${BASE}/reviews/:id`, async req => {
   // Restrict to linked user
@@ -81,7 +97,7 @@ put(`${BASE}/reviews/:id`, async req => {
     throw Error('Not authorized')
   }
   return db.reviews.edit(req.params.id, JSON.parse(req.body.json))
-}, uploads.array('photo'))
+}, uploads.array('photos'))
 
 // Routes: Users
 post(`${BASE}/users`, req => db.users.add(req))

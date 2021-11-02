@@ -62,18 +62,10 @@ class Locations {
       // Ensure even spatial spread
       values.distance.order = 'ORDER BY RANDOM()'
     }
-    if (photo !== 'true') {
-      return this.db.any(sql.list, values)
+    if (photo === 'true') {
+      return this.db.any(sql.listphoto, values)
     }
-    const locations = await this.db.any(sql.listphoto, values)
-    return locations.map(l => {
-      if (l.photo_file_name) {
-        l.photo = _.build_photo_urls(l.review_id, l.photo_file_name).thumb
-      }
-      delete l.review_id
-      delete l.photo_file_name
-      return l
-    })
+    return this.db.any(sql.list, values)
   }
 
   count({bounds, muni = 'true', types = ''}) {

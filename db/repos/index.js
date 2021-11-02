@@ -5,5 +5,6 @@ module.exports = {
   Reviews: require('./reviews'),
   Users: require('./users'),
   Reports: require('./reports'),
-  Imports: require('./imports')
+  Imports: require('./imports'),
+  Photos: require('./photos')
 }

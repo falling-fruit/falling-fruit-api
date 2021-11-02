@@ -12,7 +12,8 @@ const options = {
     obj.reviews = new repos.Reviews(obj, pgp)
     obj.users = new repos.Users(obj, pgp),
     obj.reports = new repos.Reports(obj, pgp),
-    obj.imports = new repos.Imports(obj, pgp)
+    obj.imports = new repos.Imports(obj, pgp),
+    obj.photos = new repos.Photos(obj, pgp)
   }
 }
 const pgp = require('pg-promise')(options)

@@ -30,6 +30,7 @@
     "express": "^4.17.1",
     "multer": "^1.4.2",
     "pg-monitor": "^1.4.1",
-    "pg-promise": "^10.10.2"
+    "pg-promise": "^10.10.2",
+    "sharp": "^0.29.2"
   }
 }
