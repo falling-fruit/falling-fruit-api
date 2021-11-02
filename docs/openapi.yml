@@ -646,13 +646,6 @@ components:
       schema:
         type: boolean
         default: true
-    pending:
-      name: pending
-      description: Whether to include pending Types.
-      in: query
-      schema:
-        type: boolean
-        default: false
     types:
       name: types
       description: IDs of Types to include (all by default).
@@ -688,115 +681,6 @@ components:
       schema:
         type: integer
         minimum: 0
-    lng:
-      name: lng
-      description: Longitude in WGS84 decimal degrees.
-      in: query
-      required: true
-      schema:
-        type: number
-        minimum: -180
-        maximum: 180
-    lat:
-      name: lat
-      description: Latitude in WGS84 decimal degrees.
-      in: query
-      required: true
-      schema:
-        type: number
-        minimum: -85.0511
-        maximum: 85.0511
-    author:
-      name: author
-      in: query
-      description: Author name.
-      schema:
-        type: string
-    description:
-      name: description
-      in: query
-      description: Description.
-      schema:
-        type: string
-    season_start:
-      name: season_start
-      in: query
-      description: First month in season.
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 12
-    season_stop:
-      name: season_stop
-      in: query
-      description: Last month in season.
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 12
-    unverified:
-      name: unverified
-      in: query
-      description: Whether needs verification.
-      schema:
-        type: boolean
-        default: false
-    access:
-      name: access
-      in: query
-      description: |
-        Access level.
-        - 0: Location is on my property.
-        - 1: I have permission from the owner to add this Location.
-        - 2: Location is on public land.
-        - 3: Location is on private property but overhangs public property.
-        - 4: Location is on private property.
-      schema:
-        type: integer
-        enum: [0, 1, 2, 3, 4]
-    comment:
-      name: comment
-      in: query
-      description: Review comment.
-      schema:
-        type: string
-    fruiting:
-      name: fruiting
-      in: query
-      description: |
-        Fruiting status.
-        - 0: Flowers.
-        - 1: Unripe fruit.
-        - 2: Ripe fruit.
-      schema:
-        type: integer
-        enum: [0, 1, 2]
-    quality_rating:
-      name: quality_rating
-      in: query
-      description: |
-        Quality rating.
-        - 0: Poor.
-        - 1: Fair.
-        - 2: Good.
-        - 3: Very good.
-        - 4: Excellent.
-      schema:
-        type: integer
-        enum: [0, 1, 2, 3, 4]
-    yield_rating:
-      name: yield_rating
-      in: query
-      description: |
-        Yield rating.
-        - 0: Poor.
-        - 1: Fair.
-        - 2: Good.
-        - 3: Very good.
-        - 4: Excellent.
-      schema:
-        type: integer
-        enum: [0, 1, 2, 3, 4]
     user_id:
       name: id
       in: path
@@ -805,13 +689,6 @@ components:
       schema:
         type: integer
         minimum: 0
-    observed_on:
-      name: observed_on
-      in: query
-      description: Date visited in format YYYY-MM-DD.
-      schema:
-        type: string
-        format: date
     import_id:
       name: id
       in: path
@@ -820,6 +697,129 @@ components:
       schema:
         type: integer
         minimum: 0
+    # pending:
+    #   name: pending
+    #   description: Whether to include pending Types.
+    #   in: query
+    #   schema:
+    #     type: boolean
+    #     default: false
+    # lng:
+    #   name: lng
+    #   description: Longitude in WGS84 decimal degrees.
+    #   in: query
+    #   required: true
+    #   schema:
+    #     type: number
+    #     minimum: -180
+    #     maximum: 180
+    # lat:
+    #   name: lat
+    #   description: Latitude in WGS84 decimal degrees.
+    #   in: query
+    #   required: true
+    #   schema:
+    #     type: number
+    #     minimum: -85.0511
+    #     maximum: 85.0511
+    # author:
+    #   name: author
+    #   in: query
+    #   description: Author name.
+    #   schema:
+    #     type: string
+    # description:
+    #   name: description
+    #   in: query
+    #   description: Description.
+    #   schema:
+    #     type: string
+    # season_start:
+    #   name: season_start
+    #   in: query
+    #   description: First month in season.
+    #   schema:
+    #     type: integer
+    #     minimum: 1
+    #     maximum: 12
+    # season_stop:
+    #   name: season_stop
+    #   in: query
+    #   description: Last month in season.
+    #   schema:
+    #     type: integer
+    #     minimum: 1
+    #     maximum: 12
+    # unverified:
+    #   name: unverified
+    #   in: query
+    #   description: Whether needs verification.
+    #   schema:
+    #     type: boolean
+    #     default: false
+    # access:
+    #   name: access
+    #   in: query
+    #   description: |
+    #     Access level.
+    #     - 0: Location is on my property.
+    #     - 1: I have permission from the owner to add this Location.
+    #     - 2: Location is on public land.
+    #     - 3: Location is on private property but overhangs public property.
+    #     - 4: Location is on private property.
+    #   schema:
+    #     type: integer
+    #     enum: [0, 1, 2, 3, 4]
+    # comment:
+    #   name: comment
+    #   in: query
+    #   description: Review comment.
+    #   schema:
+    #     type: string
+    # fruiting:
+    #   name: fruiting
+    #   in: query
+    #   description: |
+    #     Fruiting status.
+    #     - 0: Flowers.
+    #     - 1: Unripe fruit.
+    #     - 2: Ripe fruit.
+    #   schema:
+    #     type: integer
+    #     enum: [0, 1, 2]
+    # quality_rating:
+    #   name: quality_rating
+    #   in: query
+    #   description: |
+    #     Quality rating.
+    #     - 0: Poor.
+    #     - 1: Fair.
+    #     - 2: Good.
+    #     - 3: Very good.
+    #     - 4: Excellent.
+    #   schema:
+    #     type: integer
+    #     enum: [0, 1, 2, 3, 4]
+    # yield_rating:
+    #   name: yield_rating
+    #   in: query
+    #   description: |
+    #     Yield rating.
+    #     - 0: Poor.
+    #     - 1: Fair.
+    #     - 2: Good.
+    #     - 3: Very good.
+    #     - 4: Excellent.
+    #   schema:
+    #     type: integer
+    #     enum: [0, 1, 2, 3, 4]
+    # observed_on:
+    #   name: observed_on
+    #   in: query
+    #   description: Date visited in format YYYY-MM-DD.
+    #   schema:
+    #     type: string
+    #     format: date
   schemas:
     IdField:
       required:
