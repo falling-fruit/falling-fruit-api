@@ -600,8 +600,8 @@ components:
   securitySchemes:
     key:
       type: apiKey
-      name: key
-      in: query
+      name: x-api-key
+      in: header
     token:
       type: apiKey
       name: token

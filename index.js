@@ -142,9 +142,13 @@ function put(url, handler, uploader) {
 }
 
 async function check_key(req) {
-  const keys = await db.any("SELECT id FROM api_keys WHERE api_key=${key}", req.query)
+  const key = req.header('x-api-key')
+  if (!key) {
+    throw Error('API key is missing')
+  }
+  const keys = await db.any("SELECT id FROM api_keys WHERE api_key=${key}", {key: key})
   if (keys.length == 0) {
-    throw Error('key is invalid')
+    throw Error('API key is invalid')
   }
 }
 
