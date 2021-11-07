@@ -10,7 +10,7 @@ const s3 = new aws.S3({
 })
 const sharp = require('sharp')
 
-var _ = {}
+let _ = {}
 
 const EARTH_RADIUS = 6378137  // m
 const EARTH_CIRCUMFERENCE = 2 * Math.PI * EARTH_RADIUS  // m

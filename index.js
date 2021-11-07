@@ -1,6 +1,7 @@
 require('dotenv').config()
 const db = require('./db')
 const _ = require('./helpers')
+const middleware = require('./middleware')
 const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
@@ -17,6 +18,11 @@ app.use(compression())
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+// Pre-route middleware
+app.use(middleware.check_api_key)
+
+// Routes: Index
 app.use(BASE, express.static('docs'))
 
 // Routes: Clusters
@@ -100,7 +106,6 @@ get(`${BASE}/imports/:id`, req => db.imports.show(req.params.id))
 function get(url, handler) {
   app.get(url, async (req, res) => {
     try {
-      await check_key(req)
       const data = await handler(req)
       res.status(200).json(data)
     } catch (error) {
@@ -115,7 +120,6 @@ function post(url, handler, uploader) {
   uploader = uploader || uploads.none()
   app.post(url, uploader, async (req, res) => {
     try {
-      await check_key(req)
       const data = await handler(req)
       res.status(200).json(data)
     } catch (error) {
@@ -130,7 +134,6 @@ function put(url, handler, uploader) {
   uploader = uploader || uploads.none()
   app.put(url, uploader, async (req, res) => {
     try {
-      await check_key(req)
       const data = await handler(req)
       res.status(200).json(data)
     } catch (error) {
@@ -139,17 +142,6 @@ function put(url, handler, uploader) {
       })
     }
   })
-}
-
-async function check_key(req) {
-  const key = req.header('x-api-key')
-  if (!key) {
-    throw Error('API key is missing')
-  }
-  const keys = await db.any("SELECT id FROM api_keys WHERE api_key=${key}", {key: key})
-  if (keys.length == 0) {
-    throw Error('API key is invalid')
-  }
 }
 
 // Start server
