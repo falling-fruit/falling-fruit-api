@@ -10,29 +10,49 @@ info:
     - POST and PUT requests rely on path parameters and body content. If the request includes file(s), a `multipart/form-data` body is used with a `json` key whose value is a JSON-formatted string; otherwise, raw JSON is used.
     - The values of array query parameters are comma-delimited, e.g. `types=1,2,3`, and arrays of arrays are pipe-delimited, e.g. `bounds=-85,-180|85,180`.
     - All endpoints return JSON responses.
-    - Success and error responses use conventional HTTP status codes: `2xx` for success (implemented: `200`), `4xx` for incorrect requests (implemented: `400`), and `5xx` for server errors (not implemented). `4xx` errors will typically include an error message.
+    - Success and error responses use conventional HTTP status codes: `2xx` for success (implemented: `200`), `4xx` for incorrect requests (implemented: `400`, `401`, `403`), and `5xx` for server errors (not implemented). `4xx` errors will typically include an error message.
 
-    ### Authentication
+    ### Security
 
-    - All requests require authentication via an API key (`key`).
-    - POST and PUT requests may accept (or require) an additional authentication token (`token`), in which case the action is associated with the logged in user.
-    - Authentication tokens are acquired by submitting registered user credentials (`email` and `password`).
+    - All endpoints (other than `GET` endpoints intended for email links) require authentication via an API key (header `x-api-key`).
+    - `POST` and `PUT` requests may accept (or require) an access token (header `Authorization: Bearer {token}`), in which case the action is associated with that user.
+    - Access tokens are acquired by submitting registered user credentials (`email` and `password`).
 
-    ### TODO: Security
+    ### TODO
 
-    - Pass `user` and `password` as a base-64 encoded string in the HTTP header (https://swagger.io/docs/specification/authentication/basic-authentication).
-    - Require a reCAPTCHA for POST and PUT requests without a `token`.
-    - Pass `token` in the HTTP header (https://swagger.io/docs/specification/authentication/bearer-authentication).
-    - Get help from someone who understands web security.
-
-    ### TODO: Endpoints
-
-    - Add, view and resolve problems (https://fallingfruit.org/problems).
-    - Merge types (https://fallingfruit.org/types).
-    - Add, view, and edit imports (https://fallingfruit.org/datasets, https://fallingfruit.org/imports/436).
-    - View recent changes (https://fallingfruit.org/changes).
-    - View user activity (https://fallingfruit.org/home).
-    - View and edit users (https://fallingfruit.org/users/edit).
+    - Security
+      - Consider passing `user:password` as base-64 encoded string in `Authorization: Basic` header (https://swagger.io/docs/specification/authentication/basic-authentication) for wider compatibility.
+      - Consider adding `POST /user/confirmation` for use by client on redirect from email confirmation link.
+      - Require a reCAPTCHA for `POST` and `PUT` requests without a token (https://developers.google.com/recaptcha/docs/verify, https://www.twilio.com/blog/2017/08/http-requests-in-node-js.html, https://www.npmjs.com/package/express-recaptcha).
+      - Resolve flow between server and client for email confirmation and password reset.
+      - Consider adding session support endpoints `POST /user/session`, `DELETE /user/session`.
+    - Photos
+      - Add `POST /photos` one-or-more upload endpoint which returns expiring tokens on success
+      - Refactor `POST|PUT /locations|reviews` to accept array of photo tokens, expiring tokens on success
+      - Run background job to delete expired photos from database and AWS S3 bucket.
+    - Public endpoints
+      - View recent changes (https://fallingfruit.org/changes).
+    - User endpoints
+      - View user activity (https://fallingfruit.org/home).
+      - Change and confirm email.
+      - Delete account with `DELETE /user`.
+      - Change password while logged in (?).
+    - I/O:
+      - Translate emails, errors, and messages (https://github.com/lingui/js-lingui, https://github.com/phrase/phrase-cli).
+      - Return `5xx` for server errors, currently included in `400`.
+      - Validate requests, and responses in development (https://github.com/cdimascio/express-openapi-validator).
+      - Return coded error objects for client-side translation to the user.
+    - Existing and new features
+      - Invasive species filter
+      - User foraging range and weekly digests
+      - Type filters
+      - Preferred user locale
+      - ...
+    - Admin endpoints
+      - View and resolve problem reports (https://fallingfruit.org/problems).
+      - Merge types (https://fallingfruit.org/types).
+      - Add and edit imports (https://fallingfruit.org/datasets, https://fallingfruit.org/imports/436).
+      - View and edit users (https://fallingfruit.org/users/edit).
   version: '0.3'
   contact:
     email: info@fallingfruit.org
