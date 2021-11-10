@@ -1,0 +1,94 @@
+get:
+  summary: Fetch Location summaries.
+  tags:
+    - Locations
+  security:
+    - key: []
+  parameters:
+    - $ref: ../components/parameters.yml#/bounds
+    - $ref: ../components/parameters.yml#/muni
+    - $ref: ../components/parameters.yml#/types
+    # - name: invasive
+    #   in: query
+    #   description: Whether to only return Locations with Types locally flagged as invasive species.
+    #   schema:
+    #     type: boolean
+    #     default: false
+    - name: limit
+      in: query
+      description: Maximum number of Locations to return.
+      schema:
+        type: integer
+        minimum: 0
+        default: 1000
+    - name: offset
+      in: query
+      description: Offset from which to apply `limit`.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    - name: center
+      in: query
+      description: Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].
+      explode: false
+      schema:
+        type: array
+        minItems: 2
+        maxItems: 2
+        items:
+          type: number
+          minimum: -180
+          maximum: 180
+        example: [1.359, 103.807]
+    - name: photo
+      in: query
+      description: Whether to include the path to a review photo thumbnail, if available.
+      schema:
+        type: boolean
+        default: false
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas.yml#/ListLocation
+post:
+  tags:
+    - Locations
+  summary: Create a Location.
+  description: A `review` can be included, in which case the result includes the `reviews` property.
+  security:
+    - key: []
+    - key: []
+      token: []
+    - key: []
+      oauth2token: []
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          required:
+            - json
+          properties:
+            json:
+              $ref: ../components/schemas.yml#/AddLocation
+            photos:
+              type: array
+              description: Photos to upload.
+              items:
+                type: string
+                format: binary
+              nullable: true
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Location

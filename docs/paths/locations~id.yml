@@ -1,0 +1,51 @@
+get:
+  summary: Fetch a Location.
+  tags:
+    - Locations
+  security:
+    - key: []
+  parameters:
+    - $ref: ../components/parameters.yml#/location_id
+    - name: embed
+      description: |
+        Additional information to include.
+        - reviews: Location reviews.
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [reviews]
+        default: null
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Location
+put:
+  tags:
+    - Locations
+  summary: Edit a Location.
+  security:
+    - key: []
+    - key: []
+      token: []
+    - key: []
+      oauth2token: []
+  parameters:
+    - $ref: ../components/parameters.yml#/location_id
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas.yml#/EditLocation
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Location

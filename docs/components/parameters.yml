@@ -1,0 +1,87 @@
+bounds:
+  name: bounds
+  description: The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180].
+  in: query
+  explode: false
+  style: pipeDelimited
+  required: true
+  schema:
+    type: array
+    minItems: 2
+    maxItems: 2
+    items:
+      type: array
+      minItems: 2
+      maxItems: 2
+      items:
+        type: number
+        minimum: -180
+        maximum: 180
+    example: [[-5, -180], [5, 180]]
+zoom:
+  name: zoom
+  description: Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid.
+  in: query
+  schema:
+    type: integer
+    minimum: 0
+    maximum: 13
+    default: 0
+muni:
+  name: muni
+  description: Whether to include Locations imported from municipal tree inventories.
+  in: query
+  schema:
+    type: boolean
+    default: true
+types:
+  name: types
+  description: IDs of Types to include (all by default).
+  in: query
+  explode: false
+  schema:
+    type: array
+    items:
+      type: integer
+      minimum: 0
+    default: null
+location_id:
+  name: id
+  in: path
+  description: Location ID.
+  required: true
+  schema:
+    type: integer
+    minimum: 0
+type_id:
+  name: id
+  in: path
+  description: Type ID.
+  required: true
+  schema:
+    type: integer
+    minimum: 0
+review_id:
+  name: id
+  in: path
+  description: Review ID.
+  required: true
+  schema:
+    type: integer
+    minimum: 0
+user_id:
+  name: id
+  in: path
+  description: User ID.
+  required: true
+  schema:
+    type: integer
+    minimum: 0
+import_id:
+  name: id
+  in: path
+  description: Import ID.
+  required: true
+  schema:
+    type: integer
+    minimum: 0

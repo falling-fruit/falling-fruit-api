@@ -1,0 +1,20 @@
+get:
+  summary: Fetch Clusters.
+  tags:
+    - Clusters
+  security:
+    - key: []
+  parameters:
+    - $ref: ../components/parameters.yml#/bounds
+    - $ref: ../components/parameters.yml#/zoom
+    - $ref: ../components/parameters.yml#/muni
+    - $ref: ../components/parameters.yml#/types
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas.yml#/Cluster

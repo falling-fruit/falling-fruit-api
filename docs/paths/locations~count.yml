@@ -1,0 +1,18 @@
+get:
+  summary: Count Locations.
+  tags:
+    - Locations
+  security:
+    - key: []
+  parameters:
+    - $ref: ../components/parameters.yml#/bounds
+    - $ref: ../components/parameters.yml#/muni
+    - $ref: ../components/parameters.yml#/types
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: number
+            example: 25

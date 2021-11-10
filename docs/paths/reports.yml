@@ -1,0 +1,34 @@
+# get:
+#   tags:
+#     - Reports
+#   summary: Fetch Reports.
+#   responses:
+#     '200':
+#       description: Success
+#       content:
+#         application/json:
+#           schema:
+#             $ref: 'components/schemas.yml#/Report'
+post:
+  tags:
+    - Reports
+  summary: Create a Report.
+  security:
+    - key: []
+    - key: []
+      token: []
+    - key: []
+      oauth2token: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas.yml#/EditReport
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Report

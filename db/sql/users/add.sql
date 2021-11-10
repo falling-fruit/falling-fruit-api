@@ -1,14 +1,11 @@
 INSERT INTO users (
-  email, name, add_anonymously,
-  encrypted_password, authentication_token,
+  email, encrypted_password, name,
   created_at, updated_at
 )
 VALUES (
-  ${email}, ${name}, ${add_anonymously},
-  ${password}, ${token},
+  ${email}, ${password}, ${name},
   NOW(), NOW()
 )
 RETURNING
-  id, email,
-  name, add_anonymously,
-  created_at, updated_at
+  id, email, name, roles,
+  created_at, updated_at, confirmed_at

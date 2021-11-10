@@ -1,0 +1,54 @@
+get:
+  summary: Fetch a Location's Reviews.
+  tags:
+    - Reviews
+  security:
+    - key: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_id'
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../components/schemas.yml#/Review'
+post:
+  summary: Review a Location.
+  tags:
+    - Reviews
+  security:
+    - key: []
+    - key: []
+      token: []
+    - key: []
+      oauth2token: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_id'
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          required:
+            - json
+          properties:
+            json:
+              $ref: ../components/schemas.yml#/EditReview
+            photos:
+              type: array
+              description: Photos to upload.
+              items:
+                type: string
+                format: binary
+              nullable: true
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Review

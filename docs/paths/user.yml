@@ -1,0 +1,79 @@
+post:
+  summary: Register a new user.
+  description: |
+    When first created, the account is not confirmed (`confirmed_at: null`) and cannot be used.
+    An email is sent with a link that must be clicked to confirm the account.
+
+    `email` cannot match (case-insensitive) the email of an existing user.
+  tags:
+    - Authentication
+  security:
+    - key: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              $ref: ../components/properties.yml#/email
+            password:
+              $ref: ../components/properties.yml#/password
+            name:
+              $ref: ../components/properties.yml#/name
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: You will receive an email with instructions for how to confirm your email address in a few minutes
+get:
+  summary: View the user (self).
+  tags:
+    - Authentication
+  security:
+    - key: []
+      token: []
+    - key: []
+      oauth2token: []
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/User
+put:
+  summary: Edit the user (self).
+  tags:
+    - Authentication
+  security:
+    - key: []
+      token: []
+    - key: []
+      oauth2token: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            name:
+              $ref: ../components/properties.yml#/name
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/User

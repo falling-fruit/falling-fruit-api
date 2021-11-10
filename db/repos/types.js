@@ -17,14 +17,18 @@ class Types {
       ...obj,
       pending: true
     }
-    if (
-      !Object.keys(values.common_names).length &&
-      !values.scientific_names.length
-    ) {
-      throw Error('At least one common or scientific name is required')
+    values = {
+      en_name: null,
+      en_synonyms: null,
+      scientific_name: null,
+      scientific_synonymss: null,
+      ..._.deconstruct_type(values)
+    }
+    console.log(values)
+    if (!values.en_name && !values.scientific_name) {
+      throw Error('At least one scientific name or (en) common name is required')
     }
     // TODO: Check for existing matching types
-    values = _.deconstruct_type(values)
     const type = await this.db.one(sql.add, values)
     return _.format_type(type)
   }

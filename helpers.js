@@ -9,8 +9,15 @@ const s3 = new aws.S3({
   apiVersion: '2006-03-01'
 })
 const sharp = require('sharp')
+const {ORIGIN, BASE, JWT_OPTIONS, JWT_EXPIRES_IN} = require('./constants')
+const jwt = require('jsonwebtoken')
+const postmark = require('postmark')
+const { info } = require('console')
+const postmark_client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
+const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 
-let _ = {}
+const _ = {}
 
 const EARTH_RADIUS = 6378137  // m
 const EARTH_CIRCUMFERENCE = 2 * Math.PI * EARTH_RADIUS  // m
@@ -93,7 +100,7 @@ _.bounds_to_sql = function(bounds, mercator = false) {
  * @param {Point} point - Point (WGS84) with latitude in interval [-85.0511, 85.0511].
  * @returns {Point} Point (Web Mercator).
  */
-const wgs84_to_mercator = function(point) {
+function wgs84_to_mercator(point) {
   if (Math.abs(point.y) > MAX_LATITUDE) {
     throw Error(`Latitude not in the interval [-${MAX_LATITUDE}, ${MAX_LATITUDE}]`)
   }
@@ -146,7 +153,7 @@ _.format_type = function(type) {
   type.common_names = {}
   // Format urls: {tag: url, ...}
   type.urls = {}
-  for (let key in type) {
+  for (const key in type) {
     if (key == 'scientific_name') {
       continue
     }
@@ -178,7 +185,7 @@ _.format_type = function(type) {
   }
   replaced.push('usda_symbol')
   // Drop replaced properties
-  for (let key of replaced) {
+  for (const key of replaced) {
     delete type[key]
   }
   return type
@@ -211,7 +218,7 @@ _.format_location = function(location) {
   return location
 }
 
-const resize_photo = function(input, output, size = null) {
+function resize_photo(input, output, size = null) {
   return sharp(input)
     // https://sharp.pixelplumbing.com/api-resize#resize
     .resize({width: size, height: size, fit: 'inside', withoutEnlargement: true})
@@ -222,7 +229,7 @@ const resize_photo = function(input, output, size = null) {
     .toFile(output)
 }
 
-const upload_photo = function(input, output) {
+function upload_photo(input, output) {
   return s3.upload({
     ACL: 'public-read',
     Bucket: process.env.S3_BUCKET,
@@ -232,7 +239,7 @@ const upload_photo = function(input, output) {
   }).promise()
 }
 
-const resize_and_upload_photo = async function(input) {
+async function resize_and_upload_photo(input) {
   sizes = {
     thumb: 100,
     medium: 300,
@@ -261,6 +268,122 @@ _.resize_and_upload_photos = function(inputs) {
     promises.push(resize_and_upload_photo(input))
   }
   return Promise.all(promises)
+}
+
+_.sign_user_token = function(user) {
+  return jwt.sign(
+    {user: {id: user.id, roles: user.roles}},
+    process.env.JWT_SECRET,
+    {...JWT_OPTIONS, expiresIn: JWT_EXPIRES_IN}
+  )
+}
+
+function send_email({to, subject, body, tag = null}) {
+  return postmark_client.sendEmail({
+    From: 'info@fallingfruit.org',
+    To: to,
+    Subject: subject,
+    HtmlBody: body.replace(/\s{2,}/g, ''),
+    MessageStream: 'outbound',
+    Tag: tag
+  })
+}
+
+_.sha256_hmac = function(text) {
+  const key = process.env.APP_SECRET
+  return crypto.createHmac('sha256', key).update(text).digest('hex')
+}
+
+_.reset_password_token = function() {
+  return crypto.randomBytes(32).toString('hex')
+}
+
+/**
+ * Constant-time comparison.
+ *
+ * crypto.timingSafeEqual() requires buffers of the same length.
+ * So it is skipped if they have different lengths.
+ * See https://github.com/nodejs/node/issues/17178#issuecomment-348784606.
+ */
+_.safe_equal = function(x, y) {
+  const xb = Buffer.from(x)
+  const yb = Buffer.from(y)
+  return xb.length === yb.length && crypto.timingSafeEqual(xb, yb)
+}
+
+_.email_confirmation_url = function(id, expires) {
+  const url = `${ORIGIN}${BASE}/user/confirmation?id=${id}&expires=${expires}`
+  const signature = _.sha256_hmac(url) // 256 bits = 32 bytes, 32 * 2 = 64 chars
+  return `${url}&signature=${signature}`
+}
+
+_.send_email_confirmation = function(user) {
+  const expires = Date.now() + 1000 * 86400 // 1 day
+  const url = _.email_confirmation_url(user.id, expires)
+  const email = {
+    to: user.email,
+    // Phrase: devise.mailer.confirmation_instructions.subject
+    subject: 'Confirmation instructions',
+    // Phrase: users.mailer.confirmation_instructions_html
+    body: `
+      <p>Welcome to Falling Fruit,</p>
+      <p>To activate your account, you must confirm your email (${user.email}) by visiting the link below:
+      <br/>${url}</p>
+      <p>Falling Fruit is powered by its users, so if you have the opportunity to add or improve it, please do so. Happy foraging!</p>
+    `,
+    tag: 'email-confirmation'
+  }
+  return send_email(email)
+}
+
+_.send_password_reset = function(user, token) {
+  const url = `${ORIGIN}${BASE}/password?id=${user.id}&token=${token}`
+  const email = {
+    to: user.email,
+    // Phrase: devise.mailer.reset_password_instructions.subject
+    subject: 'Reset password instructions',
+    // Phrase: users.mailer.reset_password_instructions_html
+    body: `
+      <p>Hello ${user.name || user.email},</p>
+      <p>Someone (most likely you) requested a link to change your password:
+      <br/>${url}</p>
+      <p>If you didn't request this, you can ignore this email. Your password won't change unless you visit the link above and create a new one.</p>
+    `,
+    tag: 'password-reset'
+  }
+  return send_email(email)
+}
+
+/**
+ * Hash text using SHA256.
+ *
+ * Always produces a string that is 256 bits (32 bytes) long.
+ * In base64, that is ceil(32/3) * 4 = 44 bytes, under the bcrypt 72 byte limit.
+ *
+ * @param {*} text
+ * @returns
+ */
+function sha256(text) {
+  return crypto.createHash("sha256").update(text).digest("base64")
+}
+
+/**
+ * Compare password to password hash.
+ *
+ * bcrypt truncates the input to 72 bytes, so the first 72 bytes of a password
+ * would pass. To prevent this, we prehash the password.
+ * See https://security.stackexchange.com/q/6623.
+ *
+ * @param {*} password
+ * @param {*} hash
+ * @returns
+ */
+_.compare_password = function(password, hash) {
+  return bcrypt.compare(sha256(password), hash)
+}
+
+_.hash_password = function(password) {
+  return bcrypt.hash(sha256(password), 10)
 }
 
 module.exports = _

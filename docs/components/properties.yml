@@ -1,0 +1,14 @@
+email:
+  description: Email.
+  type: string
+  format: email
+  example: foo@bar.com
+password:
+  description: Password.
+  type: string
+  example: f00!bar
+name:
+  description: Display name.
+  type: string
+  example: Ethan
+  nullable: true

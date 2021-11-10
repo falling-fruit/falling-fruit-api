@@ -1,0 +1,27 @@
+post:
+  summary: Request an access token.
+  tags:
+    - Authentication
+  security:
+    - key: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              $ref: ../components/properties.yml#/email
+            password:
+              $ref: ../components/properties.yml#/password
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Token

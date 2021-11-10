@@ -10,6 +10,7 @@ class Reports {
     const values = {
       comment: null,
       name: null,
+      reporter_id: null,
       ...obj
     }
     return this.db.one(sql.add, values)

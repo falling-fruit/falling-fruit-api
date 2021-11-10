@@ -1,15 +1,12 @@
 UPDATE users
 SET (
-  email, encrypted_password,
-  name, add_anonymously,
+  name,
   updated_at
 ) = (
-  ${email}, ${password},
-  ${name}, ${add_anonymously},
+  ${name},
   NOW()
 )
 WHERE id = ${id}
 RETURNING
-  id, email,
-  name, add_anonymously,
-  created_at, updated_at
+  id, email, name, roles,
+  created_at, updated_at, confirmed_at

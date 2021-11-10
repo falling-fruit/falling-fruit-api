@@ -1,0 +1,109 @@
+openapi: 3.0.0
+info:
+  title: Falling Fruit API
+  description: |
+    Falling Fruit is an open-technology nonprofit mapping the world's edible plants and developing online platforms to promote urban foraging and hyperlocal food. This API provides access to the Falling Fruit database. It is a work in progress and does not provide access to all possible database tables or fields. Many features on the website (https://fallingfruit.org) still rely on the older Rails API.
+
+    ### General usage
+
+    - GET requests rely on path and query parameters.
+    - POST and PUT requests rely on path parameters and body content. If the request includes file(s), a `multipart/form-data` body is used with a `json` key whose value is a JSON-formatted string; otherwise, raw JSON is used.
+    - The values of array query parameters are comma-delimited, e.g. `types=1,2,3`, and arrays of arrays are pipe-delimited, e.g. `bounds=-85,-180|85,180`.
+    - All endpoints return JSON responses.
+    - Success and error responses use conventional HTTP status codes: `2xx` for success (implemented: `200`), `4xx` for incorrect requests (implemented: `400`), and `5xx` for server errors (not implemented). `4xx` errors will typically include an error message.
+
+    ### Authentication
+
+    - All requests require authentication via an API key (`key`).
+    - POST and PUT requests may accept (or require) an additional authentication token (`token`), in which case the action is associated with the logged in user.
+    - Authentication tokens are acquired by submitting registered user credentials (`email` and `password`).
+
+    ### TODO: Security
+
+    - Pass `user` and `password` as a base-64 encoded string in the HTTP header (https://swagger.io/docs/specification/authentication/basic-authentication).
+    - Require a reCAPTCHA for POST and PUT requests without a `token`.
+    - Pass `token` in the HTTP header (https://swagger.io/docs/specification/authentication/bearer-authentication).
+    - Get help from someone who understands web security.
+
+    ### TODO: Endpoints
+
+    - Add, view and resolve problems (https://fallingfruit.org/problems).
+    - Merge types (https://fallingfruit.org/types).
+    - Add, view, and edit imports (https://fallingfruit.org/datasets, https://fallingfruit.org/imports/436).
+    - View recent changes (https://fallingfruit.org/changes).
+    - View user activity (https://fallingfruit.org/home).
+    - View and edit users (https://fallingfruit.org/users/edit).
+  version: '0.3'
+  contact:
+    email: info@fallingfruit.org
+    url: https://fallingfruit.org
+    name: Falling Fruit
+tags:
+  - name: Authentication
+    description: User authentication, credentials, and account management.
+  - name: Types
+    description: Types describe the plants, fungi, or other resources present at a Location.
+  - name: Locations
+    description: Locations describe resources at a particular position in the world.
+  - name: Reviews
+    description: Reviews describe observations of, and opinions about, a Location.
+  - name: Clusters
+    description: |-
+      Clusters reduce the Locations in an area to a count and a center of mass. They are computed on a nested [quadtree](https://en.wikipedia.org/wiki/Quadtree) which, for a given zoom level, divides the Earth into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid of equal-sized squares in the Web Mercator projection (EPSG:3857).
+
+      Note that Clusters count the number of Location Types, not Locations. So, for example, a Location with two Types is counted twice.
+  - name: Reports
+    description: Users can submit problem reports for admin review.
+  - name: Imports
+    description: Import datasets.
+paths:
+  /clusters:
+    $ref: paths/clusters.yml
+  /imports:
+    $ref: paths/imports.yml
+  /imports/{id}:
+    $ref: paths/imports~id.yml
+  /locations:
+    $ref: paths/locations.yml
+  /locations/count:
+    $ref: paths/locations~count.yml
+  /locations/{id}:
+    $ref: paths/locations~id.yml
+  /locations/{id}/reviews:
+    $ref: paths/locations~id~reviews.yml
+  /reviews/{id}:
+    $ref: paths/reviews~id.yml
+  /types:
+    $ref: paths/types.yml
+  /types/{id}:
+    $ref: paths/types~id.yml
+  /types/counts:
+    $ref: paths/types~counts.yml
+  /reports:
+    $ref: paths/reports.yml
+  /user:
+    $ref: paths/user.yml
+  /user/confirmation:
+    $ref: paths/user~confirmation.yml
+  /user/confirmation/retry:
+    $ref: paths/user~confirmation~retry.yml
+  /user/token:
+    $ref: paths/user~token.yml
+  /user/password:
+    $ref: paths/user~password.yml
+  /user/password/reset:
+    $ref: paths/user~password~reset.yml
+components:
+  securitySchemes:
+    $ref: components/securitySchemes.yml
+  parameters:
+    $ref: components/parameters.yml
+  schemas:
+    $ref: components/schemas.yml
+servers:
+  - description: Falling Fruit test server.
+    url: https://fallingfruit.org/test-api/0.3/
+  - description: SwaggerHub mock server.
+    url: https://virtserver.swaggerhub.com/ezwelty/falling-fruit-api/0.3/
+  - description: Localhost.
+    url: http://localhost:3300/test-api/0.3/

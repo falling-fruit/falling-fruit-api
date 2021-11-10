@@ -1,0 +1,39 @@
+get:
+  summary: Fetch Type.
+  tags:
+    - Types
+  security:
+    - key: []
+  parameters:
+    - $ref: ../components/parameters.yml#/type_id
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Type
+# put:
+#   tags:
+#     - Types
+#   summary: Edit Type (admin only).
+#   security:
+#     - key: []
+#       token: []
+#   parameters:
+#     - $ref: ../components/parameters.yml/type_id
+#   requestBody:
+#     required: true
+#     content:
+#       application/json:
+#         schema:
+#           $ref: ../components/schemas.yml#/EditType
+#   responses:
+#     '200':
+#       description: Success
+#       content:
+#         application/json:
+#           schema:
+#             type: array
+#             items:
+#               $ref: ../components/schemas.yml#/Type

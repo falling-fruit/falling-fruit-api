@@ -1,0 +1,36 @@
+get:
+  summary: Fetch Types.
+  tags:
+    - Types
+  security:
+    - key: []
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas.yml#/Type
+post:
+  summary: Submit new Type.
+  tags:
+    - Types
+  security:
+    - key: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas.yml#/SubmitType
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas.yml#/Type
