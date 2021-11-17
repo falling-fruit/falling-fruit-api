@@ -75,7 +75,7 @@ tags:
   - name: Reports
     description: Users can submit problem reports for admin review.
   - name: Imports
-    description: Import datasets.
+    description: Imported datasets.
 paths:
   /clusters:
     $ref: paths/clusters.yml

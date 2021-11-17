@@ -75,7 +75,7 @@ tags:
   - name: Reports
     description: Users can submit problem reports for admin review.
   - name: Imports
-    description: Import datasets.
+    description: Imported datasets.
 paths:
   /clusters:
     get:
@@ -253,13 +253,16 @@ paths:
           description: |
             Additional information to include.
             - reviews: Location reviews.
+            - import: Imported dataset.
           in: query
+          explode: false
           schema:
             type: array
             items:
               type: string
               enum:
                 - reviews
+                - import
             default: null
       responses:
         '200':
@@ -1177,7 +1180,6 @@ components:
             - season_start
             - season_stop
             - muni
-            - import_id
           properties:
             author:
               description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
@@ -1214,7 +1216,9 @@ components:
               type: integer
               nullable: true
               minimum: 0
-              example: 23
+              example: 42
+            import:
+              $ref: '#/components/schemas/Import'
             reviews:
               description: Location reviews.
               type: array

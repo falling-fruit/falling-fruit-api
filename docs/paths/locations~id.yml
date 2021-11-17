@@ -10,12 +10,14 @@ get:
       description: |
         Additional information to include.
         - reviews: Location reviews.
+        - import: Imported dataset.
       in: query
+      explode: false
       schema:
         type: array
         items:
           type: string
-          enum: [reviews]
+          enum: [reviews, import]
         default: null
   responses:
     '200':

@@ -291,7 +291,6 @@ Location:
         - season_start
         - season_stop
         - muni
-        - import_id
       properties:
         author:
           description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
@@ -328,7 +327,9 @@ Location:
           type: integer
           nullable: true
           minimum: 0
-          example: 23
+          example: 42
+        import:
+          $ref: '#/Import'
         reviews:
           description: Location reviews.
           type: array

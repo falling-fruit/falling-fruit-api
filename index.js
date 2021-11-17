@@ -67,8 +67,15 @@ post(
 get(`${BASE}/locations/count`, req => db.locations.count(req.query))
 get(`${BASE}/locations/:id`, async req => {
   const location = await db.locations.show(req.params.id)
-  if (req.query.embed === 'reviews') {
-    location.reviews = await db.reviews.list(req.params.id)
+  if (req.query.embed) {
+    const embedded = req.query.embed.split(',')
+    if (embedded.includes('reviews')) {
+      location.reviews = await db.reviews.list(req.params.id)
+    }
+    if (embedded.includes('import') && location.import_id) {
+      location.import = await db.imports.show(location.import_id)
+      delete location.import_id
+    }
   }
   return location
 })
