@@ -335,9 +335,8 @@ Location:
           type: array
           items:
             $ref: '#/Review'
-EditReview:
-  title: Review (edit)
-  description: Review properties that can be edited.
+BaseReview:
+  title: Review (base)
   type: object
   properties:
     comment:
@@ -369,12 +368,26 @@ EditReview:
       enum: [0, 1, 2, 3, 4]
       nullable: true
       example: 3
+EditReview:
+  title: Review (edit)
+  description: Review properties that can be edited.
+  allOf:
+    - $ref: '#/BaseReview'
+    - type: object
+      properties:
+        photo_ids:
+          description: IDs of photos to assign.
+          type: array
+          items:
+            type: integer
+            minimum: 0
+          example: [1, 2, 3]
 Review:
   title: Review
   description: Observations of and opinions about a Location.
   allOf:
     - $ref: '#/IdField'
-    - $ref: '#/EditReview'
+    - $ref: '#/BaseReview'
     - $ref: '#/DateFields'
     - type: object
       required:
@@ -415,16 +428,16 @@ Photo:
   description: Location photo.
   type: object
   required:
-    # - id
+    - id
     - thumb
     - medium
     - original
   properties:
-    # id:
-    #   description: Photo ID.
-    #   type: integer
-    #   minimum: 0
-    #   example: 2745
+    id:
+      description: Photo ID.
+      type: integer
+      minimum: 1
+      example: 2745
     thumb:
       description: Path to thumbnail (longest dimension <= 100 px).
       type: string
@@ -436,7 +449,7 @@ Photo:
       format: uri
       example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
     original:
-      description: Path to original size file.
+      description: Path to large size file (longest dimension <= 2048 px).
       type: string
       format: uri
       example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'

@@ -218,8 +218,13 @@ _.format_location = function(location) {
   return location
 }
 
-function resize_photo(input, output, size = null) {
-  return sharp(input)
+async function resize_photo(input, output, size = null) {
+  const image = sharp(input)
+  const metadata = await image.metadata()
+  if (metadata.format === 'jpeg' && metadata.width <= size && metadata.height <= size) {
+    return input
+  }
+  await image
     // https://sharp.pixelplumbing.com/api-resize#resize
     .resize({width: size, height: size, fit: 'inside', withoutEnlargement: true})
     .rotate()
@@ -227,6 +232,7 @@ function resize_photo(input, output, size = null) {
     // Convert to JPEG
     .jpeg()
     .toFile(output)
+  return output
 }
 
 function upload_photo(input, output) {
@@ -239,20 +245,22 @@ function upload_photo(input, output) {
   }).promise()
 }
 
-async function resize_and_upload_photo(input) {
+_.resize_and_upload_photo = async function(input) {
   sizes = {
     thumb: 100,
     medium: 300,
-    original: null
+    original: 2048
   }
   const promises = []
   for (const style in sizes) {
     const job = async function() {
       const resized = `${input}-${style}.jpg`
-      await resize_photo(input, resized, sizes[style])
+      const to_upload = await resize_photo(input, resized, sizes[style])
       const output = path.join('photos', path.basename(input), `${style}.jpg`)
-      const upload = await upload_photo(resized, output, 'image/jpeg')
-      await fs.promises.unlink(resized)
+      const upload = await upload_photo(to_upload, output, 'image/jpeg')
+      if (to_upload === resized) {
+        await fs.promises.unlink(resized)
+      }
       return upload.Location
     }
     promises.push(job())
@@ -260,14 +268,6 @@ async function resize_and_upload_photo(input) {
   const urls = await Promise.all(promises)
   await fs.promises.unlink(input)
   return Object.fromEntries(Object.keys(sizes).map((k, i) => [k, urls[i]]))
-}
-
-_.resize_and_upload_photos = function(inputs) {
-  const promises = []
-  for (const input of inputs) {
-    promises.push(resize_and_upload_photo(input))
-  }
-  return Promise.all(promises)
 }
 
 _.sign_user_token = function(user) {

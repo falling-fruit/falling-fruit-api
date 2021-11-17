@@ -49,16 +49,20 @@ get(`${BASE}/locations`, req => db.locations.list(req.query))
 post(
   `${BASE}/locations`,
   middleware.authenticate(),
-  uploads.array('photos'),
   async req => {
-    const obj = JSON.parse(req.body.json)
-    const location = await db.locations.add({...obj, user_id: req.user.id})
-    if (obj.review) {
-      const urls = await _.resize_and_upload_photos(req.files.map(f => f.path))
+    // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
+    const user_id = req.user ? req.user.id : null
+    let photos
+    if (req.body.review) {
+      photos = await db.photos.test_not_assigned(req.body.review.photo_ids)
+    }
+    const location = await db.locations.add({...req.body, user_id: user_id})
+    if (req.body.review) {
       const review = await db.reviews.add(
-        location.id, {...obj.review, user_id: req.user.id}
+        location.id, {...req.body.review, user_id: user_id}
       )
-      review.photos = await db.photos.insert(review.id, urls)
+      await db.photos.assign(req.body.review.photo_ids, review.id)
+      review.photos = photos
       location.reviews = [review]
     }
     return location
@@ -86,14 +90,14 @@ get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
 post(
   `${BASE}/locations/:id/reviews`,
   middleware.authenticate(),
-  uploads.array('photos'),
   async req => {
-    const obj = JSON.parse(req.body.json)
-    const urls = await _.resize_and_upload_photos(req.files.map(f => f.path))
+    // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
+    const photos = await db.photos.test_not_assigned(req.body.photo_ids)
     const review = await db.reviews.add(
-      req.params.id, {...obj, user_id: req.user.id}
+      req.params.id, {...req.body, user_id: req.user ? req.user.id : null}
     )
-    review.photos = await db.photos.insert(review.id, urls)
+    await db.photos.assign(req.body.photo_ids, review.id)
+    review.photos = photos
     return review
   }
 )
@@ -101,14 +105,23 @@ get(`${BASE}/reviews/:id`, req => db.reviews.show(req.params.id))
 put(
   `${BASE}/reviews/:id`,
   middleware.authenticate('user'),
-  uploads.array('photos'),
   async (req, res) => {
     // Restrict to linked user
     const review = await db.reviews.show(req.params.id)
     if (req.user.id != review.user_id) {
       return void res.status(403).json({error: 'Insufficient permissions'})
     }
-    return db.reviews.edit(req.params.id, JSON.parse(req.body.json))
+    return db.reviews.edit(req.params.id, req.body)
+  }
+)
+
+// Routes: Photos
+post(
+  `${BASE}/photos`,
+  uploads.single('file'),
+  async req => {
+    const urls = await _.resize_and_upload_photo(req.file.path)
+    return db.photos.add(urls)
   }
 )
 
@@ -168,7 +181,7 @@ post(
     })
   }
 )
-post(`${BASE}/user/oauth2token`, uploads.none(), async (req, res) => {
+post(`${BASE}/user/oauth2token`, async (req, res) => {
   let user
   try {
     user = await db.one(

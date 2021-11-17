@@ -7,7 +7,7 @@ info:
     ### General usage
 
     - GET requests rely on path and query parameters.
-    - POST and PUT requests rely on path parameters and body content. If the request includes file(s), a `multipart/form-data` body is used with a `json` key whose value is a JSON-formatted string; otherwise, raw JSON is used.
+    - POST and PUT requests rely on path parameters and body content. If the request includes a file, a `multipart/form-data` body is used with a `json` key (if needed) whose value is a JSON-formatted string; otherwise, raw JSON is used.
     - The values of array query parameters are comma-delimited, e.g. `types=1,2,3`, and arrays of arrays are pipe-delimited, e.g. `bounds=-85,-180|85,180`.
     - All endpoints return JSON responses.
     - Success and error responses use conventional HTTP status codes: `2xx` for success (implemented: `200`), `4xx` for incorrect requests (implemented: `400`, `401`, `403`), and `5xx` for server errors (not implemented). `4xx` errors will typically include an error message.
@@ -27,8 +27,7 @@ info:
       - Resolve flow between server and client for email confirmation and password reset.
       - Consider adding session support endpoints `POST /user/session`, `DELETE /user/session`.
     - Photos
-      - Add `POST /photos` one-or-more upload endpoint which returns expiring tokens on success
-      - Refactor `POST|PUT /locations|reviews` to accept array of photo tokens, expiring tokens on success
+      - Preserve array order
       - Run background job to delete expired photos from database and AWS S3 bucket.
     - Public endpoints
       - View recent changes (https://fallingfruit.org/changes).
@@ -67,6 +66,8 @@ tags:
     description: Locations describe resources at a particular position in the world.
   - name: Reviews
     description: 'Reviews describe observations of, and opinions about, a Location.'
+  - name: Photos
+    description: Review photos.
   - name: Clusters
     description: |-
       Clusters reduce the Locations in an area to a count and a center of mass. They are computed on a nested [quadtree](https://en.wikipedia.org/wiki/Quadtree) which, for a given zoom level, divides the Earth into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid of equal-sized squares in the Web Mercator projection (EPSG:3857).
@@ -199,21 +200,9 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              required:
-                - json
-              properties:
-                json:
-                  $ref: '#/components/schemas/AddLocation'
-                photos:
-                  type: array
-                  description: Photos to upload.
-                  items:
-                    type: string
-                    format: binary
-                  nullable: true
+              $ref: '#/components/schemas/AddLocation'
       responses:
         '200':
           description: Success
@@ -329,21 +318,9 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              required:
-                - json
-              properties:
-                json:
-                  $ref: '#/components/schemas/EditReview'
-                photos:
-                  type: array
-                  description: Photos to upload.
-                  items:
-                    type: string
-                    format: binary
-                  nullable: true
+              $ref: '#/components/schemas/EditReview'
       responses:
         '200':
           description: Success
@@ -351,6 +328,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Review'
+  /photos:
+    post:
+      tags:
+        - Photos
+      summary: Upload a photo.
+      security:
+        - key: []
+        - key: []
+          token: []
+        - key: []
+          oauth2token: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  description: 'File to upload (jpeg, png, webp, gif, or svg). Images are converted to jpeg and resized as needed to a maximum dimension of 2048 pixels.'
+                  type: string
+                  format: binary
+                  nullable: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
   '/reviews/{id}':
     get:
       summary: Fetch a Review.
@@ -381,21 +390,9 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              required:
-                - json
-              properties:
-                json:
-                  $ref: '#/components/schemas/EditReview'
-                photos:
-                  type: array
-                  description: Photos to upload.
-                  items:
-                    type: string
-                    format: binary
-                  nullable: true
+              $ref: '#/components/schemas/EditReview'
       responses:
         '200':
           description: Success
@@ -1224,9 +1221,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Review'
-    EditReview:
-      title: Review (edit)
-      description: Review properties that can be edited.
+    BaseReview:
+      title: Review (base)
       type: object
       properties:
         comment:
@@ -1271,12 +1267,29 @@ components:
             - 4
           nullable: true
           example: 3
+    EditReview:
+      title: Review (edit)
+      description: Review properties that can be edited.
+      allOf:
+        - $ref: '#/components/schemas/BaseReview'
+        - type: object
+          properties:
+            photo_ids:
+              description: IDs of photos to assign.
+              type: array
+              items:
+                type: integer
+                minimum: 0
+              example:
+                - 1
+                - 2
+                - 3
     Review:
       title: Review
       description: Observations of and opinions about a Location.
       allOf:
         - $ref: '#/components/schemas/IdField'
-        - $ref: '#/components/schemas/EditReview'
+        - $ref: '#/components/schemas/BaseReview'
         - $ref: '#/components/schemas/DateFields'
         - type: object
           required:
@@ -1317,10 +1330,16 @@ components:
       description: Location photo.
       type: object
       required:
+        - id
         - thumb
         - medium
         - original
       properties:
+        id:
+          description: Photo ID.
+          type: integer
+          minimum: 1
+          example: 2745
         thumb:
           description: Path to thumbnail (longest dimension <= 100 px).
           type: string
@@ -1332,7 +1351,7 @@ components:
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
         original:
-          description: Path to original size file.
+          description: Path to large size file (longest dimension <= 2048 px).
           type: string
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'

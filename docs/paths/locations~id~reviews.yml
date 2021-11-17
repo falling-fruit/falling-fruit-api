@@ -30,21 +30,9 @@ post:
   requestBody:
     required: true
     content:
-      multipart/form-data:
+      application/json:
         schema:
-          type: object
-          required:
-            - json
-          properties:
-            json:
-              $ref: ../components/schemas.yml#/EditReview
-            photos:
-              type: array
-              description: Photos to upload.
-              items:
-                type: string
-                format: binary
-              nullable: true
+          $ref: ../components/schemas.yml#/EditReview
   responses:
     '200':
       description: Success

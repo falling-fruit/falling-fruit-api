@@ -6,7 +6,7 @@ class Reviews {
     this.pgp = pgp
   }
 
-  async add(id, obj) {
+  add(id, obj) {
     const values = {
       observed_on: null,
       comment: null,
@@ -18,13 +18,13 @@ class Reviews {
       ...obj,
       location_id: parseInt(id)
     }
-    const review = await this.db.one(sql.add, values)
-    review.photos = await this.photos(id)
-    return review
+    return this.db.one(sql.add, values)
   }
 
-  show(id) {
-    return this.db.one(sql.show, {id: parseInt(id)})
+  async show(id) {
+    const review = await this.db.one(sql.show, {id: parseInt(id)})
+    review.photos = await this.photos(id)
+    return review
   }
 
   async edit(id, obj) {
@@ -39,7 +39,6 @@ class Reviews {
   }
 
   photos(id) {
-    // Failed to return photos from add and edit, so doing so separately
     return this.db.any(sql.photos, {id: parseInt(id)})
   }
 }
