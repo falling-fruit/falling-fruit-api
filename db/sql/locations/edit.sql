@@ -31,7 +31,8 @@ SELECT
   l.access,
   l.description,
   l.muni,
-  l.unverified
+  l.unverified,
+  l.invasive
 FROM l
 LEFT JOIN users u
   ON l.user_id = u.id

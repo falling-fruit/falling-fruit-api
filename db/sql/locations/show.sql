@@ -7,7 +7,8 @@ SELECT
   l.access,
   l.description,
   l.muni,
-  l.unverified
+  l.unverified,
+  l.invasive
 FROM locations l
 LEFT JOIN users u
   ON l.user_id = u.id

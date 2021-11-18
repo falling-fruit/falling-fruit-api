@@ -8,12 +8,7 @@ get:
     - $ref: ../components/parameters.yml#/bounds
     - $ref: ../components/parameters.yml#/muni
     - $ref: ../components/parameters.yml#/types
-    # - name: invasive
-    #   in: query
-    #   description: Whether to only return Locations with Types locally flagged as invasive species.
-    #   schema:
-    #     type: boolean
-    #     default: false
+    - $ref: ../components/parameters.yml#/invasive
     - name: limit
       in: query
       description: Maximum number of Locations to return.

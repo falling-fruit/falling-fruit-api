@@ -45,6 +45,13 @@ types:
       type: integer
       minimum: 0
     default: null
+invasive:
+  name: invasive
+  description: Whether to only return Locations with Types locally flagged as invasive species. Note that this parameter is not supported for filtering clusters.
+  in: query
+  schema:
+    type: boolean
+    default: false
 location_id:
   name: id
   in: path

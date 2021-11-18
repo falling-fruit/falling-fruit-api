@@ -124,6 +124,12 @@ _.muni_to_sql = function(value) {
   }
 }
 
+_.invasive_to_sql = function(value) {
+  if (value == 'true') {
+    return 'invasive'
+  }
+}
+
 _.types_to_sql = function(value) {
   // '1,2,3'
   if (value) {

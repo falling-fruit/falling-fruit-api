@@ -8,6 +8,7 @@ get:
     - $ref: ../components/parameters.yml#/bounds
     - $ref: ../components/parameters.yml#/muni
     - $ref: ../components/parameters.yml#/types
+    - $ref: ../components/parameters.yml#/invasive
   responses:
     '200':
       description: Success

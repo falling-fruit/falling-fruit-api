@@ -140,6 +140,7 @@ paths:
         - $ref: '#/components/parameters/bounds'
         - $ref: '#/components/parameters/muni'
         - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/invasive'
         - name: limit
           in: query
           description: Maximum number of Locations to return.
@@ -217,6 +218,7 @@ paths:
         - $ref: '#/components/parameters/bounds'
         - $ref: '#/components/parameters/muni'
         - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/invasive'
       responses:
         '200':
           description: Success
@@ -791,6 +793,13 @@ components:
           type: integer
           minimum: 0
         default: null
+    invasive:
+      name: invasive
+      description: Whether to only return Locations with Types locally flagged as invasive species. Note that this parameter is not supported for filtering clusters.
+      in: query
+      schema:
+        type: boolean
+        default: false
     location_id:
       name: id
       in: path

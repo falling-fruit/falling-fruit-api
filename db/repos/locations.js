@@ -32,7 +32,7 @@ class Locations {
     return _.format_location(location)
   }
 
-  async list({bounds, center = null, muni = 'true', types = null, limit = '1000', offset = '0', photo = 'false'}) {
+  async list({bounds, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false'}) {
     if (types === '') {
       return []
     }
@@ -40,7 +40,8 @@ class Locations {
       'NOT hidden',
       _.bounds_to_sql(_.parse_bounds(bounds)),
       _.muni_to_sql(muni),
-      _.types_array_to_sql(types)
+      _.types_array_to_sql(types),
+      _.muni_to_sql(invasive)
     ]
     const values = {
       where: filters.filter(Boolean).join(' AND '),
@@ -67,12 +68,13 @@ class Locations {
     return this.db.any(sql.list, values)
   }
 
-  count({bounds, muni = 'true', types = ''}) {
+  count({bounds, muni = 'true', types = null, invasive = 'false'}) {
     const filters = [
       'NOT hidden',
       _.bounds_to_sql(_.parse_bounds(bounds)),
       _.muni_to_sql(muni),
-      _.types_array_to_sql(types)
+      _.types_array_to_sql(types),
+      _.muni_to_sql(invasive)
     ]
     const values = {where: filters.filter(Boolean).join(' AND ')}
     return this.db.one(sql.count, values)
