@@ -7,4 +7,5 @@ token:
   flows:
     password:
       tokenUrl: user/token
+      refreshUrl: user/token/refresh
       scopes: {}

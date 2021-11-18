@@ -182,9 +182,39 @@ post(`${BASE}/user/token`, uploads.none(), async (req, res) => {
     // Phrase: devise.failure.invalid
     return void res.status(401).json({error: 'Invalid email or password'})
   }
-  return void res.status(200).set({
-    'cache-control': 'no-store'
-  }).json(tokenizer.sign_and_wrap_access(user))
+  const [tokens, jti, exp] = tokenizer.sign_and_wrap_access(user)
+  // Store refresh token id in database
+  await db.none(
+    'INSERT INTO refresh_tokens (user_id, jti, exp) VALUES (${user_id}, ${jti}, ${exp})',
+    {user_id: user.id, jti: jti, exp: exp}
+  )
+  return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
+})
+post(`${BASE}/user/token/refresh`, uploads.none(), async (req, res) => {
+  // req.body.grant_type=refresh_token
+  const token = req.body.refresh_token
+  const data = tokenizer.verify_refresh(token, res)
+  if (!data) {
+    return
+  }
+  // Fetch user roles
+  const user = await db.oneOrNone(
+    'SELECT id, roles FROM users WHERE id = ${id}', {id: data.id}
+  )
+  if (!user) {
+    return void res.status(401).json({error: 'Invalid refresh token'})
+  }
+  // Generate new refresh token with same expiration
+  const [tokens, jti, exp] = tokenizer.sign_and_wrap_access(user, data.exp)
+  // Replace with new refresh token if old refresh token exists
+  const refreshed = await db.oneOrNone(
+    'UPDATE refresh_tokens SET jti = ${new} WHERE user_id = ${user_id} AND jti = ${old} RETURNING jti',
+    {user_id: user.id, old: data.jti, new: jti}
+  )
+  if (!refreshed) {
+    return void res.status(401).json({error: 'Invalid refresh token'})
+  }
+  return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
 })
 drop(
   `${BASE}/user`,

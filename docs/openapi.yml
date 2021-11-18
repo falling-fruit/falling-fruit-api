@@ -662,7 +662,7 @@ paths:
                     example: You will receive an email with instructions for how to confirm your email address in a few minutes
   /user/token:
     post:
-      summary: Request an access token.
+      summary: Request an access token (password).
       description: 'Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.'
       tags:
         - Authentication
@@ -680,6 +680,41 @@ paths:
                   $ref: '#/components/schemas/User/allOf/3/properties/email'
                 password:
                   $ref: '#/paths/~1user/post/requestBody/content/application~1json/schema/properties/password'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+  /user/token/refresh:
+    post:
+      summary: Request an access token (refresh token).
+      description: |
+        Follows the OAuth2 spec for refresh token flow, which requires form data with `grant_type: 'refresh_token'` (ignored) and `refresh_token`.
+      tags:
+        - Authentication
+      security:
+        - key: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  description: Refresh token.
+                  type: string
+                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+                grant_type:
+                  description: Grant type.
+                  type: string
+                  enum:
+                    - refresh_token
+                  example: refresh_token
       responses:
         '200':
           description: Success
@@ -760,6 +795,7 @@ components:
       flows:
         password:
           tokenUrl: user/token
+          refreshUrl: user/token/refresh
           scopes: {}
   parameters:
     bounds:
@@ -1554,11 +1590,12 @@ components:
         - access_token
         - token_type
         - expires_in
+        - refresh_token
       properties:
         access_token:
           description: Access token.
           type: string
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoxMjMsInJvbGVzIjpbInVzZXIiXX0sImlhdCI6MTYzNjQ0NzA2OSwiZXhwIjoxNjM2NDQ3OTY5LCJhdWQiOiJodHRwczovL2ZhbGxpbmdmcnVpdC5vcmcvYXBpIiwic3ViIjoidXNlciJ9.6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
         token_type:
           description: Token type.
           type: string
@@ -1570,6 +1607,10 @@ components:
           type: integer
           minimum: 1
           example: 900
+        refresh_token:
+          description: Refresh token.
+          type: string
+          example: 6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
 servers:
   - description: Falling Fruit test server.
     url: 'https://fallingfruit.org/test-api/0.3/'

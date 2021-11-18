@@ -105,6 +105,8 @@ paths:
     $ref: paths/user~confirmation~retry.yml
   /user/token:
     $ref: paths/user~token.yml
+  /user/token/refresh:
+    $ref: paths/user~token~refresh.yml
   /user/password:
     $ref: paths/user~password.yml
   /user/password/reset:

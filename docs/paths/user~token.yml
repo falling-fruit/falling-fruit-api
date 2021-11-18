@@ -1,5 +1,5 @@
 post:
-  summary: Request an access token.
+  summary: Request an access token (password).
   description: Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.
   tags:
     - Authentication

@@ -624,11 +624,12 @@ Token:
     - access_token
     - token_type
     - expires_in
+    - refresh_token
   properties:
     access_token:
       description: Access token.
       type: string
-      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoxMjMsInJvbGVzIjpbInVzZXIiXX0sImlhdCI6MTYzNjQ0NzA2OSwiZXhwIjoxNjM2NDQ3OTY5LCJhdWQiOiJodHRwczovL2ZhbGxpbmdmcnVpdC5vcmcvYXBpIiwic3ViIjoidXNlciJ9.6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
     token_type:
       description: Token type.
       type: string
@@ -639,6 +640,10 @@ Token:
       type: integer
       minimum: 1
       example: 900
+    refresh_token:
+      description: Refresh token.
+      type: string
+      example: 6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
 # Error:
 #   title: Error
 #   description: |

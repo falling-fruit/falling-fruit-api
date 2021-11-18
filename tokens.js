@@ -18,16 +18,21 @@ class Tokenizer {
     )
   }
 
-  sign_and_wrap_access(user) {
-    // 15 min
-    const EXPIRES_IN = 900
-    return {
+  sign_and_wrap_access(user, exp = null) {
+    const ACCESS_EXPIRES_IN = 900 // 15 min
+    const REFRESH_EXPIRES_IN = 2592000 // 30 days
+    const jti = require('crypto').randomBytes(6).toString('hex')
+    exp = exp || Math.floor(Date.now() / 1000) + REFRESH_EXPIRES_IN
+    const tokens = {
       access_token: this.sign(
-        {id: user.id, roles: user.roles}, {expiresIn: EXPIRES_IN}
+        {id: user.id, roles: user.roles}, {expiresIn: ACCESS_EXPIRES_IN}
       ),
       token_type: 'bearer',
-      expires_in: EXPIRES_IN
+      expires_in: ACCESS_EXPIRES_IN,
+      refresh_token: this.sign({id: user.id, exp: exp, jti: jti}
+      )
     }
+    return [tokens, jti, exp]
   }
 
   verify_access(token, res) {
@@ -41,6 +46,20 @@ class Tokenizer {
       }
       // Phrase: devise.failure.invalid_token
       return void res.status(401).json({error: 'Invalid access token'})
+    }
+  }
+
+  verify_refresh(token, res) {
+    try {
+      const data = this.verify(token)
+      return {id: data.id, exp: data.exp, jti: data.jti}
+    } catch (err) {
+      if (err instanceof jwt.TokenExpiredError) {
+        // Phrase: no equivalent (see devise.failure.timeout for sessions)
+        return void res.status(401).json({error: 'Expired refresh token'})
+      }
+      // Phrase: devise.failure.invalid_token
+      return void res.status(401).json({error: 'Invalid refresh token'})
     }
   }
 
