@@ -3,8 +3,6 @@ post:
   description: Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.
   tags:
     - Authentication
-  security:
-    - key: []
   requestBody:
     required: true
     content:

@@ -54,14 +54,14 @@ post(
     const user_id = req.user ? req.user.id : null
     let photos
     if (req.body.review) {
-      photos = await db.photos.test_not_assigned(req.body.review.photo_ids)
+      photos = await db.photos.test_unlinked(req.body.review.photo_ids)
     }
     const location = await db.locations.add({...req.body, user_id: user_id})
     if (req.body.review) {
       const review = await db.reviews.add(
         location.id, {...req.body.review, user_id: user_id}
       )
-      await db.photos.assign(req.body.review.photo_ids, review.id)
+      await db.photos.link(req.body.review.photo_ids, review.id)
       review.photos = photos
       location.reviews = [review]
     }
@@ -92,26 +92,35 @@ post(
   middleware.authenticate(),
   async req => {
     // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
-    const photos = await db.photos.test_not_assigned(req.body.photo_ids)
+    const photos = await db.photos.test_unlinked(req.body.photo_ids)
     const review = await db.reviews.add(
       req.params.id, {...req.body, user_id: req.user ? req.user.id : null}
     )
-    await db.photos.assign(req.body.photo_ids, review.id)
+    await db.photos.link(req.body.photo_ids, review.id)
     review.photos = photos
     return review
   }
 )
-get(`${BASE}/reviews/:id`, req => db.reviews.show(req.params.id))
+get(`${BASE}/reviews/:id`, async (req) => {
+  const review = await db.reviews.show(req.params.id)
+  review.photos = await db.photos.list(req.params.id)
+  return review
+})
 put(
   `${BASE}/reviews/:id`,
   middleware.authenticate('user'),
   async (req, res) => {
+    const original = await db.reviews.show(req.params.id)
     // Restrict to linked user
-    const review = await db.reviews.show(req.params.id)
-    if (req.user.id != review.user_id) {
+    if (req.user.id != original.user_id) {
       return void res.status(403).json({error: 'Insufficient permissions'})
     }
-    return db.reviews.edit(req.params.id, req.body)
+    // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
+    const photos = await db.photos.test_unlinked(req.body.photo_ids, original.id)
+    const review = await db.reviews.edit(req.params.id, req.body)
+    await db.photos.link(req.body.photo_ids, review.id)
+    review.photos = photos
+    return review
   }
 )
 

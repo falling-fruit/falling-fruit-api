@@ -15,7 +15,7 @@ class Photos {
     return this.db.one(sql.add, urls)
   }
 
-  async test_not_assigned(photo_ids, review_id = null) {
+  async test_unlinked(photo_ids, review_id = null) {
     if (!photo_ids || !photo_ids.length) {
       return []
     }
@@ -24,7 +24,13 @@ class Photos {
       'SELECT id, observation_id, thumb, medium, original FROM photos WHERE id IN (${ids:csv}) ORDER BY idx(ARRAY[${ids:csv}], id)',
       {ids: photo_ids}
     )
-    // Fail if one or more already assigned to a review
+    // Fail if one or more photos not found
+    const found_ids = photos.map(photo => photo.id)
+    const missing = photo_ids.filter(id => !found_ids.includes(id))
+    if (missing.length > 0) {
+      throw Error(`Photo(s) ${missing} not found`)
+    }
+    // Fail if one or more already assigned to a(nother) review
     const assigned = photos.filter(photo => (
       photo.observation_id &&
       (review_id ? photo.observation_id != review_id : true)
@@ -38,13 +44,11 @@ class Photos {
     return photos
   }
 
-  assign(photo_ids, review_id) {
-    if (photo_ids && photo_ids.length) {
-      return this.db.none(
-        'UPDATE photos SET observation_id = ${id} WHERE id IN (${ids:csv})',
-        {id: review_id, ids: photo_ids}
-      )
+  async link(photo_ids, review_id) {
+    if (photo_ids.length) {
+      await this.db.none(sql.link, {id: review_id, ids: photo_ids})
     }
+    await this.db.none(sql.unlink, {id: review_id, ids: photo_ids})
   }
 }
 

@@ -376,12 +376,12 @@ EditReview:
     - type: object
       properties:
         photo_ids:
-          description: IDs of photos to assign.
+          description: IDs of photos to link to the review. Previously linked photos are unlinked if their ids are omitted. Photos are ordered by the order of their ids.
           type: array
           items:
             type: integer
             minimum: 0
-          example: [1, 2, 3]
+          example: [3, 1, 2]
 Review:
   title: Review
   description: Observations of and opinions about a Location.

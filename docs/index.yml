@@ -21,13 +21,11 @@ info:
     ### TODO
 
     - Security
-      - Consider passing `user:password` as base-64 encoded string in `Authorization: Basic` header (https://swagger.io/docs/specification/authentication/basic-authentication) for wider compatibility.
-      - Consider adding `POST /user/confirmation` for use by client on redirect from email confirmation link.
+      - Add `POST /user/confirmation` for use by client on redirect from email confirmation link.
+      - Return user email from `user/confirmation` endpoints.
       - Require a reCAPTCHA for `POST` and `PUT` requests without a token (https://developers.google.com/recaptcha/docs/verify, https://www.twilio.com/blog/2017/08/http-requests-in-node-js.html, https://www.npmjs.com/package/express-recaptcha).
-      - Resolve flow between server and client for email confirmation and password reset.
-      - Consider adding session support endpoints `POST /user/session`, `DELETE /user/session`.
+      - Add session endpoints `POST /user/session`, `DELETE /user/session` (?).
     - Photos
-      - Preserve array order
       - Run background job to delete expired photos from database and AWS S3 bucket.
     - Public endpoints
       - View recent changes (https://fallingfruit.org/changes).

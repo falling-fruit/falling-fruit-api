@@ -21,13 +21,11 @@ info:
     ### TODO
 
     - Security
-      - Consider passing `user:password` as base-64 encoded string in `Authorization: Basic` header (https://swagger.io/docs/specification/authentication/basic-authentication) for wider compatibility.
-      - Consider adding `POST /user/confirmation` for use by client on redirect from email confirmation link.
+      - Add `POST /user/confirmation` for use by client on redirect from email confirmation link.
+      - Return user email from `user/confirmation` endpoints.
       - Require a reCAPTCHA for `POST` and `PUT` requests without a token (https://developers.google.com/recaptcha/docs/verify, https://www.twilio.com/blog/2017/08/http-requests-in-node-js.html, https://www.npmjs.com/package/express-recaptcha).
-      - Resolve flow between server and client for email confirmation and password reset.
-      - Consider adding session support endpoints `POST /user/session`, `DELETE /user/session`.
+      - Add session endpoints `POST /user/session`, `DELETE /user/session` (?).
     - Photos
-      - Preserve array order
       - Run background job to delete expired photos from database and AWS S3 bucket.
     - Public endpoints
       - View recent changes (https://fallingfruit.org/changes).
@@ -635,8 +633,6 @@ paths:
       description: 'Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.'
       tags:
         - Authentication
-      security:
-        - key: []
       requestBody:
         required: true
         content:
@@ -1256,15 +1252,15 @@ components:
         - type: object
           properties:
             photo_ids:
-              description: IDs of photos to assign.
+              description: IDs of photos to link to the review. Previously linked photos are unlinked if their ids are omitted. Photos are ordered by the order of their ids.
               type: array
               items:
                 type: integer
                 minimum: 0
               example:
+                - 3
                 - 1
                 - 2
-                - 3
     Review:
       title: Review
       description: Observations of and opinions about a Location.

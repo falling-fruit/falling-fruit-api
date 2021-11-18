@@ -21,25 +21,17 @@ class Reviews {
     return this.db.one(sql.add, values)
   }
 
-  async show(id) {
-    const review = await this.db.one(sql.show, {id: parseInt(id)})
-    review.photos = await this.photos(id)
-    return review
+  show(id) {
+    return this.db.one(sql.show, {id: parseInt(id)})
   }
 
-  async edit(id, obj) {
+  edit(id, obj) {
     const values = {...obj, id: parseInt(id)}
-    const review = await this.db.one(sql.edit, values)
-    review.photos = await this.photos(id)
-    return review
+    return this.db.one(sql.edit, values)
   }
 
   list(id) {
     return this.db.any(sql.list, {id: parseInt(id)})
-  }
-
-  photos(id) {
-    return this.db.any(sql.photos, {id: parseInt(id)})
   }
 }
 
