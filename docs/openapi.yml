@@ -564,17 +564,6 @@ paths:
       security:
         - key: []
           token: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - password
-              properties:
-                password:
-                  $ref: '#/paths/~1user/post/requestBody/content/application~1json/schema/properties/password'
       responses:
         '204':
           description: Success (no content)

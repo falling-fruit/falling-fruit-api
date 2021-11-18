@@ -220,14 +220,14 @@ drop(
   `${BASE}/user`,
   middleware.authenticate('user'),
   async (req, res) => {
-    // Check password
-    const user = await db.one(
-      'SELECT encrypted_password FROM users WHERE id = ${id}',
-      {id: req.user.id}
-    )
-    if (!await _.compare_password(req.body.password, user.encrypted_password)) {
-      return void res.status(401).json({error: 'Wrong password'})
-    }
+    // // Check password
+    // const user = await db.one(
+    //   'SELECT encrypted_password FROM users WHERE id = ${id}',
+    //   {id: req.user.id}
+    // )
+    // if (!await _.compare_password(req.body.password, user.encrypted_password)) {
+    //   return void res.status(401).json({error: 'Wrong password'})
+    // }
     await db.users.delete(req.user.id)
     return void res.status(204).send()
   }

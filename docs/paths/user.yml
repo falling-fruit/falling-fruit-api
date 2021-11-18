@@ -80,17 +80,17 @@ delete:
   security:
     - key: []
       token: []
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          type: object
-          required:
-            - password
-          properties:
-            password:
-              $ref: ../components/properties.yml#/password
+  # requestBody:
+  #   required: true
+  #   content:
+  #     application/json:
+  #       schema:
+  #         type: object
+  #         required:
+  #           - password
+  #         properties:
+  #           password:
+  #             $ref: ../components/properties.yml#/password
   responses:
     '204':
       description: Success (no content)
