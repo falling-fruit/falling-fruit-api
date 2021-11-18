@@ -21,12 +21,8 @@ info:
     ### TODO
 
     - Security
-      - Add `POST /user/confirmation` for use by client on redirect from email confirmation link.
-      - Return user email from `user/confirmation` endpoints.
       - Require a reCAPTCHA for `POST` and `PUT` requests without a token (https://developers.google.com/recaptcha/docs/verify, https://www.twilio.com/blog/2017/08/http-requests-in-node-js.html, https://www.npmjs.com/package/express-recaptcha).
       - Add session endpoints `POST /user/session`, `DELETE /user/session` (?).
-    - Photos
-      - Run background job to delete expired photos from database and AWS S3 bucket.
     - Public endpoints
       - View recent changes (https://fallingfruit.org/changes).
     - User endpoints

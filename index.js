@@ -9,6 +9,7 @@ const multer = require('multer')
 const uploads = multer({ dest: 'uploads' })
 const compression = require('compression')
 const bcrypt = require('bcrypt')
+const tokenizer = new (require('./tokens'))()
 
 // Configuration
 const app = express()
@@ -146,7 +147,7 @@ post(`${BASE}/user`, async (req) => {
   }
   const user = await db.users.add(req)
   // Send confirmation email
-  await _.send_email_confirmation(user)
+  await _.send_email_confirmation(user, tokenizer.sign_email_confirmation(user))
   // Phrase: devise.confirmations.send_instructions
   return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
 })
@@ -183,28 +184,18 @@ post(`${BASE}/user/token`, uploads.none(), async (req, res) => {
   }
   return void res.status(200).set({
     'cache-control': 'no-store'
-  }).json({
-    access_token: _.sign_user_token(user),
-    token_type: 'bearer',
-    expires_in: JWT_EXPIRES_IN
-  })
+  }).json(tokenizer.sign_and_wrap_access(user))
 })
 
 // Routes: User email
-get(`${BASE}/user/confirmation`, async (req) => {
-  const id = Number(req.query.id)
-  const expires = Number(req.query.expires)
-  const expected = _.email_confirmation_url(id, expires)
-  const actual = `${ORIGIN}${req.originalUrl}`
-  if (!_.safe_equal(expected, actual)) {
-    throw Error('Confirmation link is not valid')
-  }
-  if (expires <= Date.now()) {
-    // Phrase: devise.errors.messages.expired
-    throw Error('Confirmation link has expired, please request a new one')
+get(`${BASE}/user/confirmation`, async (req, res) => {
+  const token = req.query.token
+  const data = tokenizer.verify_email_confirmation(token, res)
+  if (!data) {
+    return
   }
   const user = await db.oneOrNone(
-    'SELECT confirmed_at FROM users WHERE id=${id}', {id: id}
+    'SELECT id, email, confirmed_at FROM users WHERE id=${id}', {id: data.id}
   )
   if (!user) {
     // Phrase: devise.errors.messages.not_found
@@ -214,9 +205,30 @@ get(`${BASE}/user/confirmation`, async (req) => {
     // Phrase: devise.errors.messages.already_confirmed
     throw Error('Email was already confirmed, please try signing in')
   }
-  await db.users.confirm(id)
+  await db.users.confirm(user.id)
   // Phrase: devise.confirmation.confirmed
   return {message: 'Your email address has been successfully confirmed'}
+})
+post(`${BASE}/user/confirmation`, async (req, res) => {
+  const token = req.body.token
+  const data = tokenizer.verify_email_confirmation(token, res)
+  if (!data) {
+    return
+  }
+  const user = await db.oneOrNone(
+    'SELECT id, email, confirmed_at FROM users WHERE id=${id}', {id: data.id}
+  )
+  if (!user) {
+    // Phrase: devise.errors.messages.not_found
+    throw Error('Email not found')
+  }
+  if (user.confirmed_at) {
+    // Phrase: devise.errors.messages.already_confirmed
+    throw Error('Email was already confirmed, please try signing in')
+  }
+  await db.users.confirm(user.id)
+  // Phrase: devise.confirmation.confirmed
+  return {email: user.email}
 })
 post(`${BASE}/user/confirmation/retry`, async (req) => {
   const email = req.body.email.toLowerCase()
@@ -232,49 +244,45 @@ post(`${BASE}/user/confirmation/retry`, async (req) => {
     // Phrase: devise.errors.messages.already_confirmed
     throw Error('Email was already confirmed, please try signing in')
   }
-  await _.send_email_confirmation(user)
+  const token = tokenizer.sign_email_confirmation(user)
+  await _.send_email_confirmation(user, token)
   // Phrase: devise.confirmation.send_instructions
   return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
 })
 
 // Routes: User password
 put(`${BASE}/user/password`, async (req, res) => {
-  const id = Number(req.query.id)
-  const token = String(req.query.token)
+  const token = req.body.token
+  let data = tokenizer.decode_password_reset(token, res)
+  if (!data) {
+    return
+  }
   const user = await db.oneOrNone(
-    'SELECT reset_password_token, reset_password_sent_at FROM users WHERE id=${id}',
-    {id: id}
+    'SELECT id, email, encrypted_password FROM users WHERE id=${id}', {id: data.id}
   )
   if (!user) {
-    throw Error(`User with id=${id} not found`)
+    throw Error('Account not found')
   }
-  if (!user.reset_password_token) {
-    return void res.status(401).json({error: 'Reset password token is invalid'})
+  data = tokenizer.verify_password_reset(token, user.encrypted_password, res)
+  if (!data) {
+    return
   }
-  if (!_.safe_equal(user.reset_password_token, _.sha256_hmac(token))) {
-    return void res.status(401).json(
-      {error: 'Invalid (or expired) password reset link. Make sure to use the link from the most recent password reset email'}
-    )
-  }
-  const hours = (Date.now() - user.reset_password_sent_at) / (1000 * 3600)
-  if (hours > 12) {
-    return void res.status(401).json('Expired password reset link. Please request a new one')
-  }
-  await db.users.set_password(id, req.body.password)
+  await db.users.set_password(user.id, req.body.password)
   // Phrase: devise.passwords.updated_not_active
-  return {message: 'Your password has been changed successfully'}
+  // return {message: 'Your password has been changed successfully'}
+  return {email: user.email}
 })
 post(`${BASE}/user/password/reset`, async (req) => {
   const email = req.body.email.toLowerCase()
   const user = await db.oneOrNone(
-    'SELECT id, email, name, confirmed_at FROM users WHERE email=${email}',
+    'SELECT id, email, name, confirmed_at, encrypted_password FROM users WHERE email=${email}',
     {email: email}
   )
   if (!user) {
     // Phrase: devise.errors.messages.not_found
     throw Error('Email not found')
   }
-  const token = await db.users.reset_password(user.id)
+  const token = tokenizer.sign_password_reset(user, user.encrypted_password)
   await _.send_password_reset(user, token)
   // Phrase: devise.passwords.send_instructions
   return {message: 'You will receive an email with instructions on how to reset your password in a few minutes'}

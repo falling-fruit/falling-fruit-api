@@ -1,6 +1,5 @@
 const db = require('./db')
-const jwt = require('jsonwebtoken')
-const { JWT_OPTIONS } = require('./constants')
+const tokenizer = new (require('./tokens'))()
 
 const _ = {}
 
@@ -27,19 +26,13 @@ function get_user_from_token(req, res, next) {
   }
   if (!header.toLowerCase().startsWith('bearer ')) {
     // Phrase: devise.failure.invalid_token
-    return void res.status(401).json({error: 'Invalid authentication token'})
+    return void res.status(401).json({error: 'Invalid access token'})
   }
   const token = header.substring(7)
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET, JWT_OPTIONS).user
+  const user = tokenizer.verify_access(token, res)
+  if (user) {
+    req.user = user
     return void next()
-  } catch (err) {
-    if (err instanceof jwt.TokenExpiredError) {
-      // Phrase: no equivalent (see devise.failure.timeout for sessions)
-      return void res.status(401).json({error: 'Expired authentication token'})
-    }
-    // Phrase: devise.failure.invalid_token
-    return void res.status(401).json({error: 'Invalid authentication token'})
   }
 }
 

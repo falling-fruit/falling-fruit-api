@@ -21,12 +21,8 @@ info:
     ### TODO
 
     - Security
-      - Add `POST /user/confirmation` for use by client on redirect from email confirmation link.
-      - Return user email from `user/confirmation` endpoints.
       - Require a reCAPTCHA for `POST` and `PUT` requests without a token (https://developers.google.com/recaptcha/docs/verify, https://www.twilio.com/blog/2017/08/http-requests-in-node-js.html, https://www.npmjs.com/package/express-recaptcha).
       - Add session endpoints `POST /user/session`, `DELETE /user/session` (?).
-    - Photos
-      - Run background job to delete expired photos from database and AWS S3 bucket.
     - Public endpoints
       - View recent changes (https://fallingfruit.org/changes).
     - User endpoints
@@ -488,7 +484,7 @@ paths:
     post:
       summary: Register a new user.
       description: |
-        When first created, the account is not confirmed (`confirmed_at: null`) and cannot be used.
+        When first created, the account is not confirmed and cannot be used.
         An email is sent with a link that must be clicked to confirm the account.
 
         `email` cannot match (case-insensitive) the email of an existing user.
@@ -563,32 +559,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
   /user/confirmation:
+    post:
+      summary: Confirm the user (from a form).
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  description: Email-confirmation token.
+                  type: string
+                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - email
+                properties:
+                  email:
+                    $ref: '#/components/schemas/User/allOf/3/properties/email'
     get:
       summary: Confirm the user (from a link in an email).
       tags:
         - Authentication
       parameters:
-        - name: id
-          description: User ID.
-          in: query
-          schema:
-            type: integer
-          required: true
-          example: 123
-        - name: expires
-          description: Confirmation link expiration in milliseconds since the UNIX epoch (1 January 1970).
-          in: query
-          schema:
-            type: integer
-          required: true
-          example: 1636553249490
-        - name: signature
-          description: Cryptographic signature.
+        - name: token
+          description: Email-confirmation token.
           in: query
           schema:
             type: string
           required: true
-          example: 231dc7ce4da196b93624d4c49b32978b5205970b713a67f3dab61d4b7ec5e25d
+          example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
       responses:
         '200':
           description: Success
@@ -663,21 +674,6 @@ paths:
         - Authentication
       security:
         - key: []
-      parameters:
-        - name: id
-          description: User ID.
-          in: query
-          schema:
-            type: integer
-          required: true
-          example: 123
-        - name: token
-          description: Password reset token.
-          in: query
-          schema:
-            type: string
-          required: true
-          example: 1972f009f210ebb55863c616631f4ad28eff6600e7b7518cd51062d15d7faef0
       requestBody:
         required: true
         content:
@@ -685,8 +681,13 @@ paths:
             schema:
               type: object
               required:
+                - token
                 - password
               properties:
+                token:
+                  description: Password-reset token.
+                  type: string
+                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
                 password:
                   $ref: '#/paths/~1user/post/requestBody/content/application~1json/schema/properties/password'
       responses:
@@ -697,9 +698,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
-                    type: string
-                    example: Your password has been changed successfully
+                  email:
+                    $ref: '#/components/schemas/User/allOf/3/properties/email'
   /user/password/reset:
     post:
       summary: Request a password-reset email.

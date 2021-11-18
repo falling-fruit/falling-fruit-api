@@ -35,13 +35,6 @@ class Users {
     return this.db.none(sql.confirm, {id: id})
   }
 
-  async reset_password(id) {
-    const token = _.reset_password_token()
-    const hash = _.sha256_hmac(token)
-    await this.db.none(sql.resetPassword, {id: id, token: hash})
-    return token
-  }
-
   async set_password(id, password) {
     const hash = await _.hash_password(password)
     return this.db.none(sql.setPassword, {id: id, password: hash})

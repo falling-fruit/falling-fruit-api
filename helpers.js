@@ -9,10 +9,8 @@ const s3 = new aws.S3({
   apiVersion: '2006-03-01'
 })
 const sharp = require('sharp')
-const {ORIGIN, BASE, JWT_OPTIONS, JWT_EXPIRES_IN} = require('./constants')
-const jwt = require('jsonwebtoken')
+const {ORIGIN, BASE} = require('./constants')
 const postmark = require('postmark')
-const { info } = require('console')
 const postmark_client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
@@ -276,14 +274,6 @@ _.resize_and_upload_photo = async function(input) {
   return Object.fromEntries(Object.keys(sizes).map((k, i) => [k, urls[i]]))
 }
 
-_.sign_user_token = function(user) {
-  return jwt.sign(
-    {user: {id: user.id, roles: user.roles}},
-    process.env.JWT_SECRET,
-    {...JWT_OPTIONS, expiresIn: JWT_EXPIRES_IN}
-  )
-}
-
 function send_email({to, subject, body, tag = null}) {
   return postmark_client.sendEmail({
     From: 'info@fallingfruit.org',
@@ -295,37 +285,8 @@ function send_email({to, subject, body, tag = null}) {
   })
 }
 
-_.sha256_hmac = function(text) {
-  const key = process.env.APP_SECRET
-  return crypto.createHmac('sha256', key).update(text).digest('hex')
-}
-
-_.reset_password_token = function() {
-  return crypto.randomBytes(32).toString('hex')
-}
-
-/**
- * Constant-time comparison.
- *
- * crypto.timingSafeEqual() requires buffers of the same length.
- * So it is skipped if they have different lengths.
- * See https://github.com/nodejs/node/issues/17178#issuecomment-348784606.
- */
-_.safe_equal = function(x, y) {
-  const xb = Buffer.from(x)
-  const yb = Buffer.from(y)
-  return xb.length === yb.length && crypto.timingSafeEqual(xb, yb)
-}
-
-_.email_confirmation_url = function(id, expires) {
-  const url = `${ORIGIN}${BASE}/user/confirmation?id=${id}&expires=${expires}`
-  const signature = _.sha256_hmac(url) // 256 bits = 32 bytes, 32 * 2 = 64 chars
-  return `${url}&signature=${signature}`
-}
-
-_.send_email_confirmation = function(user) {
-  const expires = Date.now() + 1000 * 86400 // 1 day
-  const url = _.email_confirmation_url(user.id, expires)
+_.send_email_confirmation = function(user, token) {
+  const url = `${ORIGIN}${BASE}/user/confirmation?token=${token}`
   const email = {
     to: user.email,
     // Phrase: devise.mailer.confirmation_instructions.subject
@@ -343,7 +304,7 @@ _.send_email_confirmation = function(user) {
 }
 
 _.send_password_reset = function(user, token) {
-  const url = `${ORIGIN}${BASE}/password?id=${user.id}&token=${token}`
+  const url = `${ORIGIN}${BASE}/user/password?token=${token}`
   const email = {
     to: user.email,
     // Phrase: devise.mailer.reset_password_instructions.subject

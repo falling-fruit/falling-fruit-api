@@ -1,57 +1,44 @@
-# post:
-#   summary: Confirm the user (from a form).
-#   description:
-#   tags:
-#     - Authentication
-#   requestBody:
-#     required: true
-#     content:
-#       application/json:
-#         schema:
-#           type: object
-#           required:
-#             - email
-#             - password
-#           properties:
-#             email:
-#               $ref: ../components/properties.yml#/email
-#             password:
-#               $ref: ../components/properties.yml#/password
-#             name:
-#               $ref: ../components/properties.yml#/name
-#   responses:
-#     '200':
-#       description: Success
-#       content:
-#         application/json:
-#           schema:
-#             $ref: ../components/schemas.yml#/User
+post:
+  summary: Confirm the user (from a form).
+  tags:
+    - Authentication
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - token
+          properties:
+            token:
+              description: Email-confirmation token.
+              type: string
+              example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                $ref: ../components/properties.yml#/email
 get:
   summary: Confirm the user (from a link in an email).
   tags:
     - Authentication
   parameters:
-    - name: id
-      description: User ID.
-      in: query
-      schema:
-        type: integer
-      required: true
-      example: 123
-    - name: expires
-      description: Confirmation link expiration in milliseconds since the UNIX epoch (1 January 1970).
-      in: query
-      schema:
-        type: integer
-      required: true
-      example: 1636553249490
-    - name: signature
-      description: Cryptographic signature.
+    - name: token
+      description: Email-confirmation token.
       in: query
       schema:
         type: string
       required: true
-      example: 231dc7ce4da196b93624d4c49b32978b5205970b713a67f3dab61d4b7ec5e25d
+      example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
   responses:
     '200':
       description: Success

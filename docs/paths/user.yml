@@ -1,7 +1,7 @@
 post:
   summary: Register a new user.
   description: |
-    When first created, the account is not confirmed (`confirmed_at: null`) and cannot be used.
+    When first created, the account is not confirmed and cannot be used.
     An email is sent with a link that must be clicked to confirm the account.
 
     `email` cannot match (case-insensitive) the email of an existing user.
