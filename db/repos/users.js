@@ -39,6 +39,11 @@ class Users {
     const hash = await _.hash_password(password)
     return this.db.none(sql.setPassword, {id: id, password: hash})
   }
+
+  delete(id) {
+    // TODO: What happens to user content (photos, reviews, locations, ...) ?
+    return this.db.none('DELETE FROM users WHERE id = ${id}', {id: parseInt(id)})
+  }
 }
 
 module.exports = Users

@@ -186,6 +186,22 @@ post(`${BASE}/user/token`, uploads.none(), async (req, res) => {
     'cache-control': 'no-store'
   }).json(tokenizer.sign_and_wrap_access(user))
 })
+drop(
+  `${BASE}/user`,
+  middleware.authenticate('user'),
+  async (req, res) => {
+    // Check password
+    const user = await db.one(
+      'SELECT encrypted_password FROM users WHERE id = ${id}',
+      {id: req.user.id}
+    )
+    if (!await _.compare_password(req.body.password, user.encrypted_password)) {
+      return void res.status(401).json({error: 'Wrong password'})
+    }
+    await db.users.delete(req.user.id)
+    return void res.status(204).send()
+  }
+)
 
 // Routes: User email
 get(`${BASE}/user/confirmation`, async (req, res) => {
@@ -339,6 +355,11 @@ function post(url, ...handlers) {
 
 function put(url, ...handlers) {
   register_route('put', url, handlers)
+}
+
+// delete is a reserved word
+function drop(url, ...handlers) {
+  register_route('delete', url, handlers)
 }
 
 // Start server

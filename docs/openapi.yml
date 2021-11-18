@@ -28,7 +28,6 @@ info:
     - User endpoints
       - View user activity (https://fallingfruit.org/home).
       - Change and confirm email.
-      - Delete account with `DELETE /user`.
       - Change password while logged in (?).
     - I/O:
       - Translate emails, errors, and messages (https://github.com/lingui/js-lingui, https://github.com/phrase/phrase-cli).
@@ -558,6 +557,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+    delete:
+      summary: Delete the user (self).
+      tags:
+        - Authentication
+      security:
+        - key: []
+          token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  $ref: '#/paths/~1user/post/requestBody/content/application~1json/schema/properties/password'
+      responses:
+        '204':
+          description: Success (no content)
   /user/confirmation:
     post:
       summary: Confirm the user (from a form).

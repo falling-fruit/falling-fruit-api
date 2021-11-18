@@ -73,3 +73,24 @@ put:
         application/json:
           schema:
             $ref: ../components/schemas.yml#/User
+delete:
+  summary: Delete the user (self).
+  tags:
+    - Authentication
+  security:
+    - key: []
+      token: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - password
+          properties:
+            password:
+              $ref: ../components/properties.yml#/password
+  responses:
+    '204':
+      description: Success (no content)
