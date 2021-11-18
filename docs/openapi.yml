@@ -195,8 +195,6 @@ paths:
         - key: []
         - key: []
           token: []
-        - key: []
-          oauth2token: []
       requestBody:
         required: true
         content:
@@ -268,8 +266,6 @@ paths:
         - key: []
         - key: []
           token: []
-        - key: []
-          oauth2token: []
       parameters:
         - $ref: '#/components/parameters/location_id'
       requestBody:
@@ -311,8 +307,6 @@ paths:
         - key: []
         - key: []
           token: []
-        - key: []
-          oauth2token: []
       parameters:
         - $ref: '#/components/parameters/location_id'
       requestBody:
@@ -337,8 +331,6 @@ paths:
         - key: []
         - key: []
           token: []
-        - key: []
-          oauth2token: []
       requestBody:
         required: true
         content:
@@ -383,8 +375,6 @@ paths:
       security:
         - key: []
           token: []
-        - key: []
-          oauth2token: []
       parameters:
         - $ref: '#/components/parameters/review_id'
       requestBody:
@@ -481,8 +471,6 @@ paths:
         - key: []
         - key: []
           token: []
-        - key: []
-          oauth2token: []
       requestBody:
         required: true
         content:
@@ -544,8 +532,6 @@ paths:
       security:
         - key: []
           token: []
-        - key: []
-          oauth2token: []
       responses:
         '200':
           description: Success
@@ -560,8 +546,6 @@ paths:
       security:
         - key: []
           token: []
-        - key: []
-          oauth2token: []
       requestBody:
         required: true
         content:
@@ -648,6 +632,7 @@ paths:
   /user/token:
     post:
       summary: Request an access token.
+      description: 'Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.'
       tags:
         - Authentication
       security:
@@ -655,14 +640,14 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               required:
-                - email
+                - username
                 - password
               properties:
-                email:
+                username:
                   $ref: '#/components/schemas/User/allOf/3/properties/email'
                 password:
                   $ref: '#/paths/~1user/post/requestBody/content/application~1json/schema/properties/password'
@@ -753,14 +738,10 @@ components:
       name: x-api-key
       in: header
     token:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-    oauth2token:
       type: oauth2
       flows:
         password:
-          tokenUrl: user/oauth2token
+          tokenUrl: user/token
           scopes: {}
   parameters:
     bounds:

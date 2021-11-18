@@ -20,8 +20,6 @@ put:
   security:
     - key: []
       token: []
-    - key: []
-      oauth2token: []
   parameters:
     - $ref: ../components/parameters.yml#/review_id
   requestBody:

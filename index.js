@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use((req, res, next) => {
   const skip_api_key = [
     // OpenAPI OAuth2 password flow
-    `${BASE}/user/oauth2token`,
+    `${BASE}/user/token`,
     // Email confirmation link
     `${BASE}/user/confirmation`
   ]
@@ -151,37 +151,7 @@ put(
   middleware.authenticate('user'),
   (req) => db.users.edit(req)
 )
-post(
-  `${BASE}/user/token`,
-  async (req, res) => {
-    let user
-    try {
-      user = await db.one(
-        'SELECT id, roles, encrypted_password, confirmed_at FROM users WHERE email = ${email}',
-        {email: req.body.email.toLowerCase()}
-      )
-    } catch (err) {
-      // Email not found
-      return void res.status(401).json({error: 'Invalid email or password'})
-    }
-    if (!user.confirmed_at) {
-      // Phrase: devise.failure.unconfirmed
-      throw Error('You have to confirm your email address before continuing')
-    }
-    if (!await _.compare_password(req.body.password, user.encrypted_password)) {
-      // Wrong password
-      return void res.status(401).json({error: 'Invalid email or password'})
-    }
-    return void res.status(200).set({
-      'cache-control': 'no-store'
-    }).json({
-      access_token: _.sign_user_token(user),
-      token_type: 'bearer',
-      expires_in: JWT_EXPIRES_IN
-    })
-  }
-)
-post(`${BASE}/user/oauth2token`, async (req, res) => {
+post(`${BASE}/user/token`, uploads.none(), async (req, res) => {
   let user
   try {
     user = await db.one(

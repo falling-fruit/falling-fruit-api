@@ -3,13 +3,8 @@ key:
   name: x-api-key
   in: header
 token:
-  type: http
-  scheme: bearer
-  bearerFormat: JWT
-# Alternate included only for the convenience of the integrated login form
-oauth2token:
   type: oauth2
   flows:
     password:
-      tokenUrl: user/oauth2token
+      tokenUrl: user/token
       scopes: {}

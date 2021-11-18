@@ -17,8 +17,6 @@ post:
     - key: []
     - key: []
       token: []
-    - key: []
-      oauth2token: []
   requestBody:
     required: true
     content:

@@ -43,8 +43,6 @@ get:
   security:
     - key: []
       token: []
-    - key: []
-      oauth2token: []
   responses:
     '200':
       description: Success
@@ -59,8 +57,6 @@ put:
   security:
     - key: []
       token: []
-    - key: []
-      oauth2token: []
   requestBody:
     required: true
     content:

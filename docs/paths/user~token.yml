@@ -1,5 +1,6 @@
 post:
   summary: Request an access token.
+  description: Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.
   tags:
     - Authentication
   security:
@@ -7,14 +8,14 @@ post:
   requestBody:
     required: true
     content:
-      application/json:
+      multipart/form-data:
         schema:
           type: object
           required:
-            - email
+            - username
             - password
           properties:
-            email:
+            username:
               $ref: ../components/properties.yml#/email
             password:
               $ref: ../components/properties.yml#/password

@@ -23,8 +23,6 @@ post:
     - key: []
     - key: []
       token: []
-    - key: []
-      oauth2token: []
   parameters:
     - $ref: '../components/parameters.yml#/location_id'
   requestBody:
