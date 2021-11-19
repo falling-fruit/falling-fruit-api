@@ -147,7 +147,8 @@ post(`${BASE}/user`, async (req) => {
   }
   const user = await db.users.add(req)
   // Send confirmation email
-  await _.send_email_confirmation(user, tokenizer.sign_email_confirmation(user))
+  const token = tokenizer.sign_email_confirmation(user)
+  await _.send_email_confirmation(user, token)
   // Phrase: devise.confirmations.send_instructions
   return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
 })
@@ -159,7 +160,53 @@ get(
 put(
   `${BASE}/user`,
   middleware.authenticate('user'),
-  (req) => db.users.edit(req)
+  async (req, res) => {
+    const user = await db.one(
+      'SELECT id, name, encrypted_password, email FROM users WHERE id = ${id}',
+      {id: req.user.id}
+    )
+    if (req.body.email != user.email || req.body.password) {
+      // Require password confirmation
+      if (!req.body.password_confirmation) {
+        return void res.status(401).json(
+          {error: 'Current password is required to change email or password'}
+        )
+      }
+      const confirmed = await _.compare_password(
+        req.body.password_confirmation, user.encrypted_password
+      )
+      if (!confirmed) {
+        return void res.status(401).json({error: 'Wrong password'})
+      }
+      if (req.body.email != user.email) {
+        // Check that email is not already taken
+        const other = await db.oneOrNone('SELECT id FROM users WHERE email = ${email}', {email: req.body.email})
+        if (other) {
+          throw Error('An account with that email already exists')
+        }
+        // Save new email as unconfirmed
+        await db.none(
+          'UPDATE users SET unconfirmed_email = ${email} WHERE id = ${id}',
+          {id: req.user.id, email: req.body.email}
+        )
+        // Send confirmation email
+        const token = tokenizer.sign_email_confirmation(user, req.body.email)
+        await _.send_email_confirmation({email: req.body.email}, token)
+        // When email clicked: set unconfirmed_email to email
+      }
+      if (req.body.password === req.body.password_confirmation) {
+        // Ignore password input
+        req.body.password = null
+      } else {
+        // Revoke all existing tokens except the one in use
+        await db.none(
+          'DELETE FROM refresh_tokens WHERE user_id = ${id} AND jti != ${jti}',
+          {id: req.user.id, jti: req.user.jti}
+        )
+      }
+    }
+    return db.users.edit(req)
+  }
 )
 post(`${BASE}/user/token`, uploads.none(), async (req, res) => {
   let user
@@ -241,11 +288,24 @@ get(`${BASE}/user/confirmation`, async (req, res) => {
     return
   }
   const user = await db.oneOrNone(
-    'SELECT id, email, confirmed_at FROM users WHERE id=${id}', {id: data.id}
+    'SELECT id, email, confirmed_at, unconfirmed_email FROM users WHERE id=${id}',
+    {id: data.id}
   )
   if (!user) {
     // Phrase: devise.errors.messages.not_found
     throw Error('Email not found')
+  }
+  if (user.unconfirmed_email) {
+    if (user.unconfirmed_email === data.email) {
+      // Confirm unconfirmed email
+      await db.none(
+        'UPDATE users SET email = unconfirmed_email, unconfirmed_email = NULL WHERE id = ${id}',
+        {id: user.id}
+      )
+      return {message: 'Your email address has been successfully confirmed'}
+    } else {
+      throw Error('Email-confirmation token is not for the newest email on your account')
+    }
   }
   if (user.confirmed_at) {
     // Phrase: devise.errors.messages.already_confirmed
@@ -262,11 +322,24 @@ post(`${BASE}/user/confirmation`, async (req, res) => {
     return
   }
   const user = await db.oneOrNone(
-    'SELECT id, email, confirmed_at FROM users WHERE id=${id}', {id: data.id}
+    'SELECT id, email, confirmed_at, unconfirmed_email FROM users WHERE id=${id}',
+    {id: data.id}
   )
   if (!user) {
     // Phrase: devise.errors.messages.not_found
     throw Error('Email not found')
+  }
+  if (user.unconfirmed_email) {
+    if (user.unconfirmed_email === data.email) {
+      // Confirm unconfirmed email
+      await db.none(
+        'UPDATE users SET email = unconfirmed_email, unconfirmed_email = NULL WHERE id = ${id}',
+        {id: user.id}
+      )
+      return {email: user.unconfirmed_email}
+    } else {
+      throw Error('Email-confirmation token does not match the newest email on your account')
+    }
   }
   if (user.confirmed_at) {
     // Phrase: devise.errors.messages.already_confirmed
@@ -279,19 +352,19 @@ post(`${BASE}/user/confirmation`, async (req, res) => {
 post(`${BASE}/user/confirmation/retry`, async (req) => {
   const email = req.body.email.toLowerCase()
   const user = await db.oneOrNone(
-    'SELECT id, email, confirmed_at FROM users WHERE email=${email}',
+    'SELECT id, email, unconfirmed_email, confirmed_at FROM users WHERE email = ${email} OR unconfirmed_email = ${email}',
     {email: email}
   )
   if (!user) {
     // Phrase: devise.errors.messages.not_found
     throw Error('Email not found')
   }
-  if (user.confirmed_at) {
+  if (user.email === email && user.confirmed_at) {
     // Phrase: devise.errors.messages.already_confirmed
     throw Error('Email was already confirmed, please try signing in')
   }
-  const token = tokenizer.sign_email_confirmation(user)
-  await _.send_email_confirmation(user, token)
+  const token = tokenizer.sign_email_confirmation(user, user.unconfirmed_email ? user.unconfirmed_email : null)
+  await _.send_email_confirmation({email: email}, token)
   // Phrase: devise.confirmation.send_instructions
   return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
 })

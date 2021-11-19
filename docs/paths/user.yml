@@ -52,6 +52,10 @@ get:
             $ref: ../components/schemas.yml#/User
 put:
   summary: Edit the user (self).
+  description: |
+    - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed.
+    - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
+    - In either case, the existing password is required (`password_confirmation`).
   tags:
     - Authentication
   security:
@@ -63,9 +67,20 @@ put:
       application/json:
         schema:
           type: object
+          required:
+            - name
+            - email
           properties:
             name:
               $ref: ../components/properties.yml#/name
+            email:
+              $ref: ../components/properties.yml#/email
+            password:
+              $ref: ../components/properties.yml#/password
+            password_confirmation:
+              description: Current password. Required for email and password change.
+              type: string
+              example: foo?bar
   responses:
     '200':
       description: Success

@@ -27,8 +27,6 @@ info:
       - View recent changes (https://fallingfruit.org/changes).
     - User endpoints
       - View user activity (https://fallingfruit.org/home).
-      - Change and confirm email.
-      - Change password while logged in (?).
     - I/O:
       - Translate emails, errors, and messages (https://github.com/lingui/js-lingui, https://github.com/phrase/phrase-cli).
       - Return `5xx` for server errors, currently included in `400`.
@@ -504,9 +502,7 @@ paths:
                 email:
                   $ref: '#/components/schemas/User/allOf/3/properties/email'
                 password:
-                  description: Password.
-                  type: string
-                  example: f00!bar
+                  $ref: '#/paths/~1user/put/requestBody/content/application~1json/schema/properties/password'
                 name:
                   $ref: '#/components/schemas/EditUser/allOf/0/properties/name'
       responses:
@@ -536,6 +532,10 @@ paths:
                 $ref: '#/components/schemas/User'
     put:
       summary: Edit the user (self).
+      description: |
+        - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed.
+        - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
+        - In either case, the existing password is required (`password_confirmation`).
       tags:
         - Authentication
       security:
@@ -547,9 +547,22 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - name
+                - email
               properties:
                 name:
                   $ref: '#/components/schemas/EditUser/allOf/0/properties/name'
+                email:
+                  $ref: '#/components/schemas/User/allOf/3/properties/email'
+                password:
+                  description: Password.
+                  type: string
+                  example: f00!bar
+                password_confirmation:
+                  description: Current password. Required for email and password change.
+                  type: string
+                  example: foo?bar
       responses:
         '200':
           description: Success
@@ -668,7 +681,7 @@ paths:
                 username:
                   $ref: '#/components/schemas/User/allOf/3/properties/email'
                 password:
-                  $ref: '#/paths/~1user/post/requestBody/content/application~1json/schema/properties/password'
+                  $ref: '#/paths/~1user/put/requestBody/content/application~1json/schema/properties/password'
       responses:
         '200':
           description: Success
@@ -733,7 +746,7 @@ paths:
                   type: string
                   example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
                 password:
-                  $ref: '#/paths/~1user/post/requestBody/content/application~1json/schema/properties/password'
+                  $ref: '#/paths/~1user/put/requestBody/content/application~1json/schema/properties/password'
       responses:
         '200':
           description: Success
@@ -1436,6 +1449,10 @@ components:
                   - admin
               example:
                 - user
+            unconfirmed_email:
+              description: Email change pending confirmation.
+              type: string
+              example: noo@bar.com
     EditReport:
       title: Report (edit)
       description: Report properties that can be edited.

@@ -25,7 +25,8 @@ class Tokenizer {
     exp = exp || Math.floor(Date.now() / 1000) + REFRESH_EXPIRES_IN
     const tokens = {
       access_token: this.sign(
-        {id: user.id, roles: user.roles}, {expiresIn: ACCESS_EXPIRES_IN}
+        {id: user.id, roles: user.roles, jti: jti},
+        {expiresIn: ACCESS_EXPIRES_IN}
       ),
       token_type: 'bearer',
       expires_in: ACCESS_EXPIRES_IN,
@@ -38,7 +39,7 @@ class Tokenizer {
   verify_access(token, res) {
     try {
       const data = this.verify(token)
-      return {id: data.id, roles: data.roles}
+      return {id: data.id, roles: data.roles, exp: data.exp, jti: data.jti}
     } catch (err) {
       if (err instanceof jwt.TokenExpiredError) {
         // Phrase: no equivalent (see devise.failure.timeout for sessions)
@@ -63,14 +64,18 @@ class Tokenizer {
     }
   }
 
-  sign_email_confirmation(user) {
-    return this.sign({id: user.id}, {expiresIn: '1d', noTimestamp: true})
+  sign_email_confirmation(user, email = null) {
+    const data = {id: user.id}
+    if (email) {
+      Object.assign(data, {email: email})
+    }
+    return this.sign(data, {expiresIn: '1d', noTimestamp: true})
   }
 
   verify_email_confirmation(token, res) {
     try {
       const data = this.verify(token)
-      return {id: data.id}
+      return {id: data.id, email: data.email}
     } catch (err) {
       if (err instanceof jwt.TokenExpiredError) {
         // Phrase: devise.errors.messages.expired

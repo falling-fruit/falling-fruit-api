@@ -493,6 +493,10 @@ User:
             type: string
             enum: [user, admin]
           example: [user]
+        unconfirmed_email:
+          description: Email change pending confirmation.
+          type: string
+          example: noo@bar.com
 EditReport:
   title: Report (edit)
   description: Report properties that can be edited.

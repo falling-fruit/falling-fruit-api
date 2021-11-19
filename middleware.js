@@ -29,9 +29,9 @@ function get_user_from_token(req, res, next) {
     return void res.status(401).json({error: 'Invalid access token'})
   }
   const token = header.substring(7)
-  const user = tokenizer.verify_access(token, res)
-  if (user) {
-    req.user = user
+  const data = tokenizer.verify_access(token, res)
+  if (data) {
+    req.user = data
     return void next()
   }
 }

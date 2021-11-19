@@ -27,8 +27,6 @@ info:
       - View recent changes (https://fallingfruit.org/changes).
     - User endpoints
       - View user activity (https://fallingfruit.org/home).
-      - Change and confirm email.
-      - Change password while logged in (?).
     - I/O:
       - Translate emails, errors, and messages (https://github.com/lingui/js-lingui, https://github.com/phrase/phrase-cli).
       - Return `5xx` for server errors, currently included in `400`.

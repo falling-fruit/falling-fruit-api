@@ -21,13 +21,15 @@ class Users {
     return this.db.one(sql.show, {id: id})
   }
 
-  edit(req) {
+  async edit(req) {
     const values = {
       ...req.body,
       id: req.user.id
     }
-    // TODO: Change password
-    // TODO: Change and confirm email
+    if (values.password) {
+      values.password = await _.hash_password(values.password)
+      return this.db.one(sql.editPassword, values)
+    }
     return this.db.one(sql.edit, values)
   }
 
