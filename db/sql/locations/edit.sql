@@ -20,7 +20,8 @@ WITH l AS (
     access,
     description,
     muni,
-    unverified
+    unverified,
+    invasive
 )
 SELECT
   l.id, l.lat, l.lng, l.type_ids, l.import_id, l.user_id,
