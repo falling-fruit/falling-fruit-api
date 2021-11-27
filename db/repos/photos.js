@@ -47,6 +47,15 @@ class Photos {
   async link(photo_ids, review_id) {
     if (photo_ids.length) {
       await this.db.none(sql.link, {id: review_id, ids: photo_ids})
+      // NOTE: For backwards compatibility only
+      // Copy first photo
+      const urls = await this.db.one('SELECT thumb, medium, original FROM photos WHERE id = ${id}', {id: photo_ids[0]})
+      await _.copy_photo_to_old_urls(urls, review_id)
+      await this.db.none("UPDATE observations SET photo_file_name = 'first.jpg' WHERE id = ${id}", {id: review_id})
+    } else {
+      // NOTE: For backwards compatibility only
+      // Clear first photo
+      await this.db.none('UPDATE observations SET photo_file_name = NULL WHERE id = ${id}', {id: review_id})
     }
     await this.db.none(sql.unlink, {id: review_id, ids: photo_ids})
   }

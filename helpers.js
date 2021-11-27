@@ -249,6 +249,45 @@ function upload_photo(input, output) {
   }).promise()
 }
 
+// ---- For backwards compatibility only ----
+
+function id_partition(id) {
+  const pad = String(id).padStart(9, '0')
+  return path.join(pad.substr(0, 3), pad.substr(3, 3), pad.substr(6, 3))
+}
+
+function build_s3_photo_keys(observation_id, filename = 'first.jpg') {
+  const base = path.join('observations', 'photos', id_partition(observation_id))
+  return {
+    thumb: path.join(base, 'thumb', filename),
+    medium: path.join(base, 'medium', filename),
+    original: path.join(base, 'original', filename)
+  }
+}
+
+function parse_s3_url(url) {
+  const regex = /^https?:\/\/(?<bucket>[^\.]+)\.s3\.(?<region>[^\.]+)\.amazonaws\.com\/(?<key>.*)$/
+  const match = regex.exec(url)
+  if (match == null) {
+    throw Error(`Photo URL not formatted as expected: ${url}`)
+  }
+  return match.groups
+}
+
+_.copy_photo_to_old_urls = function(urls, observation_id) {
+  const keys = build_s3_photo_keys(observation_id)
+  const promises = ['thumb', 'medium', 'original'].map(style => {
+    const parsed = parse_s3_url(urls[style])
+    return s3.copyObject({
+      CopySource: `${parsed.bucket}/${parsed.key}`,
+      Bucket: process.env.S3_BUCKET,
+      Key: keys[style],
+      ACL: 'public-read'
+    }).promise()
+  })
+  return Promise.all(promises)
+}
+
 _.resize_and_upload_photo = async function(input) {
   sizes = {
     thumb: 100,
@@ -273,6 +312,7 @@ _.resize_and_upload_photo = async function(input) {
   await fs.promises.unlink(input)
   return Object.fromEntries(Object.keys(sizes).map((k, i) => [k, urls[i]]))
 }
+
 
 function send_email({to, subject, body, tag = null}) {
   return postmark_client.sendEmail({
