@@ -1,5 +1,10 @@
 const db = require('./db')
 const tokenizer = new (require('./tokens'))()
+const Recaptcha = require('express-recaptcha').RecaptchaV2
+const recaptcha = new Recaptcha(
+  process.env.RECAPTCHA_SITE_KEY,
+  process.env.RECAPTCHA_SECRET_KEY
+)
 
 const _ = {}
 
@@ -55,6 +60,18 @@ _.authenticate = function(role) {
     return [get_user_from_token, require_user(role)]
   }
   return [get_user_from_token]
+}
+
+_.recaptcha = function(req, res, next) {
+  if (req.user) {
+    return void next()
+  }
+  recaptcha.verify(req, (error) => {
+    if (error) {
+      return void res.status(401).json({error: `reCAPTCHA ${error}`})
+    }
+    return void next()
+  })
 }
 
 module.exports = _
