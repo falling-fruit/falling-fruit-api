@@ -2,7 +2,7 @@ require('dotenv').config()
 const db = require('./db')
 const _ = require('./helpers')
 const middleware = require('./middleware')
-const {PORT, ORIGIN, BASE, JWT_EXPIRES_IN} = require('./constants')
+const {PORT, BASE} = require('./constants')
 const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
@@ -66,6 +66,7 @@ post(
       review.photos = photos
       location.reviews = [review]
     }
+    await db.clusters.increment(location)
     return location
   }
 )
@@ -84,7 +85,19 @@ get(`${BASE}/locations/:id`, async req => {
   }
   return location
 })
-put(`${BASE}/locations/:id`, req => db.locations.edit(req.params.id, req.body))
+put(`${BASE}/locations/:id`, async req => {
+  const old = await db.locations.show(req.params.id)
+  const updated = await db.locations.edit(req.params.id, req.body)
+  // Decrement first in case location properties have changed
+  if (
+    updated.lat != old.lat || updated.lng != old.lng ||
+    updated.muni != old.muni || !_.set_equal(updated.type_ids, old.type_ids)
+  ) {
+    await db.clusters.decrement(old)
+    await db.clusters.increment(updated)
+  }
+  return updated
+})
 
 // Routes: Reviews
 get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
