@@ -41,7 +41,7 @@ class Locations {
       _.bounds_to_sql(_.parse_bounds(bounds)),
       _.muni_to_sql(muni),
       _.types_array_to_sql(types),
-      _.muni_to_sql(invasive)
+      _.invasive_to_sql(invasive)
     ]
     const values = {
       where: filters.filter(Boolean).join(' AND '),
@@ -74,7 +74,7 @@ class Locations {
       _.bounds_to_sql(_.parse_bounds(bounds)),
       _.muni_to_sql(muni),
       _.types_array_to_sql(types),
-      _.muni_to_sql(invasive)
+      _.invasive_to_sql(invasive)
     ]
     const values = {where: filters.filter(Boolean).join(' AND ')}
     return this.db.one(sql.count, values)
