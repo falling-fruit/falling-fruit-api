@@ -36,20 +36,41 @@ app.use((req, res, next) => {
 app.use(BASE, express.static('docs'))
 
 // Routes: Clusters
-get(`${BASE}/clusters`, req => db.clusters.list(req.query))
+get(
+  `${BASE}/clusters`,
+  req => db.clusters.list(req.query)
+)
 
 // Routes: Types
-get(`${BASE}/types`, () => db.types.list())
+get(
+  `${BASE}/types`,
+  () => db.types.list()
+)
 // TODO: Raise auth error if pending: false and not admin
-post(`${BASE}/types`, req => db.types.add(req.body))
-get(`${BASE}/types/counts`, req => db.types.count(req.query))
-get(`${BASE}/types/:id`, req => db.types.show(req.params.id))
+post(
+  `${BASE}/types`,
+  middleware.authenticate(),
+  middleware.recaptcha,
+  req => db.types.add(req.body)
+)
+get(
+  `${BASE}/types/counts`,
+  req => db.types.count(req.query)
+)
+get(
+  `${BASE}/types/:id`,
+  req => db.types.show(req.params.id)
+)
 
 // Routes: Locations
-get(`${BASE}/locations`, req => db.locations.list(req.query))
+get(
+  `${BASE}/locations`,
+  req => db.locations.list(req.query)
+)
 post(
   `${BASE}/locations`,
   middleware.authenticate(),
+  middleware.recaptcha,
   async req => {
     // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
     const user_id = req.user ? req.user.id : null
@@ -70,40 +91,54 @@ post(
     return location
   }
 )
-get(`${BASE}/locations/count`, req => db.locations.count(req.query))
-get(`${BASE}/locations/:id`, async req => {
-  const location = await db.locations.show(req.params.id)
-  if (req.query.embed) {
-    const embedded = req.query.embed.split(',')
-    if (embedded.includes('reviews')) {
-      location.reviews = await db.reviews.list(req.params.id)
+get(
+  `${BASE}/locations/count`,
+  req => db.locations.count(req.query)
+)
+get(
+  `${BASE}/locations/:id`,
+  async req => {
+    const location = await db.locations.show(req.params.id)
+    if (req.query.embed) {
+      const embedded = req.query.embed.split(',')
+      if (embedded.includes('reviews')) {
+        location.reviews = await db.reviews.list(req.params.id)
+      }
+      if (embedded.includes('import') && location.import_id) {
+        location.import = await db.imports.show(location.import_id)
+        delete location.import_id
+      }
     }
-    if (embedded.includes('import') && location.import_id) {
-      location.import = await db.imports.show(location.import_id)
-      delete location.import_id
+    return location
+  }
+)
+put(
+  `${BASE}/locations/:id`,
+  middleware.recaptcha,
+  async req => {
+    const old = await db.locations.show(req.params.id)
+    const updated = await db.locations.edit(req.params.id, req.body)
+    // Decrement first in case location properties have changed
+    if (
+      updated.lat != old.lat || updated.lng != old.lng ||
+      updated.muni != old.muni || !_.set_equal(updated.type_ids, old.type_ids)
+    ) {
+      await db.clusters.decrement(old)
+      await db.clusters.increment(updated)
     }
+    return updated
   }
-  return location
-})
-put(`${BASE}/locations/:id`, async req => {
-  const old = await db.locations.show(req.params.id)
-  const updated = await db.locations.edit(req.params.id, req.body)
-  // Decrement first in case location properties have changed
-  if (
-    updated.lat != old.lat || updated.lng != old.lng ||
-    updated.muni != old.muni || !_.set_equal(updated.type_ids, old.type_ids)
-  ) {
-    await db.clusters.decrement(old)
-    await db.clusters.increment(updated)
-  }
-  return updated
-})
+)
 
 // Routes: Reviews
-get(`${BASE}/locations/:id/reviews`, req => db.reviews.list(req.params.id))
+get(
+  `${BASE}/locations/:id/reviews`,
+  req => db.reviews.list(req.params.id)
+)
 post(
   `${BASE}/locations/:id/reviews`,
   middleware.authenticate(),
+  middleware.recaptcha,
   async req => {
     // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
     const photos = await db.photos.test_unlinked(req.body.photo_ids)
@@ -115,11 +150,14 @@ post(
     return review
   }
 )
-get(`${BASE}/reviews/:id`, async (req) => {
-  const review = await db.reviews.show(req.params.id)
-  review.photos = await db.photos.list(req.params.id)
-  return review
-})
+get(
+  `${BASE}/reviews/:id`,
+  async (req) => {
+    const review = await db.reviews.show(req.params.id)
+    review.photos = await db.photos.list(req.params.id)
+    return review
+  }
+)
 put(
   `${BASE}/reviews/:id`,
   middleware.authenticate('user'),
@@ -141,6 +179,7 @@ put(
 // Routes: Photos
 post(
   `${BASE}/photos`,
+  middleware.recaptcha,
   uploads.single('file'),
   async req => {
     const urls = await _.resize_and_upload_photo(req.file.path)
@@ -149,22 +188,26 @@ post(
 )
 
 // Routes: Users
-post(`${BASE}/user`, async (req) => {
-  // Email uniqueness is case-insensitive
-  req.body.email = req.body.email.toLowerCase()
-  const exists = await db.oneOrNone(
-    'SELECT email FROM users WHERE email=${email}', {email: req.body.email}
-  )
-  if (exists) {
-    throw Error('An account with that email already exists')
+post(
+  `${BASE}/user`,
+  middleware.recaptcha,
+  async (req) => {
+    // Email uniqueness is case-insensitive
+    req.body.email = req.body.email.toLowerCase()
+    const exists = await db.oneOrNone(
+      'SELECT email FROM users WHERE email=${email}', {email: req.body.email}
+    )
+    if (exists) {
+      throw Error('An account with that email already exists')
+    }
+    const user = await db.users.add(req)
+    // Send confirmation email
+    const token = tokenizer.sign_email_confirmation(user)
+    await _.send_email_confirmation(user, token)
+    // Phrase: devise.confirmations.send_instructions
+    return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
   }
-  const user = await db.users.add(req)
-  // Send confirmation email
-  const token = tokenizer.sign_email_confirmation(user)
-  await _.send_email_confirmation(user, token)
-  // Phrase: devise.confirmations.send_instructions
-  return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
-})
+)
 get(
   `${BASE}/user`,
   middleware.authenticate('user'),
@@ -221,61 +264,69 @@ put(
     return db.users.edit(req)
   }
 )
-post(`${BASE}/user/token`, uploads.none(), async (req, res) => {
-  let user
-  try {
-    user = await db.one(
-      'SELECT id, roles, encrypted_password, confirmed_at FROM users WHERE email = ${email}',
-      {email: req.body.username.toLowerCase()}
+post(
+  `${BASE}/user/token`,
+  uploads.none(),
+  async (req, res) => {
+    let user
+    try {
+      user = await db.one(
+        'SELECT id, roles, encrypted_password, confirmed_at FROM users WHERE email = ${email}',
+        {email: req.body.username.toLowerCase()}
+      )
+    } catch (err) {
+      // Email not found
+      // Phrase: devise.failure.invalid
+      return void res.status(401).json({error: 'Invalid email or password'})
+    }
+    if (!user.confirmed_at) {
+      // Phrase: devise.failure.unconfirmed
+      throw Error('You have to confirm your email address before continuing')
+    }
+    if (!await _.compare_password(req.body.password, user.encrypted_password)) {
+      // Wrong password
+      // Phrase: devise.failure.invalid
+      return void res.status(401).json({error: 'Invalid email or password'})
+    }
+    const [tokens, jti, exp] = tokenizer.sign_and_wrap_access(user)
+    // Store refresh token id in database
+    await db.none(
+      'INSERT INTO refresh_tokens (user_id, jti, exp) VALUES (${user_id}, ${jti}, ${exp})',
+      {user_id: user.id, jti: jti, exp: exp}
     )
-  } catch (err) {
-    // Email not found
-    // Phrase: devise.failure.invalid
-    return void res.status(401).json({error: 'Invalid email or password'})
+    return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
   }
-  if (!user.confirmed_at) {
-    // Phrase: devise.failure.unconfirmed
-    throw Error('You have to confirm your email address before continuing')
+)
+post(
+  `${BASE}/user/token/refresh`,
+  uploads.none(),
+  async (req, res) => {
+    // req.body.grant_type=refresh_token
+    const token = req.body.refresh_token
+    const data = tokenizer.verify_refresh(token, res)
+    if (!data) {
+      return
+    }
+    // Fetch user roles
+    const user = await db.oneOrNone(
+      'SELECT id, roles FROM users WHERE id = ${id}', {id: data.id}
+    )
+    if (!user) {
+      return void res.status(401).json({error: 'Invalid refresh token'})
+    }
+    // Generate new refresh token with same expiration
+    const [tokens, jti, exp] = tokenizer.sign_and_wrap_access(user, data.exp)
+    // Replace with new refresh token if old refresh token exists
+    const refreshed = await db.oneOrNone(
+      'UPDATE refresh_tokens SET jti = ${new} WHERE user_id = ${user_id} AND jti = ${old} RETURNING jti',
+      {user_id: user.id, old: data.jti, new: jti}
+    )
+    if (!refreshed) {
+      return void res.status(401).json({error: 'Invalid refresh token'})
+    }
+    return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
   }
-  if (!await _.compare_password(req.body.password, user.encrypted_password)) {
-    // Wrong password
-    // Phrase: devise.failure.invalid
-    return void res.status(401).json({error: 'Invalid email or password'})
-  }
-  const [tokens, jti, exp] = tokenizer.sign_and_wrap_access(user)
-  // Store refresh token id in database
-  await db.none(
-    'INSERT INTO refresh_tokens (user_id, jti, exp) VALUES (${user_id}, ${jti}, ${exp})',
-    {user_id: user.id, jti: jti, exp: exp}
-  )
-  return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
-})
-post(`${BASE}/user/token/refresh`, uploads.none(), async (req, res) => {
-  // req.body.grant_type=refresh_token
-  const token = req.body.refresh_token
-  const data = tokenizer.verify_refresh(token, res)
-  if (!data) {
-    return
-  }
-  // Fetch user roles
-  const user = await db.oneOrNone(
-    'SELECT id, roles FROM users WHERE id = ${id}', {id: data.id}
-  )
-  if (!user) {
-    return void res.status(401).json({error: 'Invalid refresh token'})
-  }
-  // Generate new refresh token with same expiration
-  const [tokens, jti, exp] = tokenizer.sign_and_wrap_access(user, data.exp)
-  // Replace with new refresh token if old refresh token exists
-  const refreshed = await db.oneOrNone(
-    'UPDATE refresh_tokens SET jti = ${new} WHERE user_id = ${user_id} AND jti = ${old} RETURNING jti',
-    {user_id: user.id, old: data.jti, new: jti}
-  )
-  if (!refreshed) {
-    return void res.status(401).json({error: 'Invalid refresh token'})
-  }
-  return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
-})
+)
 drop(
   `${BASE}/user`,
   middleware.authenticate('user'),
@@ -294,149 +345,171 @@ drop(
 )
 
 // Routes: User email
-get(`${BASE}/user/confirmation`, async (req, res) => {
-  const token = req.query.token
-  const data = tokenizer.verify_email_confirmation(token, res)
-  if (!data) {
-    return
-  }
-  const user = await db.oneOrNone(
-    'SELECT id, email, confirmed_at, unconfirmed_email FROM users WHERE id=${id}',
-    {id: data.id}
-  )
-  if (!user) {
-    // Phrase: devise.errors.messages.not_found
-    throw Error('Email not found')
-  }
-  if (user.unconfirmed_email) {
-    if (user.unconfirmed_email === data.email) {
-      // Confirm unconfirmed email
-      await db.none(
-        'UPDATE users SET email = unconfirmed_email, unconfirmed_email = NULL WHERE id = ${id}',
-        {id: user.id}
-      )
-      return {message: 'Your email address has been successfully confirmed'}
-    } else {
-      throw Error('Email-confirmation token is not for the newest email on your account')
+get(
+  `${BASE}/user/confirmation`,
+  async (req, res) => {
+    const token = req.query.token
+    const data = tokenizer.verify_email_confirmation(token, res)
+    if (!data) {
+      return
     }
-  }
-  if (user.confirmed_at) {
-    // Phrase: devise.errors.messages.already_confirmed
-    throw Error('Email was already confirmed, please try signing in')
-  }
-  await db.users.confirm(user.id)
-  // Phrase: devise.confirmation.confirmed
-  return {message: 'Your email address has been successfully confirmed'}
-})
-post(`${BASE}/user/confirmation`, async (req, res) => {
-  const token = req.body.token
-  const data = tokenizer.verify_email_confirmation(token, res)
-  if (!data) {
-    return
-  }
-  const user = await db.oneOrNone(
-    'SELECT id, email, confirmed_at, unconfirmed_email FROM users WHERE id=${id}',
-    {id: data.id}
-  )
-  if (!user) {
-    // Phrase: devise.errors.messages.not_found
-    throw Error('Email not found')
-  }
-  if (user.unconfirmed_email) {
-    if (user.unconfirmed_email === data.email) {
-      // Confirm unconfirmed email
-      await db.none(
-        'UPDATE users SET email = unconfirmed_email, unconfirmed_email = NULL WHERE id = ${id}',
-        {id: user.id}
-      )
-      return {email: user.unconfirmed_email}
-    } else {
-      throw Error('Email-confirmation token does not match the newest email on your account')
+    const user = await db.oneOrNone(
+      'SELECT id, email, confirmed_at, unconfirmed_email FROM users WHERE id=${id}',
+      {id: data.id}
+    )
+    if (!user) {
+      // Phrase: devise.errors.messages.not_found
+      throw Error('Email not found')
     }
+    if (user.unconfirmed_email) {
+      if (user.unconfirmed_email === data.email) {
+        // Confirm unconfirmed email
+        await db.none(
+          'UPDATE users SET email = unconfirmed_email, unconfirmed_email = NULL WHERE id = ${id}',
+          {id: user.id}
+        )
+        return {message: 'Your email address has been successfully confirmed'}
+      } else {
+        throw Error('Email-confirmation token is not for the newest email on your account')
+      }
+    }
+    if (user.confirmed_at) {
+      // Phrase: devise.errors.messages.already_confirmed
+      throw Error('Email was already confirmed, please try signing in')
+    }
+    await db.users.confirm(user.id)
+    // Phrase: devise.confirmation.confirmed
+    return {message: 'Your email address has been successfully confirmed'}
   }
-  if (user.confirmed_at) {
-    // Phrase: devise.errors.messages.already_confirmed
-    throw Error('Email was already confirmed, please try signing in')
+)
+post(
+  `${BASE}/user/confirmation`,
+  async (req, res) => {
+    const token = req.body.token
+    const data = tokenizer.verify_email_confirmation(token, res)
+    if (!data) {
+      return
+    }
+    const user = await db.oneOrNone(
+      'SELECT id, email, confirmed_at, unconfirmed_email FROM users WHERE id=${id}',
+      {id: data.id}
+    )
+    if (!user) {
+      // Phrase: devise.errors.messages.not_found
+      throw Error('Email not found')
+    }
+    if (user.unconfirmed_email) {
+      if (user.unconfirmed_email === data.email) {
+        // Confirm unconfirmed email
+        await db.none(
+          'UPDATE users SET email = unconfirmed_email, unconfirmed_email = NULL WHERE id = ${id}',
+          {id: user.id}
+        )
+        return {email: user.unconfirmed_email}
+      } else {
+        throw Error('Email-confirmation token does not match the newest email on your account')
+      }
+    }
+    if (user.confirmed_at) {
+      // Phrase: devise.errors.messages.already_confirmed
+      throw Error('Email was already confirmed, please try signing in')
+    }
+    await db.users.confirm(user.id)
+    // Phrase: devise.confirmation.confirmed
+    return {email: user.email}
   }
-  await db.users.confirm(user.id)
-  // Phrase: devise.confirmation.confirmed
-  return {email: user.email}
-})
-post(`${BASE}/user/confirmation/retry`, async (req) => {
-  const email = req.body.email.toLowerCase()
-  const user = await db.oneOrNone(
-    'SELECT id, email, unconfirmed_email, confirmed_at FROM users WHERE email = ${email} OR unconfirmed_email = ${email}',
-    {email: email}
-  )
-  if (!user) {
-    // Phrase: devise.errors.messages.not_found
-    throw Error('Email not found')
+)
+post(
+  `${BASE}/user/confirmation/retry`,
+  middleware.recaptcha,
+  async (req) => {
+    const email = req.body.email.toLowerCase()
+    const user = await db.oneOrNone(
+      'SELECT id, email, unconfirmed_email, confirmed_at FROM users WHERE email = ${email} OR unconfirmed_email = ${email}',
+      {email: email}
+    )
+    if (!user) {
+      // Phrase: devise.errors.messages.not_found
+      throw Error('Email not found')
+    }
+    if (user.email === email && user.confirmed_at) {
+      // Phrase: devise.errors.messages.already_confirmed
+      throw Error('Email was already confirmed, please try signing in')
+    }
+    const token = tokenizer.sign_email_confirmation(user, user.unconfirmed_email ? user.unconfirmed_email : null)
+    await _.send_email_confirmation({email: email}, token)
+    // Phrase: devise.confirmation.send_instructions
+    return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
   }
-  if (user.email === email && user.confirmed_at) {
-    // Phrase: devise.errors.messages.already_confirmed
-    throw Error('Email was already confirmed, please try signing in')
-  }
-  const token = tokenizer.sign_email_confirmation(user, user.unconfirmed_email ? user.unconfirmed_email : null)
-  await _.send_email_confirmation({email: email}, token)
-  // Phrase: devise.confirmation.send_instructions
-  return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
-})
+)
 
 // Routes: User password
-put(`${BASE}/user/password`, async (req, res) => {
-  const token = req.body.token
-  let data = tokenizer.decode_password_reset(token, res)
-  if (!data) {
-    return
+put(
+  `${BASE}/user/password`,
+  async (req, res) => {
+    const token = req.body.token
+    let data = tokenizer.decode_password_reset(token, res)
+    if (!data) {
+      return
+    }
+    const user = await db.oneOrNone(
+      'SELECT id, email, encrypted_password FROM users WHERE id=${id}', {id: data.id}
+    )
+    if (!user) {
+      throw Error('Account not found')
+    }
+    data = tokenizer.verify_password_reset(token, user.encrypted_password, res)
+    if (!data) {
+      return
+    }
+    await db.users.set_password(user.id, req.body.password)
+    // Phrase: devise.passwords.updated_not_active
+    // return {message: 'Your password has been changed successfully'}
+    return {email: user.email}
   }
-  const user = await db.oneOrNone(
-    'SELECT id, email, encrypted_password FROM users WHERE id=${id}', {id: data.id}
-  )
-  if (!user) {
-    throw Error('Account not found')
+)
+post(
+  `${BASE}/user/password/reset`,
+  middleware.recaptcha,
+  async (req) => {
+    const email = req.body.email.toLowerCase()
+    const user = await db.oneOrNone(
+      'SELECT id, email, name, confirmed_at, encrypted_password FROM users WHERE email=${email}',
+      {email: email}
+    )
+    if (!user) {
+      // Phrase: devise.errors.messages.not_found
+      throw Error('Email not found')
+    }
+    const token = tokenizer.sign_password_reset(user, user.encrypted_password)
+    await _.send_password_reset(user, token)
+    // Phrase: devise.passwords.send_instructions
+    return {message: 'You will receive an email with instructions on how to reset your password in a few minutes'}
   }
-  data = tokenizer.verify_password_reset(token, user.encrypted_password, res)
-  if (!data) {
-    return
-  }
-  await db.users.set_password(user.id, req.body.password)
-  // Phrase: devise.passwords.updated_not_active
-  // return {message: 'Your password has been changed successfully'}
-  return {email: user.email}
-})
-post(`${BASE}/user/password/reset`, async (req) => {
-  const email = req.body.email.toLowerCase()
-  const user = await db.oneOrNone(
-    'SELECT id, email, name, confirmed_at, encrypted_password FROM users WHERE email=${email}',
-    {email: email}
-  )
-  if (!user) {
-    // Phrase: devise.errors.messages.not_found
-    throw Error('Email not found')
-  }
-  const token = tokenizer.sign_password_reset(user, user.encrypted_password)
-  await _.send_password_reset(user, token)
-  // Phrase: devise.passwords.send_instructions
-  return {message: 'You will receive an email with instructions on how to reset your password in a few minutes'}
-})
+)
 
 // Routes: Reports
-post(`${BASE}/reports`, middleware.authenticate(), async (req) => {
-  if (req.user) {
-    req.body.reporter_id = req.user.id
-    if (!req.body.email || !req.body.name) {
-      const user = await db.one(
-        'SELECT name, email FROM users WHERE id=${id}', {id: req.user.id}
-      )
-      req.body.email = req.body.email || user.email
-      req.body.name = req.body.name || user.name
+post(
+  `${BASE}/reports`,
+  middleware.authenticate(),
+  middleware.recaptcha,
+  async (req) => {
+    if (req.user) {
+      req.body.reporter_id = req.user.id
+      if (!req.body.email || !req.body.name) {
+        const user = await db.one(
+          'SELECT name, email FROM users WHERE id=${id}', {id: req.user.id}
+        )
+        req.body.email = req.body.email || user.email
+        req.body.name = req.body.name || user.name
+      }
     }
+    if (!req.body.email) {
+      throw Error('An email is required')
+    }
+    return db.reports.add(req.body)
   }
-  if (!req.body.email) {
-    throw Error('An email is required')
-  }
-  return db.reports.add(req.body)
-})
+)
 
 // Routes: Imports
 get(`${BASE}/imports`, () => db.imports.list())

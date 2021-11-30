@@ -9,6 +9,8 @@ post:
     - Authentication
   security:
     - key: []
+  parameters:
+    - $ref: ../components/parameters.yml#/recaptcha
   requestBody:
     required: true
     content:

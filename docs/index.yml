@@ -17,11 +17,11 @@ info:
     - All endpoints (other than `GET` endpoints intended for email links) require authentication via an API key (header `x-api-key`).
     - `POST` and `PUT` requests may accept (or require) an access token (header `Authorization: Bearer {token}`), in which case the action is associated with that user.
     - Access tokens are acquired by submitting registered user credentials (`email` and `password`).
+    - `POST` and `PUT` requests without an access token require a reCAPTCHA user response token (https://developers.google.com/recaptcha/docs/verify).
 
     ### TODO
 
     - Security
-      - Require a reCAPTCHA for `POST` and `PUT` requests without a token (https://developers.google.com/recaptcha/docs/verify, https://www.twilio.com/blog/2017/08/http-requests-in-node-js.html, https://www.npmjs.com/package/express-recaptcha).
       - Add session endpoints `POST /user/session`, `DELETE /user/session` (?).
     - Public endpoints
       - View recent changes (https://fallingfruit.org/changes).
@@ -33,7 +33,6 @@ info:
       - Validate requests, and responses in development (https://github.com/cdimascio/express-openapi-validator).
       - Return coded error objects for client-side translation to the user.
     - Existing and new features
-      - Invasive species filter
       - User foraging range and weekly digests
       - Type filters
       - Preferred user locale

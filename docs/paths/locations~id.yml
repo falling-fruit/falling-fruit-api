@@ -36,6 +36,7 @@ put:
       token: []
   parameters:
     - $ref: ../components/parameters.yml#/location_id
+    - $ref: ../components/parameters.yml#/recaptcha
   requestBody:
     required: true
     content:

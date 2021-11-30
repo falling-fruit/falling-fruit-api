@@ -93,3 +93,14 @@ import_id:
   schema:
     type: integer
     minimum: 0
+recaptcha:
+  name: g-recaptcha-response
+  in: header
+  description: |
+    User response token for a Google reCAPTCHA v2 (see https://developers.google.com/recaptcha/docs/verify).
+    May be passed as a header or query parameter, or in the request body.
+    Only required if user authentication (if available for the endpoint) is not provided.
+  required: false
+  schema:
+    type: string
+    nullable: false
