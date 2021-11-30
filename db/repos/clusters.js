@@ -14,7 +14,10 @@ class Clusters {
     )
   }
 
-  list({bounds, zoom = '0', muni = 'true', types = ''}) {
+  list({bounds, zoom = '0', muni = 'true', types = null}) {
+    if (types === '') {
+      return []
+    }
     const filters = [
       _.bounds_to_sql(_.parse_bounds(bounds, true), true),
       _.zoom_to_sql(zoom),
