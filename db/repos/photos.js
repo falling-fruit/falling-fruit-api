@@ -45,7 +45,7 @@ class Photos {
   }
 
   async link(photo_ids, review_id) {
-    if (photo_ids.length) {
+    if (photo_ids && photo_ids.length) {
       await this.db.none(sql.link, {id: review_id, ids: photo_ids})
       // NOTE: For backwards compatibility only
       // Copy first photo
