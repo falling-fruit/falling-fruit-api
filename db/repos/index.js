@@ -6,5 +6,6 @@ module.exports = {
   Users: require('./users'),
   Reports: require('./reports'),
   Imports: require('./imports'),
-  Photos: require('./photos')
+  Photos: require('./photos'),
+  Changes: require('./changes')
 }

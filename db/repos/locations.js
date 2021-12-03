@@ -1,10 +1,12 @@
 const sql = require('../sql').locations
 const _ = require('../../helpers')
+const Changes = require('./changes')
 
 class Locations {
   constructor(db, pgp) {
     this.db = db
     this.pgp = pgp
+    this.changes = new Changes(db, pgp)
   }
 
   async add(obj) {
@@ -18,12 +20,16 @@ class Locations {
       ...obj
     }
     const location = await this.db.one(sql.add, values)
+    await this.changes.add({description: 'added', location: location})
     return _.format_location(location)
   }
 
-  async edit(id, obj) {
+  async edit(id, obj, user) {
     const values = {...obj, id: parseInt(id)}
     const location = await this.db.one(sql.edit, values)
+    await this.changes.add({
+      description: 'edited', location: location, user_id: user ? user.id : null
+    })
     return _.format_location(location)
   }
 

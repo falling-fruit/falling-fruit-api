@@ -1,12 +1,14 @@
 const sql = require('../sql').reviews
+const Changes = require('./changes')
 
 class Reviews {
   constructor(db, pgp) {
     this.db = db
     this.pgp = pgp
+    this.changes = new Changes(db, pgp)
   }
 
-  add(id, obj) {
+  async add(id, obj) {
     const values = {
       observed_on: null,
       comment: null,
@@ -18,7 +20,9 @@ class Reviews {
       ...obj,
       location_id: parseInt(id)
     }
-    return this.db.one(sql.add, values)
+    const review = await this.db.one(sql.add, values)
+    await this.changes.add({description: 'visited', review: review})
+    return review
   }
 
   show(id) {

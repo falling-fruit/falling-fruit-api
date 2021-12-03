@@ -1,0 +1,31 @@
+get:
+  summary: Fetch Location changes (activity).
+  description: A change event is recorded when a location is added (`'added'`), a location is edited (`'edited'`), or a location is reviewed (`'visited'`). Results are sorted in reverse chronological order (most recent first).
+  tags:
+    - Locations
+  security:
+    - key: []
+  parameters:
+    - name: limit
+      in: query
+      description: Maximum number of changes to return.
+      schema:
+        type: integer
+        minimum: 1
+        default: 100
+        nullable: true
+    - $ref: ../components/parameters.yml#/offset
+    - name: user_id
+      in: query
+      description: User ID of changes to return.
+      schema:
+        type: integer
+        minimum: 1
+        default: null
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/LocationChange

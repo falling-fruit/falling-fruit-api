@@ -23,10 +23,6 @@ info:
 
     - Security
       - Add session endpoints `POST /user/session`, `DELETE /user/session` (?).
-    - Public endpoints
-      - View recent changes (https://fallingfruit.org/changes).
-    - User endpoints
-      - View user activity (https://fallingfruit.org/home).
     - I/O:
       - Translate emails, errors, and messages (https://github.com/lingui/js-lingui, https://github.com/phrase/phrase-cli).
       - Return `5xx` for server errors, currently included in `400`.
@@ -140,13 +136,7 @@ paths:
             type: integer
             minimum: 0
             default: 1000
-        - name: offset
-          in: query
-          description: Offset from which to apply `limit`.
-          schema:
-            type: integer
-            minimum: 0
-            default: 0
+        - $ref: '#/components/parameters/offset'
         - name: center
           in: query
           description: 'Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].'
@@ -201,6 +191,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Location'
+  /locations/changes:
+    get:
+      summary: Fetch Location changes (activity).
+      description: 'A change event is recorded when a location is added (`''added''`), a location is edited (`''edited''`), or a location is reviewed (`''visited''`). Results are sorted in reverse chronological order (most recent first).'
+      tags:
+        - Locations
+      security:
+        - key: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of changes to return.
+          schema:
+            type: integer
+            minimum: 1
+            default: 100
+            nullable: true
+        - $ref: '#/components/parameters/offset'
+        - name: user_id
+          in: query
+          description: User ID of changes to return.
+          schema:
+            type: integer
+            minimum: 1
+            default: null
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationChange'
   /locations/count:
     get:
       summary: Count Locations.
@@ -925,6 +947,15 @@ components:
       schema:
         type: string
         nullable: false
+    offset:
+      name: offset
+      in: query
+      description: Offset from which to apply `limit`.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+        nullable: false
   schemas:
     IdField:
       required:
@@ -1292,6 +1323,81 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Review'
+    LocationChange:
+      title: Location change
+      type: object
+      required:
+        - created_at
+        - description
+        - location_id
+        - type_ids
+      properties:
+        created_at:
+          description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
+          type: string
+          format: date-time
+          example: '2014-06-19T01:02:03.456Z'
+          nullable: false
+        description:
+          description: |
+            Change type.
+            - `added`: Location added.
+            - `edited`: Location edited.
+            - `visited`: Location reviewed.
+          type: string
+          enum:
+            - added
+            - edited
+            - visited
+          example: added
+          nullable: false
+        location_id:
+          description: Location ID.
+          type: integer
+          nullable: false
+          minimum: 1
+          example: 114
+        type_ids:
+          description: Current location type IDs.
+          type: array
+          items:
+            type: integer
+            minimum: 0
+          example:
+            - 97
+            - 92
+        review_id:
+          description: Review ID. Only defined for `'visited'`.
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 3383
+        user_id:
+          description: User ID.
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 1
+        author:
+          description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+          type: string
+          nullable: true
+          example: Ethan
+        city:
+          description: Current location city (reverse-geocoded from coordinates).
+          type: string
+          nullable: true
+          example: Boulder
+        state:
+          description: Current location state (reverse-geocoded from coordinates).
+          type: string
+          nullable: true
+          example: Colorado
+        country:
+          description: Current location county (reverse-geocoded from coordinates).
+          type: string
+          nullable: true
+          example: United States
     BaseReview:
       title: Review (base)
       type: object

@@ -104,3 +104,12 @@ recaptcha:
   schema:
     type: string
     nullable: false
+offset:
+  name: offset
+  in: query
+  description: Offset from which to apply `limit`.
+  schema:
+    type: integer
+    minimum: 0
+    default: 0
+    nullable: false

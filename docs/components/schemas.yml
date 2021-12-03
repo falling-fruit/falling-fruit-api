@@ -335,6 +335,76 @@ Location:
           type: array
           items:
             $ref: '#/Review'
+LocationChange:
+  title: Location change
+  type: object
+  required:
+    - created_at
+    - description
+    - location_id
+    - type_ids
+  properties:
+    created_at:
+      description: Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.
+      type: string
+      format: date-time
+      example: '2014-06-19T01:02:03.456Z'
+      nullable: false
+    description:
+      description: |
+        Change type.
+        - `added`: Location added.
+        - `edited`: Location edited.
+        - `visited`: Location reviewed.
+      type: string
+      enum: [added, edited, visited]
+      example: added
+      nullable: false
+    location_id:
+      description: Location ID.
+      type: integer
+      nullable: false
+      minimum: 1
+      example: 114
+    type_ids:
+      description: Current location type IDs.
+      type: array
+      items:
+        type: integer
+        minimum: 0
+      example: [97, 92]
+    review_id:
+      description: Review ID. Only defined for `'visited'`.
+      type: integer
+      nullable: true
+      minimum: 1
+      example: 3383
+    user_id:
+      description: User ID.
+      type: integer
+      nullable: true
+      minimum: 1
+      example: 1
+    author:
+      description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+      type: string
+      nullable: true
+      example: Ethan
+    city:
+      description: Current location city (reverse-geocoded from coordinates).
+      type: string
+      nullable: true
+      example: Boulder
+    state:
+      description: Current location state (reverse-geocoded from coordinates).
+      type: string
+      nullable: true
+      example: Colorado
+    country:
+      description: Current location county (reverse-geocoded from coordinates).
+      type: string
+      nullable: true
+      example: United States
 BaseReview:
   title: Review (base)
   type: object

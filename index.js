@@ -96,6 +96,10 @@ get(
   req => db.locations.count(req.query)
 )
 get(
+  `${BASE}/locations/changes`,
+  req => db.changes.list(req.query)
+)
+get(
   `${BASE}/locations/:id`,
   async req => {
     const location = await db.locations.show(req.params.id)
@@ -114,10 +118,11 @@ get(
 )
 put(
   `${BASE}/locations/:id`,
+  middleware.authenticate(),
   middleware.recaptcha,
   async req => {
     const old = await db.locations.show(req.params.id)
-    const updated = await db.locations.edit(req.params.id, req.body)
+    const updated = await db.locations.edit(req.params.id, req.body, req.user)
     // Decrement first in case location properties have changed
     if (
       updated.lat != old.lat || updated.lng != old.lng ||
