@@ -38,8 +38,12 @@ class Clusters {
     const geohashes = _.expand_geohash(geohash)
     // Increment existing clusters
     const clusters = await this.db.any(
-      'SELECT id, x, y, count FROM clusters WHERE ${muni:raw} geohash IN (${geohashes:csv}) AND type_id IN (${type_ids:csv})',
-      {muni: muni ? 'muni AND' : '', geohashes: geohashes, type_ids: type_ids}
+      'SELECT id, x, y, count, type_id, geohash FROM clusters WHERE ${muni:raw} geohash IN (${geohashes:csv}) AND type_id IN (${type_ids:csv})',
+      {
+        muni: `${muni ? '' : 'NOT'} muni AND`,
+        geohashes: geohashes,
+        type_ids: type_ids
+      }
     )
     clusters.forEach(c => {
       const center = _.move_cluster({cx: c.x, cy: c.y}, c.count, mercator, 1)
@@ -91,12 +95,20 @@ class Clusters {
     // Delete singleton clusters
     await this.db.none(
       'DELETE FROM clusters WHERE ${muni:raw} geohash IN (${geohashes:csv}) AND type_id IN (${type_ids:csv}) AND count = 1',
-      {muni: muni ? 'muni AND' : '', geohashes: geohashes, type_ids: type_ids}
+      {
+        muni: `${muni ? '' : 'NOT'} muni AND`,
+        geohashes: geohashes,
+        type_ids: type_ids
+      }
     )
     // Decrement and move remaining clusters
     const clusters = await this.db.any(
       'SELECT id, x, y, count FROM clusters WHERE ${muni:raw} geohash IN (${geohashes:csv}) AND type_id IN (${type_ids:csv})',
-      {muni: muni ? 'muni AND' : '', geohashes: geohashes, type_ids: type_ids}
+      {
+        muni: `${muni ? '' : 'NOT'} muni AND`,
+        geohashes: geohashes,
+        type_ids: type_ids
+      }
     )
     clusters.forEach(c => {
       const center = _.move_cluster({cx: c.x, cy: c.y}, c.count, mercator, -1)
