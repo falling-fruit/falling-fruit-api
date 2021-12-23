@@ -18,6 +18,9 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// Routes: Docs
+app.use(`${BASE}/openapi.yml`, express.static('docs/openapi.yml'))
+
 // Pre-route middleware
 app.use((req, res, next) => {
   const skip_api_key = [
@@ -31,9 +34,6 @@ app.use((req, res, next) => {
   }
   return middleware.check_api_key(req, res, next)
 })
-
-// Routes: Docs
-app.use(BASE, express.static('docs'))
 
 // Routes: Clusters
 get(
