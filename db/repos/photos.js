@@ -11,8 +11,8 @@ class Photos {
     return this.db.any(sql.list, {id: parseInt(id)})
   }
 
-  add(urls) {
-    return this.db.one(sql.add, urls)
+  add(urls, user_id = null) {
+    return this.db.one(sql.add, {...urls, user_id: user_id})
   }
 
   async test_unlinked(photo_ids, review_id = null) {
