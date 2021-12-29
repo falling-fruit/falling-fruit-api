@@ -593,6 +593,8 @@ paths:
                 password:
                   description: Password.
                   type: string
+                  format: password
+                  minLength: 6
                   example: f00!bar
                 password_confirmation:
                   description: Current password. Required for email and password change.
@@ -903,7 +905,7 @@ components:
       required: true
       schema:
         type: integer
-        minimum: 0
+        minimum: 1
     type_id:
       name: id
       in: path
@@ -911,7 +913,7 @@ components:
       required: true
       schema:
         type: integer
-        minimum: 0
+        minimum: 1
     review_id:
       name: id
       in: path
@@ -919,7 +921,7 @@ components:
       required: true
       schema:
         type: integer
-        minimum: 0
+        minimum: 1
     user_id:
       name: id
       in: path
@@ -927,7 +929,7 @@ components:
       required: true
       schema:
         type: integer
-        minimum: 0
+        minimum: 1
     import_id:
       name: id
       in: path
@@ -935,7 +937,7 @@ components:
       required: true
       schema:
         type: integer
-        minimum: 0
+        minimum: 1
     recaptcha:
       name: g-recaptcha-response
       in: header
@@ -946,6 +948,7 @@ components:
       required: false
       schema:
         type: string
+        minLength: 1
         nullable: false
     offset:
       name: offset
@@ -964,7 +967,7 @@ components:
         id:
           description: Unique identifier.
           type: integer
-          minimum: 0
+          minimum: 1
           example: 42
     LatLngFields:
       properties:
@@ -1022,7 +1025,7 @@ components:
         id:
           type: integer
           description: Type ID.
-          minimum: 0
+          minimum: 1
           example: 1
         count:
           type: integer
@@ -1038,7 +1041,7 @@ components:
           description: Type ID of taxonomic parent.
           type: integer
           nullable: true
-          minimum: 0
+          minimum: 1
           example: 114
         pending:
           description: Whether pending admin review. This is always true unless set to false by an admin (not implemented).
@@ -1159,6 +1162,7 @@ components:
               type: object
               additionalProperties:
                 type: string
+                minLength: 1
               example:
                 wikipedia: 'https://en.wikipedia.org/wiki/Malus_domestica'
                 eat_the_weeds: 'https://www.eattheweeds.com/apples-wild-crabapples'
@@ -1178,7 +1182,7 @@ components:
               type: array
               items:
                 type: integer
-                minimum: 0
+                minimum: 1
               example:
                 - 97
                 - 92
@@ -1205,7 +1209,7 @@ components:
               type: array
               items:
                 type: integer
-                minimum: 0
+                minimum: 1
               example:
                 - 97
                 - 92
@@ -1314,7 +1318,7 @@ components:
               description: Import ID.
               type: integer
               nullable: true
-              minimum: 0
+              minimum: 1
               example: 42
             import:
               $ref: '#/components/schemas/Import'
@@ -1362,7 +1366,7 @@ components:
           type: array
           items:
             type: integer
-            minimum: 0
+            minimum: 1
           example:
             - 97
             - 92
@@ -1381,21 +1385,25 @@ components:
         author:
           description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
           type: string
+          minLength: 1
           nullable: true
           example: Ethan
         city:
           description: Current location city (reverse-geocoded from coordinates).
           type: string
+          minLength: 1
           nullable: true
           example: Boulder
         state:
           description: Current location state (reverse-geocoded from coordinates).
           type: string
+          minLength: 1
           nullable: true
           example: Colorado
         country:
           description: Current location county (reverse-geocoded from coordinates).
           type: string
+          minLength: 1
           nullable: true
           example: United States
     BaseReview:
@@ -1405,6 +1413,7 @@ components:
         comment:
           description: Comment.
           type: string
+          minLength: 1
           nullable: true
           example: The sidewalk is stained red with mulberries.
         observed_on:
@@ -1457,7 +1466,7 @@ components:
               uniqueItems: true
               items:
                 type: integer
-                minimum: 0
+                minimum: 1
               example:
                 - 3
                 - 1
@@ -1486,13 +1495,13 @@ components:
             location_id:
               description: Location ID.
               type: integer
-              minimum: 0
+              minimum: 1
               example: 3383
             user_id:
               description: User ID.
               type: integer
               nullable: true
-              minimum: 0
+              minimum: 1
               example: 1
             author:
               description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
@@ -1545,6 +1554,7 @@ components:
               type: string
               example: Ethan
               nullable: true
+              minLength: 1
     User:
       title: User
       allOf:
@@ -1562,6 +1572,7 @@ components:
               type: string
               format: email
               example: foo@bar.com
+              pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
             confirmed_at:
               description: 'Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.'
               type: string
@@ -1584,7 +1595,9 @@ components:
             unconfirmed_email:
               description: Email change pending confirmation.
               type: string
+              format: email
               example: noo@bar.com
+              pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
     EditReport:
       title: Report (edit)
       description: Report properties that can be edited.
@@ -1596,7 +1609,7 @@ components:
         location_id:
           description: Location ID.
           type: integer
-          minimum: 0
+          minimum: 1
           example: 3383
         problem_code:
           description: |
@@ -1629,6 +1642,7 @@ components:
         name:
           description: 'Name to use for correspondence. If authenticated, defaults to the user''s name.'
           type: string
+          minLength: 1
           nullable: true
           example: Ethan
     Report:
@@ -1643,7 +1657,7 @@ components:
             reporter_id:
               description: ID of reporting User (if authenticated).
               type: integer
-              minimum: 0
+              minimum: 1
               nullable: true
               example: 321
             resolution_code:
@@ -1673,7 +1687,7 @@ components:
             responder_id:
               description: ID of responding User.
               type: integer
-              minimum: 0
+              minimum: 1
               nullable: true
     Import:
       title: Import
@@ -1693,21 +1707,25 @@ components:
             name:
               description: Name.
               type: string
+              minLength: 1
               nullable: false
               example: Les arbres de Grenoble
             url:
               description: Path to a description of the data.
               type: string
+              format: uri
               nullable: true
               example: 'http://data.metropolegrenoble.fr/ckan/dataset/les-arbres-de-grenoble'
             comments:
               description: Description and import comments.
               type: string
+              minLength: 1
               nullable: true
               example: 'Tree inventory of Grenoble, France.'
             license:
               description: License.
               type: string
+              minLength: 1
               nullable: true
               example: 'Open Data Commons Open Database License (https://opendefinition.org/licenses/odc-odbl)'
             muni:

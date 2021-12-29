@@ -5,7 +5,7 @@ IdField:
     id:
       description: Unique identifier.
       type: integer
-      minimum: 0
+      minimum: 1
       example: 42
 LatLngFields:
   properties:
@@ -63,7 +63,7 @@ TypeCount:
     id:
       type: integer
       description: Type ID.
-      minimum: 0
+      minimum: 1
       example: 1
     count:
       type: integer
@@ -79,7 +79,7 @@ BaseType:
       description: Type ID of taxonomic parent.
       type: integer
       nullable: true
-      minimum: 0
+      minimum: 1
       example: 114
     pending:
       description: Whether pending admin review. This is always true unless set to false by an admin (not implemented).
@@ -180,6 +180,7 @@ Type:
           type: object
           additionalProperties:
             type: string
+            minLength: 1
           example:
             wikipedia: https://en.wikipedia.org/wiki/Malus_domestica
             eat_the_weeds: https://www.eattheweeds.com/apples-wild-crabapples
@@ -199,7 +200,7 @@ ListLocation:
           type: array
           items:
             type: integer
-            minimum: 0
+            minimum: 1
           example: [97, 92]
         distance:
           description: Distance in meters from provided centerpoint.
@@ -224,7 +225,7 @@ EditLocation:
           type: array
           items:
             type: integer
-            minimum: 0
+            minimum: 1
           example: [97, 92]
         unverified:
           description: Whether suspected to be wrong in some way and requires verification.
@@ -326,7 +327,7 @@ Location:
           description: Import ID.
           type: integer
           nullable: true
-          minimum: 0
+          minimum: 1
           example: 42
         import:
           $ref: '#/Import'
@@ -371,7 +372,7 @@ LocationChange:
       type: array
       items:
         type: integer
-        minimum: 0
+        minimum: 1
       example: [97, 92]
     review_id:
       description: Review ID. Only defined for `'visited'`.
@@ -451,7 +452,7 @@ EditReview:
           uniqueItems: true
           items:
             type: integer
-            minimum: 0
+            minimum: 1
           example: [3, 1, 2]
 Review:
   title: Review
@@ -477,13 +478,13 @@ Review:
         location_id:
           description: Location ID.
           type: integer
-          minimum: 0
+          minimum: 1
           example: 3383
         user_id:
           description: User ID.
           type: integer
           nullable: true
-          minimum: 0
+          minimum: 1
           example: 1
         author:
           description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
@@ -578,7 +579,7 @@ EditReport:
     location_id:
       description: Location ID.
       type: integer
-      minimum: 0
+      minimum: 1
       example: 3383
     problem_code:
       description: |
@@ -619,7 +620,7 @@ Report:
         reporter_id:
           description: ID of reporting User (if authenticated).
           type: integer
-          minimum: 0
+          minimum: 1
           nullable: true
           example: 321
         resolution_code:
@@ -643,7 +644,7 @@ Report:
         responder_id:
           description: ID of responding User.
           type: integer
-          minimum: 0
+          minimum: 1
           nullable: true
 Import:
   title: Import

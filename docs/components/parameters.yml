@@ -60,7 +60,7 @@ location_id:
   required: true
   schema:
     type: integer
-    minimum: 0
+    minimum: 1
 type_id:
   name: id
   in: path
@@ -68,7 +68,7 @@ type_id:
   required: true
   schema:
     type: integer
-    minimum: 0
+    minimum: 1
 review_id:
   name: id
   in: path
@@ -76,7 +76,7 @@ review_id:
   required: true
   schema:
     type: integer
-    minimum: 0
+    minimum: 1
 user_id:
   name: id
   in: path
@@ -84,7 +84,7 @@ user_id:
   required: true
   schema:
     type: integer
-    minimum: 0
+    minimum: 1
 import_id:
   name: id
   in: path
@@ -92,7 +92,7 @@ import_id:
   required: true
   schema:
     type: integer
-    minimum: 0
+    minimum: 1
 recaptcha:
   name: g-recaptcha-response
   in: header
@@ -103,6 +103,7 @@ recaptcha:
   required: false
   schema:
     type: string
+    minLength: 1
     nullable: false
 offset:
   name: offset
