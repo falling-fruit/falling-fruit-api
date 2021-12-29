@@ -14,6 +14,7 @@ post:
             token:
               description: Email-confirmation token.
               type: string
+              minLength: 1
               example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
   responses:
     '200':
@@ -37,6 +38,7 @@ get:
       in: query
       schema:
         type: string
+        minLength: 1
       required: true
       example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
   responses:
@@ -49,4 +51,5 @@ get:
             properties:
               message:
                 type: string
+                minLength: 1
                 example: Your email address has been successfully confirmed

@@ -98,6 +98,7 @@ BaseType:
       type: array
       items:
         type: string
+        minLength: 1
       example: ['Malus pumila', 'Malus domestica', 'Malus communis']
     taxonomic_rank:
       description: |
@@ -124,6 +125,7 @@ BaseType:
         type: array
         items:
           type: string
+          minLength: 1
       example:
         ar: ['تفاح']
         de: ['Apfel']
@@ -150,6 +152,7 @@ SubmitType:
         notes:
           description: Submission notes.
           type: string
+          minLength: 1
           nullable: true
           example: The fruit are edible once cooked.
 Type:
@@ -246,6 +249,7 @@ EditLocation:
         description:
           description: Description.
           type: string
+          minLength: 1
           nullable: true
           example: Two mulberry trees with a few low branches overhanging the sidewalk.
         season_start:
@@ -296,26 +300,31 @@ Location:
         author:
           description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
           type: string
+          minLength: 1
           nullable: true
           example: Ethan
         address:
           description: Address. Either provided for imported locations whose coordinates had to be geocoded from the address or reverse-geocoded from coordinates.
           type: string
+          minLength: 1
           nullable: true
           example: '748 10th Street, Boulder CO 80302, USA'
         city:
           description: City (reverse-geocoded from coordinates).
           type: string
+          minLength: 1
           nullable: true
           example: Boulder
         state:
           description: State (reverse-geocoded from coordinates).
           type: string
+          minLength: 1
           nullable: true
           example: Colorado
         country:
           description: County (reverse-geocoded from coordinates).
           type: string
+          minLength: 1
           nullable: true
           example: United States
         muni:
@@ -389,21 +398,25 @@ LocationChange:
     author:
       description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
       type: string
+      minLength: 1
       nullable: true
       example: Ethan
     city:
       description: Current location city (reverse-geocoded from coordinates).
       type: string
+      minLength: 1
       nullable: true
       example: Boulder
     state:
       description: Current location state (reverse-geocoded from coordinates).
       type: string
+      minLength: 1
       nullable: true
       example: Colorado
     country:
       description: Current location county (reverse-geocoded from coordinates).
       type: string
+      minLength: 1
       nullable: true
       example: United States
 BaseReview:
@@ -413,6 +426,7 @@ BaseReview:
     comment:
       description: Comment.
       type: string
+      minLength: 1
       nullable: true
       example: The sidewalk is stained red with mulberries.
     observed_on:
@@ -491,6 +505,7 @@ Review:
           type: string
           nullable: true
           example: Ethan
+          minLength: 1
         photos:
           type: array
           items:
@@ -513,16 +528,19 @@ Photo:
     thumb:
       description: Path to thumbnail (longest dimension <= 100 px).
       type: string
+      minLength: 1
       format: uri
       example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/thumb/open-uri20131213-3992-1szjh9k.jpg'
     medium:
       description: Path to medium size file (longest dimension <= 300 px).
       type: string
+      minLength: 1
       format: uri
       example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
     original:
       description: Path to large size file (longest dimension <= 2048 px).
       type: string
+      minLength: 1
       format: uri
       example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
 EditUser:
@@ -567,7 +585,9 @@ User:
         unconfirmed_email:
           description: Email change pending confirmation.
           type: string
+          format: email
           example: noo@bar.com
+          pattern: (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
 EditReport:
   title: Report (edit)
   description: Report properties that can be edited.
@@ -598,14 +618,17 @@ EditReport:
       type: string
       nullable: true
       example: This tree was cut down.
+      minLength: 1
     email:
       description: Email to use for correspondence. If authenticated, defaults to the user's email. Otherwise, it is required.
       type: string
       format: email
       example: foo@bar.com
+      pattern: (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
     name:
       description: Name to use for correspondence. If authenticated, defaults to the user's name.
       type: string
+      minLength: 1
       nullable: true
       example: Ethan
 Report:
@@ -639,6 +662,7 @@ Report:
         response:
           description: Response comment.
           type: string
+          minLength: 1
           nullable: true
           example: Thank you for alerting us!
         responder_id:
@@ -664,21 +688,25 @@ Import:
         name:
           description: Name.
           type: string
+          minLength: 1
           nullable: false
           example: Les arbres de Grenoble
         url:
           description: Path to a description of the data.
           type: string
+          format: uri
           nullable: true
           example: http://data.metropolegrenoble.fr/ckan/dataset/les-arbres-de-grenoble
         comments:
           description: Description and import comments.
           type: string
+          minLength: 1
           nullable: true
           example: Tree inventory of Grenoble, France.
         license:
           description: License.
           type: string
+          minLength: 1
           nullable: true
           example: Open Data Commons Open Database License (https://opendefinition.org/licenses/odc-odbl)
         muni:
@@ -705,6 +733,7 @@ Token:
       description: Access token.
       type: string
       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+      minLength: 1
     token_type:
       description: Token type.
       type: string
@@ -719,6 +748,7 @@ Token:
       description: Refresh token.
       type: string
       example: 6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
+      minLength: 1
 # Error:
 #   title: Error
 #   description: |

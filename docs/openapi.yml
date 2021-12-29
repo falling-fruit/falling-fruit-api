@@ -363,6 +363,7 @@ paths:
                 file:
                   description: 'File to upload (jpeg, png, webp, gif, or svg). Images are converted to jpeg and resized as needed to a maximum dimension of 2048 pixels.'
                   type: string
+                  minLength: 1
                   format: binary
                   nullable: false
       responses:
@@ -550,6 +551,7 @@ paths:
                 properties:
                   message:
                     type: string
+                    minLength: 1
                     example: You will receive an email with instructions for how to confirm your email address in a few minutes
     get:
       summary: View the user (self).
@@ -599,6 +601,8 @@ paths:
                 password_confirmation:
                   description: Current password. Required for email and password change.
                   type: string
+                  format: password
+                  minLength: 1
                   example: foo?bar
       responses:
         '200':
@@ -634,6 +638,7 @@ paths:
                 token:
                   description: Email-confirmation token.
                   type: string
+                  minLength: 1
                   example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
       responses:
         '200':
@@ -657,6 +662,7 @@ paths:
           in: query
           schema:
             type: string
+            minLength: 1
           required: true
           example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
       responses:
@@ -669,6 +675,7 @@ paths:
                 properties:
                   message:
                     type: string
+                    minLength: 1
                     example: Your email address has been successfully confirmed
   /user/confirmation/retry:
     post:
@@ -698,6 +705,7 @@ paths:
                 properties:
                   message:
                     type: string
+                    minLength: 1
                     example: You will receive an email with instructions for how to confirm your email address in a few minutes
   /user/token:
     post:
@@ -747,6 +755,7 @@ paths:
                 refresh_token:
                   description: Refresh token.
                   type: string
+                  minLength: 1
                   example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
                 grant_type:
                   description: Grant type.
@@ -781,6 +790,7 @@ paths:
                 token:
                   description: Password-reset token.
                   type: string
+                  minLength: 1
                   example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
                 password:
                   $ref: '#/paths/~1user/put/requestBody/content/application~1json/schema/properties/password'
@@ -824,6 +834,7 @@ paths:
                 properties:
                   message:
                     type: string
+                    minLength: 1
                     example: You will receive an email with instructions on how to reset your password in a few minutes
 components:
   securitySchemes:
@@ -1060,6 +1071,7 @@ components:
           type: array
           items:
             type: string
+            minLength: 1
           example:
             - Malus pumila
             - Malus domestica
@@ -1089,6 +1101,7 @@ components:
             type: array
             items:
               type: string
+              minLength: 1
           example:
             ar:
               - تفاح
@@ -1132,6 +1145,7 @@ components:
             notes:
               description: Submission notes.
               type: string
+              minLength: 1
               nullable: true
               example: The fruit are edible once cooked.
     Type:
@@ -1237,6 +1251,7 @@ components:
             description:
               description: Description.
               type: string
+              minLength: 1
               nullable: true
               example: Two mulberry trees with a few low branches overhanging the sidewalk.
             season_start:
@@ -1287,26 +1302,31 @@ components:
             author:
               description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
               type: string
+              minLength: 1
               nullable: true
               example: Ethan
             address:
               description: Address. Either provided for imported locations whose coordinates had to be geocoded from the address or reverse-geocoded from coordinates.
               type: string
+              minLength: 1
               nullable: true
               example: '748 10th Street, Boulder CO 80302, USA'
             city:
               description: City (reverse-geocoded from coordinates).
               type: string
+              minLength: 1
               nullable: true
               example: Boulder
             state:
               description: State (reverse-geocoded from coordinates).
               type: string
+              minLength: 1
               nullable: true
               example: Colorado
             country:
               description: County (reverse-geocoded from coordinates).
               type: string
+              minLength: 1
               nullable: true
               example: United States
             muni:
@@ -1508,6 +1528,7 @@ components:
               type: string
               nullable: true
               example: Ethan
+              minLength: 1
             photos:
               type: array
               items:
@@ -1530,16 +1551,19 @@ components:
         thumb:
           description: Path to thumbnail (longest dimension <= 100 px).
           type: string
+          minLength: 1
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/thumb/open-uri20131213-3992-1szjh9k.jpg'
         medium:
           description: Path to medium size file (longest dimension <= 300 px).
           type: string
+          minLength: 1
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
         original:
           description: Path to large size file (longest dimension <= 2048 px).
           type: string
+          minLength: 1
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
     EditUser:
@@ -1634,11 +1658,13 @@ components:
           type: string
           nullable: true
           example: This tree was cut down.
+          minLength: 1
         email:
           description: 'Email to use for correspondence. If authenticated, defaults to the user''s email. Otherwise, it is required.'
           type: string
           format: email
           example: foo@bar.com
+          pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
         name:
           description: 'Name to use for correspondence. If authenticated, defaults to the user''s name.'
           type: string
@@ -1682,6 +1708,7 @@ components:
             response:
               description: Response comment.
               type: string
+              minLength: 1
               nullable: true
               example: Thank you for alerting us!
             responder_id:
@@ -1752,6 +1779,7 @@ components:
           description: Access token.
           type: string
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+          minLength: 1
         token_type:
           description: Token type.
           type: string
@@ -1767,6 +1795,7 @@ components:
           description: Refresh token.
           type: string
           example: 6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
+          minLength: 1
 servers:
   - description: Falling Fruit test server.
     url: 'https://fallingfruit.org/test-api/0.3/'

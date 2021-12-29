@@ -25,4 +25,5 @@ post:
             properties:
               message:
                 type: string
+                minLength: 1
                 example: You will receive an email with instructions for how to confirm your email address in a few minutes

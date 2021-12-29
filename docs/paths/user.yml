@@ -37,6 +37,7 @@ post:
             properties:
               message:
                 type: string
+                minLength: 1
                 example: You will receive an email with instructions for how to confirm your email address in a few minutes
 get:
   summary: View the user (self).
@@ -82,6 +83,8 @@ put:
             password_confirmation:
               description: Current password. Required for email and password change.
               type: string
+              format: password
+              minLength: 1
               example: foo?bar
   responses:
     '200':

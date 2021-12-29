@@ -20,6 +20,7 @@ post:
             file:
               description: File to upload (jpeg, png, webp, gif, or svg). Images are converted to jpeg and resized as needed to a maximum dimension of 2048 pixels.
               type: string
+              minLength: 1
               format: binary
               nullable: false
   responses:
