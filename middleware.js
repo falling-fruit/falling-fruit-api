@@ -79,4 +79,17 @@ _.recaptcha = function(req, res, next) {
   })
 }
 
+_.test_review = function(...path) {
+  return function(req, res, next) {
+    const review = path.reduce((prev, curr) => prev && prev[curr], req.body)
+    if (!review) {
+      return void next()
+    }
+    if (review.fruiting && !review.observed_on) {
+      return void res.status(400).json({error: 'observed_on is required when fruiting is provided'})
+    }
+    return void next()
+  }
+}
+
 module.exports = _

@@ -71,6 +71,7 @@ post(
   `${BASE}/locations`,
   middleware.authenticate(),
   middleware.recaptcha,
+  middleware.test_review('review'),
   async req => {
     // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
     const user_id = req.user ? req.user.id : null
@@ -144,6 +145,7 @@ post(
   `${BASE}/locations/:id/reviews`,
   middleware.authenticate(),
   middleware.recaptcha,
+  middleware.test_review(),
   async req => {
     // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
     const photos = await db.photos.test_unlinked(req.body.photo_ids)
@@ -166,6 +168,7 @@ get(
 put(
   `${BASE}/reviews/:id`,
   middleware.authenticate('user'),
+  middleware.test_review(),
   async (req, res) => {
     const original = await db.reviews.show(req.params.id)
     // Restrict to linked user

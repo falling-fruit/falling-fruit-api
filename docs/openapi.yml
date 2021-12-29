@@ -318,6 +318,7 @@ paths:
                   $ref: '#/components/schemas/Review'
     post:
       summary: Review a Location.
+      description: 'If `fruiting` is provided, `observed_on` is required.'
       tags:
         - Reviews
       security:
@@ -340,6 +341,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Review'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    description: Error message
+                    type: string
+                    example: observed_on is required if fruiting is provided
   /photos:
     post:
       tags:
@@ -393,6 +405,7 @@ paths:
       tags:
         - Reviews
       summary: Edit a Review (author only).
+      description: 'If `fruiting` is provided, `observed_on` is required.'
       security:
         - key: []
           token: []

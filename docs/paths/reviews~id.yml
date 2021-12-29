@@ -17,6 +17,7 @@ put:
   tags:
     - Reviews
   summary: Edit a Review (author only).
+  description: If `fruiting` is provided, `observed_on` is required.
   security:
     - key: []
       token: []
