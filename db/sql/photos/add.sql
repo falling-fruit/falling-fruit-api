@@ -7,4 +7,5 @@ VALUES (
   ${user_id}
 )
 RETURNING
-  id, thumb, medium, original
+  id, thumb, medium, original,
+  created_at, updated_at

@@ -1,7 +1,8 @@
 UPDATE photos
 SET
   observation_id = ${id},
-  observation_order = temp.row_number
+  observation_order = temp.row_number,
+  updated_at = NOW()
 FROM (
   SELECT
     id, row_number() OVER (ORDER BY idx(ARRAY[${ids:csv}], id)) AS row_number

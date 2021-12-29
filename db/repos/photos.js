@@ -19,11 +19,7 @@ class Photos {
     if (!photo_ids || !photo_ids.length) {
       return []
     }
-    const photos = await this.db.any(
-      // Requires intarray extension for idx()
-      'SELECT id, observation_id, thumb, medium, original FROM photos WHERE id IN (${ids:csv}) ORDER BY idx(ARRAY[${ids:csv}], id)',
-      {ids: photo_ids}
-    )
+    const photos = await this.db.any(sql.listByIds, {ids: photo_ids})
     // Fail if one or more photos not found
     const found_ids = photos.map(photo => photo.id)
     const missing = photo_ids.filter(id => !found_ids.includes(id))

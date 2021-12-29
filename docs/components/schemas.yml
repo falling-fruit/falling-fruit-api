@@ -513,36 +513,33 @@ Review:
 Photo:
   title: Photo
   description: Location photo.
-  type: object
-  required:
-    - id
-    - thumb
-    - medium
-    - original
-  properties:
-    id:
-      description: Photo ID.
-      type: integer
-      minimum: 1
-      example: 2745
-    thumb:
-      description: Path to thumbnail (longest dimension <= 100 px).
-      type: string
-      minLength: 1
-      format: uri
-      example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/thumb/open-uri20131213-3992-1szjh9k.jpg'
-    medium:
-      description: Path to medium size file (longest dimension <= 300 px).
-      type: string
-      minLength: 1
-      format: uri
-      example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
-    original:
-      description: Path to large size file (longest dimension <= 2048 px).
-      type: string
-      minLength: 1
-      format: uri
-      example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/DateFields'
+    - type: object
+      required:
+        - thumb
+        - medium
+        - original
+      properties:
+        thumb:
+          description: Path to thumbnail (longest dimension <= 100 px).
+          type: string
+          minLength: 1
+          format: uri
+          example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/thumb/open-uri20131213-3992-1szjh9k.jpg'
+        medium:
+          description: Path to medium size file (longest dimension <= 300 px).
+          type: string
+          minLength: 1
+          format: uri
+          example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
+        original:
+          description: Path to large size file (longest dimension <= 2048 px).
+          type: string
+          minLength: 1
+          format: uri
+          example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
 EditUser:
   title: User (edit)
   allOf:
