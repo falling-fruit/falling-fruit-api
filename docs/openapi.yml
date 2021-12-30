@@ -216,6 +216,13 @@ paths:
             type: integer
             minimum: 1
             default: null
+        - name: range
+          in: query
+          description: 'Whether to filter changes within the foraging range of the user with `user_id`, rather than by the user.'
+          schema:
+            type: boolean
+            default: false
+          example: false
       responses:
         '200':
           description: Success

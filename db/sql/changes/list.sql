@@ -14,7 +14,7 @@ JOIN locations l
   ON c.location_id = l.id
 JOIN users u
   ON c.user_id = u.id
-${where:raw}
+WHERE ${where:raw}
 ORDER BY c.created_at DESC
 LIMIT ${limit}
 OFFSET ${offset}

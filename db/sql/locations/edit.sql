@@ -4,12 +4,15 @@ WITH l AS (
     lat, lng, type_ids,
     season_start, season_stop,
     access, description, unverified,
-    updated_at
+    updated_at,
+    -- TODO: Remove once using generated column
+    location
   ) = (
     ${lat}, ${lng}, ${type_ids},
     ${season_start}, ${season_stop},
     ${access}, ${description}, ${unverified},
-    NOW()
+    NOW(),
+    ST_SetSrid(ST_MakePoint({$lng}, ${lat}), 4326)
   )
   WHERE id = ${id}
   RETURNING

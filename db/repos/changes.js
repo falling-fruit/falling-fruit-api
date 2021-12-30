@@ -7,11 +7,20 @@ class Changes {
     this.pgp = pgp
   }
 
-  list({limit = '100', offset = '0', user_id = null}) {
+  list({limit = '100', offset = '0', user_id = null, range = 'false'}) {
+    let user_filter
+    if (user_id) {
+      if (range === 'true') {
+        user_filter = `c.user_id = ${parseInt(user_id)}`
+      } else {
+        user_filter = `ST_INTERSECTS(l.location, (SELECT range FROM users u2 WHERE u2.id = ${parseInt(user_id)}))`
+      }
+    }
+    const filters = ['NOT l.hidden', user_filter]
     const values = {
       limit: parseInt(limit),
       offset: parseInt(offset),
-      where: user_id ? `WHERE c.user_id = ${user_id}` : ''
+      where: filters.filter(Boolean).join(' AND ')
     }
     return this.db.any(sql.list, values)
   }
