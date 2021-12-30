@@ -16,3 +16,9 @@ name:
   example: Ethan
   nullable: true
   minLength: 1
+bio:
+  description: Bio ('about you').
+  type: string
+  example: Mulberries are my favorite fruit.
+  nullable: true
+  minLength: 1

@@ -10,6 +10,7 @@ class Users {
   async add(req) {
     const values = {
       name: null,
+      bio: null,
       range: null,
       ...req.body
     }

@@ -546,12 +546,15 @@ EditUser:
   required:
     - email
     - name
+    - bio
     - range
   properties:
     email:
       $ref: properties.yml#/email
     name:
       $ref: properties.yml#/name
+    bio:
+      $ref: properties.yml#/bio
     range:
       allOf:
         - $ref: geojson.yml#/Polygon

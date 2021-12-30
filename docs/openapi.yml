@@ -1581,6 +1581,7 @@ components:
       required:
         - email
         - name
+        - bio
         - range
       properties:
         email:
@@ -1593,6 +1594,12 @@ components:
           description: Display name.
           type: string
           example: Ethan
+          nullable: true
+          minLength: 1
+        bio:
+          description: Bio ('about you').
+          type: string
+          example: Mulberries are my favorite fruit.
           nullable: true
           minLength: 1
         range:
