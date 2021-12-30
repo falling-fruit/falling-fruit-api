@@ -6,8 +6,8 @@ post:
     - key: []
     - key: []
       token: []
-  parameters:
-    - $ref: ../components/parameters.yml#/recaptcha
+  # parameters:
+  #   - $ref: ../components/parameters.yml#/recaptcha
   requestBody:
     required: true
     content:

@@ -375,8 +375,6 @@ paths:
         - key: []
         - key: []
           token: []
-      parameters:
-        - $ref: '#/components/parameters/recaptcha'
       requestBody:
         required: true
         content:
