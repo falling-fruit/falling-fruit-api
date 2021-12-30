@@ -46,6 +46,8 @@ info:
 tags:
   - name: Authentication
     description: User authentication, credentials, and account management.
+  - name: Users
+    description: Public user profiles.
   - name: Types
     description: Types describe the plants, fungi, or other resources present at a Location.
   - name: Locations
@@ -106,6 +108,8 @@ paths:
     $ref: paths/user~password.yml
   /user/password/reset:
     $ref: paths/user~password~reset.yml
+  /users/{id}:
+    $ref: paths/users~id.yml
 components:
   securitySchemes:
     $ref: components/securitySchemes.yml

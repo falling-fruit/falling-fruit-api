@@ -46,6 +46,8 @@ info:
 tags:
   - name: Authentication
     description: 'User authentication, credentials, and account management.'
+  - name: Users
+    description: Public user profiles.
   - name: Types
     description: 'Types describe the plants, fungi, or other resources present at a Location.'
   - name: Locations
@@ -194,11 +196,16 @@ paths:
   /locations/changes:
     get:
       summary: Fetch Location changes (activity).
-      description: 'A change event is recorded when a location is added (`''added''`), a location is edited (`''edited''`), or a location is reviewed (`''visited''`). Results are sorted in reverse chronological order (most recent first).'
+      description: |
+        A change event is recorded when a location is added (`'added'`), a location is edited (`'edited'`), or a location is reviewed (`'visited'`). Results are sorted in reverse chronological order (most recent first).
+
+        Filtering by user `id` is forbidden if the user is anonymous (`name` is null). Filtering by user `range` is restricted to the user.
       tags:
         - Locations
       security:
         - key: []
+        - key: []
+          token: []
       parameters:
         - name: limit
           in: query
@@ -848,6 +855,23 @@ paths:
                     type: string
                     minLength: 1
                     example: You will receive an email with instructions on how to reset your password in a few minutes
+  '/users/{id}':
+    get:
+      summary: View a user (public).
+      description: Forbidden if the user is anonymous (`name` is null).
+      tags:
+        - Users
+      security:
+        - key: []
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUser'
 components:
   securitySchemes:
     key:
@@ -1650,26 +1674,22 @@ components:
             - type: object
               description: Foraging range.
               nullable: true
-    User:
-      title: User
+    PublicUser:
+      title: User (public)
       allOf:
         - $ref: '#/components/schemas/IdField'
         - $ref: '#/components/schemas/DateFields'
-        - $ref: '#/components/schemas/EditUser'
         - type: object
           required:
-            - email
-            - confirmed_at
+            - name
+            - bio
             - roles
+            - confirmed_at
           properties:
-            email:
-              $ref: '#/components/schemas/EditUser/properties/email'
-            confirmed_at:
-              description: 'Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.'
-              type: string
-              format: date-time
-              example: '2014-07-20T12:34:56.789Z'
-              nullable: true
+            name:
+              $ref: '#/components/schemas/EditUser/properties/name'
+            bio:
+              $ref: '#/components/schemas/EditUser/properties/bio'
             roles:
               description: |
                 Roles.
@@ -1683,6 +1703,18 @@ components:
                   - admin
               example:
                 - user
+            confirmed_at:
+              description: 'Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              type: string
+              format: date-time
+              example: '2014-07-20T12:34:56.789Z'
+              nullable: true
+    User:
+      title: User
+      allOf:
+        - $ref: '#/components/schemas/PublicUser'
+        - type: object
+          properties:
             unconfirmed_email:
               description: Email change pending confirmation.
               type: string

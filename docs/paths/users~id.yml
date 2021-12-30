@@ -1,0 +1,16 @@
+get:
+  summary: View a user (public).
+  description: Forbidden if the user is anonymous (`name` is null).
+  tags:
+    - Users
+  security:
+    - key: []
+  parameters:
+    - $ref: ../components/parameters.yml#/user_id
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/PublicUser

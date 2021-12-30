@@ -8,7 +8,6 @@ const cors = require('cors')
 const multer = require('multer')
 const uploads = multer({ dest: 'uploads' })
 const compression = require('compression')
-const bcrypt = require('bcrypt')
 const tokenizer = new (require('./tokens'))()
 
 // Configuration
@@ -98,7 +97,21 @@ get(
 )
 get(
   `${BASE}/locations/changes`,
-  req => db.changes.list(req.query)
+  middleware.authenticate(),
+  async (req, res) => {
+    if (req.query.user_id && (!req.user || req.user.id != parseInt(req.query.user_id))) {
+      // Cannot filter by other user's foraging range
+      if (req.query.range === 'true') {
+        return void res.status(403).json({error: 'Only a user can filter by their own foraging range'})
+      }
+      const user = await db.users.show(req.query.user_id)
+      // Cannot filter by anonymous user
+      if (!user.name) {
+        return void res.status(403).json({error: 'User prefers to remain anonymous'})
+      }
+    }
+    return db.changes.list(req.query)
+  }
 )
 get(
   `${BASE}/locations/:id`,
@@ -196,7 +209,19 @@ post(
   }
 )
 
-// Routes: Users
+// Routes: Users (public)
+get(
+  `${BASE}/users/:id`,
+  async (req, res) => {
+    const user = await db.users.show_public(req.params.id)
+    if (!user.name) {
+      return void res.status(403).json({error: 'User prefers to remain anonymous'})
+    }
+    return user
+  }
+)
+
+// Routes: Users (private)
 post(
   `${BASE}/user`,
   middleware.recaptcha,

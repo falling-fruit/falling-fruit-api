@@ -11,9 +11,9 @@ class Changes {
     let user_filter
     if (user_id) {
       if (range === 'true') {
-        user_filter = `c.user_id = ${parseInt(user_id)}`
-      } else {
         user_filter = `ST_INTERSECTS(l.location, (SELECT range FROM users u2 WHERE u2.id = ${parseInt(user_id)}))`
+      } else {
+        user_filter = `c.user_id = ${parseInt(user_id)}`
       }
     }
     const filters = ['NOT l.hidden', user_filter]

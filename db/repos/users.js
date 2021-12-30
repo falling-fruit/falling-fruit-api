@@ -23,6 +23,10 @@ class Users {
     return this.db.one(sql.show, {id: id})
   }
 
+  show_public(id) {
+    return this.db.one(sql.showPublic, {id: parseInt(id)})
+  }
+
   async edit(req) {
     const values = {
       ...req.body,

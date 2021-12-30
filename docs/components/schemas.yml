@@ -561,26 +561,22 @@ EditUser:
         - type: object
           description: Foraging range.
           nullable: true
-User:
-  title: User
+PublicUser:
+  title: User (public)
   allOf:
     - $ref: '#/IdField'
     - $ref: '#/DateFields'
-    - $ref: '#/EditUser'
     - type: object
       required:
-        - email
-        - confirmed_at
+        - name
+        - bio
         - roles
+        - confirmed_at
       properties:
-        email:
-          $ref: properties.yml#/email
-        confirmed_at:
-          description: Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.
-          type: string
-          format: date-time
-          example: '2014-07-20T12:34:56.789Z'
-          nullable: true
+        name:
+          $ref: properties.yml#/name
+        bio:
+          $ref: properties.yml#/bio
         roles:
           description: |
             Roles.
@@ -591,6 +587,18 @@ User:
             type: string
             enum: [user, admin]
           example: [user]
+        confirmed_at:
+          description: Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.
+          type: string
+          format: date-time
+          example: '2014-07-20T12:34:56.789Z'
+          nullable: true
+User:
+  title: User
+  allOf:
+    - $ref: '#/PublicUser'
+    - type: object
+      properties:
         unconfirmed_email:
           description: Email change pending confirmation.
           type: string
