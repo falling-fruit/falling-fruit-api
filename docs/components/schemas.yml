@@ -542,13 +542,22 @@ Photo:
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
 EditUser:
   title: User (edit)
-  allOf:
-    - type: object
-      required:
-        - name
-      properties:
-        name:
-          $ref: properties.yml#/name
+  type: object
+  required:
+    - email
+    - name
+    - range
+  properties:
+    email:
+      $ref: properties.yml#/email
+    name:
+      $ref: properties.yml#/name
+    range:
+      allOf:
+        - $ref: geojson.yml#/Polygon
+        - type: object
+          description: Foraging range.
+          nullable: true
 User:
   title: User
   allOf:

@@ -10,6 +10,7 @@ class Users {
   async add(req) {
     const values = {
       name: null,
+      range: null,
       ...req.body
     }
     // Store encrypted password

@@ -1,0 +1,44 @@
+Point:
+  description: >
+    Point coordinates as longitude and latitude (in WGS84 decimal degrees), and optional elevation.
+  externalDocs:
+    url: 'https://tools.ietf.org/html/rfc7946#section-3.1.1'
+  type: array
+  minItems: 2
+  maxItems: 3
+  items:
+    type: number
+
+#---------------------------------------------------------------------------
+
+LinearRing:
+  description: >
+    Closed line with four or more points. The first and last MUST contain
+    identical values, and the line MUST follow the right-hand rule with respect to the area it bounds: exterior rings are counterclockwise, and holes are clockwise.
+  externalDocs:
+    url: 'https://tools.ietf.org/html/rfc7946#section-3.1.6'
+  type: array
+  items:
+    $ref: '#/Point'
+  minItems: 4
+  example: [[-105.3736, 39.9642], [-105.1635, 39.9642], [-105.1635, 40.0891], [-105.3736, 40.0891], [-105.3736, 39.9642]]
+
+#---------------------------------------------------------------------------
+
+Polygon:
+  externalDocs:
+    url: 'https://geojson.org/geojson-spec.html#id4'
+  type: object
+  required:
+    - type
+    - coordinates
+  properties:
+    type:
+      description: GeoJSON geometry type.
+      type: string
+      enum: [Polygon]
+    coordinates:
+      description: GeoJSON polygon coordinates (WGS84). The first linear ring represents the exterior ring. Any subsequent linear rings represent interior holes.
+      type: array
+      items:
+        $ref: '#/LinearRing'

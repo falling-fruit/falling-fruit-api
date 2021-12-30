@@ -16,17 +16,14 @@ post:
     content:
       application/json:
         schema:
-          type: object
-          required:
-            - email
-            - password
-          properties:
-            email:
-              $ref: ../components/properties.yml#/email
-            password:
-              $ref: ../components/properties.yml#/password
-            name:
-              $ref: ../components/properties.yml#/name
+          allOf:
+            - $ref: ../components/schemas.yml#/EditUser
+            - type: object
+              required:
+                - password
+              properties:
+                password:
+                  $ref: ../components/properties.yml#/password
   responses:
     '200':
       description: Success
@@ -69,15 +66,10 @@ put:
     content:
       application/json:
         schema:
+          allOf:
+            - $ref: ../components/schemas.yml#/EditUser
           type: object
-          required:
-            - name
-            - email
           properties:
-            name:
-              $ref: ../components/properties.yml#/name
-            email:
-              $ref: ../components/properties.yml#/email
             password:
               $ref: ../components/properties.yml#/password
             password_confirmation:

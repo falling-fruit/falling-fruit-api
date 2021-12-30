@@ -543,17 +543,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  $ref: '#/components/schemas/User/allOf/3/properties/email'
-                password:
-                  $ref: '#/paths/~1user/put/requestBody/content/application~1json/schema/properties/password'
-                name:
-                  $ref: '#/components/schemas/EditUser/allOf/0/properties/name'
+              allOf:
+                - $ref: '#/components/schemas/EditUser'
+                - type: object
+                  required:
+                    - password
+                  properties:
+                    password:
+                      $ref: '#/paths/~1user/put/requestBody/content/application~1json/schema/properties/password'
       responses:
         '200':
           description: Success
@@ -596,15 +593,10 @@ paths:
         content:
           application/json:
             schema:
+              allOf:
+                - $ref: '#/components/schemas/EditUser'
               type: object
-              required:
-                - name
-                - email
               properties:
-                name:
-                  $ref: '#/components/schemas/EditUser/allOf/0/properties/name'
-                email:
-                  $ref: '#/components/schemas/User/allOf/3/properties/email'
                 password:
                   description: Password.
                   type: string
@@ -664,7 +656,7 @@ paths:
                   - email
                 properties:
                   email:
-                    $ref: '#/components/schemas/User/allOf/3/properties/email'
+                    $ref: '#/components/schemas/EditUser/properties/email'
     get:
       summary: Confirm the user (from a link in an email).
       tags:
@@ -707,7 +699,7 @@ paths:
                 - email
               properties:
                 email:
-                  $ref: '#/components/schemas/User/allOf/3/properties/email'
+                  $ref: '#/components/schemas/EditUser/properties/email'
       responses:
         '200':
           description: Success
@@ -737,7 +729,7 @@ paths:
                 - password
               properties:
                 username:
-                  $ref: '#/components/schemas/User/allOf/3/properties/email'
+                  $ref: '#/components/schemas/EditUser/properties/email'
                 password:
                   $ref: '#/paths/~1user/put/requestBody/content/application~1json/schema/properties/password'
       responses:
@@ -816,7 +808,7 @@ paths:
                 type: object
                 properties:
                   email:
-                    $ref: '#/components/schemas/User/allOf/3/properties/email'
+                    $ref: '#/components/schemas/EditUser/properties/email'
   /user/password/reset:
     post:
       summary: Request a password-reset email.
@@ -836,7 +828,7 @@ paths:
                 - email
               properties:
                 email:
-                  $ref: '#/components/schemas/User/allOf/3/properties/email'
+                  $ref: '#/components/schemas/EditUser/properties/email'
       responses:
         '200':
           description: Success
@@ -1578,17 +1570,72 @@ components:
               example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
     EditUser:
       title: User (edit)
-      allOf:
-        - type: object
-          required:
-            - name
-          properties:
-            name:
-              description: Display name.
-              type: string
-              example: Ethan
+      type: object
+      required:
+        - email
+        - name
+        - range
+      properties:
+        email:
+          description: Email.
+          type: string
+          format: email
+          example: foo@bar.com
+          pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
+        name:
+          description: Display name.
+          type: string
+          example: Ethan
+          nullable: true
+          minLength: 1
+        range:
+          allOf:
+            - externalDocs:
+                url: 'https://geojson.org/geojson-spec.html#id4'
+              type: object
+              required:
+                - type
+                - coordinates
+              properties:
+                type:
+                  description: GeoJSON geometry type.
+                  type: string
+                  enum:
+                    - Polygon
+                coordinates:
+                  description: GeoJSON polygon coordinates (WGS84). The first linear ring represents the exterior ring. Any subsequent linear rings represent interior holes.
+                  type: array
+                  items:
+                    description: |
+                      Closed line with four or more points. The first and last MUST contain identical values, and the line MUST follow the right-hand rule with respect to the area it bounds: exterior rings are counterclockwise, and holes are clockwise.
+                    externalDocs:
+                      url: 'https://tools.ietf.org/html/rfc7946#section-3.1.6'
+                    type: array
+                    items:
+                      description: |
+                        Point coordinates as longitude and latitude (in WGS84 decimal degrees), and optional elevation.
+                      externalDocs:
+                        url: 'https://tools.ietf.org/html/rfc7946#section-3.1.1'
+                      type: array
+                      minItems: 2
+                      maxItems: 3
+                      items:
+                        type: number
+                    minItems: 4
+                    example:
+                      - - -105.3736
+                        - 39.9642
+                      - - -105.1635
+                        - 39.9642
+                      - - -105.1635
+                        - 40.0891
+                      - - -105.3736
+                        - 40.0891
+                      - - -105.3736
+                        - 39.9642
+            - type: object
+              description: Foraging range.
               nullable: true
-              minLength: 1
     User:
       title: User
       allOf:
@@ -1602,11 +1649,7 @@ components:
             - roles
           properties:
             email:
-              description: Email.
-              type: string
-              format: email
-              example: foo@bar.com
-              pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
+              $ref: '#/components/schemas/EditUser/properties/email'
             confirmed_at:
               description: 'Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.'
               type: string
