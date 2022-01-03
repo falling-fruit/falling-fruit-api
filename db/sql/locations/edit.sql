@@ -12,7 +12,7 @@ WITH l AS (
     ${season_start}, ${season_stop},
     ${access}, ${description}, ${unverified},
     NOW(),
-    ST_SetSrid(ST_MakePoint({$lng}, ${lat}), 4326)
+    ST_SetSrid(ST_MakePoint(${lng}, ${lat}), 4326)
   )
   WHERE id = ${id}
   RETURNING

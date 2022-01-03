@@ -10,7 +10,7 @@ WITH l AS (
     ${lat}, ${lng}, ${type_ids}, ${user_id},
     ${season_start}, ${season_stop},
     ${access}, ${description}, ${unverified},
-    ST_SetSrid(ST_MakePoint({$lng}, ${lat}), 4326)
+    ST_SetSrid(ST_MakePoint(${lng}, ${lat}), 4326)
   )
   RETURNING
     id, lat, lng, type_ids, user_id, import_id, author,
