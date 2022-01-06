@@ -196,6 +196,20 @@ put(
     return review
   }
 )
+drop(
+  `${BASE}/reviews/:id`,
+  middleware.authenticate('user'),
+  async (req, res) => {
+    const original = await db.reviews.show(req.params.id)
+    // Restrict to linked user
+    if (req.user.id != original.user_id) {
+      return void res.status(403).json({error: 'Insufficient permissions'})
+    }
+    await db.reviews.delete(req.params.id)
+    await db.changes.delete_review(req.params.id)
+    return void res.status(204).send()
+  }
+)
 
 // Routes: Photos
 post(

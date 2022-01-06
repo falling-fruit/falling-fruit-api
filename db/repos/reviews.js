@@ -37,6 +37,10 @@ class Reviews {
   list(id) {
     return this.db.any(sql.list, {id: parseInt(id)})
   }
+
+  delete(id) {
+    return this.db.none('DELETE FROM observations WHERE id = ${id}', {id: parseInt(id)})
+  }
 }
 
 module.exports = Reviews

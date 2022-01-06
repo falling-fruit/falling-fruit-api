@@ -36,3 +36,16 @@ put:
         application/json:
           schema:
             $ref: ../components/schemas.yml#/Review
+delete:
+  summary: Delete a Review.
+  description: Restricted to the same user that created the review.
+  tags:
+    - Reviews
+  security:
+    - key: []
+      token: []
+  parameters:
+    - $ref: ../components/parameters.yml#/review_id
+  responses:
+    '204':
+      description: Success (no content)

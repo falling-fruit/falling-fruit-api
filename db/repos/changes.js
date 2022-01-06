@@ -38,6 +38,10 @@ class Changes {
     }
     return this.db.none(sql.add, values)
   }
+
+  delete_review(id) {
+    return this.db.none('DELETE FROM changes WHERE observation_id = ${id}', {id: parseInt(id)})
+  }
 }
 
 module.exports = Changes

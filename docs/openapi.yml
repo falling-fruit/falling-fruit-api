@@ -436,6 +436,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Review'
+    delete:
+      summary: Delete a Review.
+      description: Restricted to the same user that created the review.
+      tags:
+        - Reviews
+      security:
+        - key: []
+          token: []
+      parameters:
+        - $ref: '#/components/parameters/review_id'
+      responses:
+        '204':
+          description: Success (no content)
   /types:
     get:
       summary: Fetch Types.
