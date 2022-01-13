@@ -186,7 +186,7 @@ _.format_type = function(type) {
   replaced.push('en_synonyms')
   // TEMP: Generate USDA URL from symbol
   if (type.usda_symbol) {
-    type.urls.usda = `https://plants.usda.gov/java/profile?symbol=${type.usda_symbol}`
+    type.urls.usda = `https://plants.usda.gov/home/plantProfile?symbol=${type.usda_symbol}`
   }
   replaced.push('usda_symbol')
   // Drop replaced properties
