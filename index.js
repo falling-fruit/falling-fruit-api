@@ -70,7 +70,18 @@ get(
 // Routes: Locations
 get(
   `${BASE}/locations`,
-  req => db.locations.list(req.query)
+  async (req, res) => {
+    const locations = await db.locations.list(req.query)
+    if (req.query.count === 'true') {
+      const limit = req.query.limit ? parseInt(req.query.limit) : 1000
+      let count = locations.length
+      if (locations.length === limit) {
+        count = (await db.locations.count(req.query)).count
+      }
+      res.set({'x-total-count': count})
+    }
+    return locations
+  }
 )
 post(
   `${BASE}/locations`,
