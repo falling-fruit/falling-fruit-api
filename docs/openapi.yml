@@ -467,6 +467,7 @@ paths:
                   $ref: '#/components/schemas/Type'
     post:
       summary: Submit new Type.
+      description: 'Only an admin can submit a type with `pending: false`.'
       tags:
         - Types
       security:

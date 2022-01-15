@@ -14,8 +14,8 @@ class Types {
       scientific_names: [],
       taxonomic_rank: null,
       notes: null,
-      ...obj,
-      pending: true
+      pending: true,
+      ...obj
     }
     values = {
       en_name: null,

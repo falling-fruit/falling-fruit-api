@@ -45,12 +45,18 @@ get(
   `${BASE}/types`,
   () => db.types.list()
 )
-// TODO: Raise auth error if pending: false and not admin
 post(
   `${BASE}/types`,
   middleware.authenticate(),
   middleware.recaptcha,
-  req => db.types.add(req.body)
+  (req, res) => {
+    if (req.body.pending === false && (!req.user || !req.user.roles.includes('admin'))) {
+      return void res.status(403).json(
+        {error: 'Only admins can approve a type (pending: false)'}
+      )
+    }
+    return db.types.add(req.body)
+  }
 )
 get(
   `${BASE}/types/counts`,
