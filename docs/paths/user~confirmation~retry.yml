@@ -1,5 +1,6 @@
 post:
   summary: Request another email-confirmation email.
+  description: Alternate email messages are sent if the email is not found or if the email is already confirmed.
   tags:
     - Authentication
   security:

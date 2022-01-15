@@ -160,9 +160,20 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: count
+          in: query
+          description: Whether to include the total number of locations matching the query in the `x-total-count` header.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Success
+          headers:
+            x-total-count:
+              schema:
+                type: integer
+              description: Total number of locations meeting the query conditions (if `count=true`).
           content:
             application/json:
               schema:
@@ -557,7 +568,7 @@ paths:
         When first created, the account is not confirmed and cannot be used.
         An email is sent with a link that must be clicked to confirm the account.
 
-        `email` cannot match (case-insensitive) the email of an existing user.
+        `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
       tags:
         - Authentication
       security:
@@ -606,7 +617,7 @@ paths:
     put:
       summary: Edit the user (self).
       description: |
-        - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed.
+        - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed. If an account with the new email already exists, a different email is sent.
         - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
         - In either case, the existing password is required (`password_confirmation`).
       tags:
@@ -711,6 +722,7 @@ paths:
   /user/confirmation/retry:
     post:
       summary: Request another email-confirmation email.
+      description: Alternate email messages are sent if the email is not found or if the email is already confirmed.
       tags:
         - Authentication
       security:
@@ -838,6 +850,7 @@ paths:
   /user/password/reset:
     post:
       summary: Request a password-reset email.
+      description: An alternate email message is sent if the email is not found.
       tags:
         - Authentication
       security:

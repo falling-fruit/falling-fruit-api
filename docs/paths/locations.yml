@@ -36,9 +36,21 @@ get:
       schema:
         type: boolean
         default: false
+    - name: count
+      in: query
+      description: Whether to include the total number of locations matching the query in the `x-total-count` header.
+      schema:
+        type: boolean
+        default: false
   responses:
     '200':
       description: Success
+      headers:
+        x-total-count:
+          schema:
+            type: integer
+          description: |-
+            Total number of locations meeting the query conditions (if `count=true`).
       content:
         application/json:
           schema:

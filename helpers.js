@@ -344,6 +344,51 @@ _.send_email_confirmation = function(user, token) {
   return send_email(email)
 }
 
+_.send_email_confirmation_exists = function(user) {
+  const email = {
+    to: user.email,
+    subject: 'Registration attempt',
+    body: `
+      <p>Hello ${user.name || user.email},</p>
+      <p>Someone (maybe you) tried to sign up using this email (${user.email}). If this was you, sign in here instead:
+      <br/>https://fallingfruit.org/users/sign_in</p>
+      <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
+    `,
+    tag: 'email-confirmation'
+  }
+  return send_email(email)
+}
+
+_.send_email_confirmation_not_found = function(user) {
+  const email = {
+    to: user.email,
+    subject: 'Email confirmation attempt',
+    body: `
+      <p>Hello,</p>
+      <p>Someone (possibly you) requested a link to confirm a Falling Fruit (https://fallingfruit.org) account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:
+      <br/>https://fallingfruit.org/users/confirmation/new</p>
+      <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
+    `,
+    tag: 'email-confirmation'
+  }
+  return send_email(email)
+}
+
+_.send_email_confirmation_confirmed = function(user) {
+  const email = {
+    to: user.email,
+    subject: 'Email already confirmed',
+    body: `
+      <p>Hello ${user.name || user.email},</p>
+      <p>Someone (most likely you) requested a link to confirm your email (${user.email}). Your email is already confirmed, so you can simply sign in here:
+      <br/>https://fallingfruit.org/users/sign_in</p>
+      <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
+    `,
+    tag: 'email-confirmation'
+  }
+  return send_email(email)
+}
+
 _.send_password_reset = function(user, token) {
   const url = `${ORIGIN}${BASE}/user/password?token=${token}`
   const email = {
@@ -356,6 +401,21 @@ _.send_password_reset = function(user, token) {
       <p>Someone (most likely you) requested a link to change your password:
       <br/>${url}</p>
       <p>If you didn't request this, you can ignore this email. Your password won't change unless you visit the link above and create a new one.</p>
+    `,
+    tag: 'password-reset'
+  }
+  return send_email(email)
+}
+
+_.send_password_reset_not_found = function(user) {
+  const email = {
+    to: user.email,
+    subject: 'Password reset attempt',
+    body: `
+      <p>Hello,</p>
+      <p>Someone (possibly you) requested a link to change the password for a Falling Fruit (https://fallingfruit.org) account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:
+      <br/>https://fallingfruit.org/users/password/new</p>
+      <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'password-reset'
   }

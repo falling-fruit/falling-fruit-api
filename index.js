@@ -260,15 +260,16 @@ post(
     // Email uniqueness is case-insensitive
     req.body.email = req.body.email.toLowerCase()
     const exists = await db.oneOrNone(
-      'SELECT email FROM users WHERE email=${email}', {email: req.body.email}
+      'SELECT email, name FROM users WHERE email=${email}', {email: req.body.email}
     )
     if (exists) {
-      throw Error('An account with that email already exists')
+      await _.send_email_confirmation_exists(exists)
+    } else {
+      const user = await db.users.add(req)
+      // Send confirmation email
+      const token = tokenizer.sign_email_confirmation(user)
+      await _.send_email_confirmation(user, token)
     }
-    const user = await db.users.add(req)
-    // Send confirmation email
-    const token = tokenizer.sign_email_confirmation(user)
-    await _.send_email_confirmation(user, token)
     // Phrase: devise.confirmations.send_instructions
     return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
   }
@@ -300,20 +301,21 @@ put(
         return void res.status(401).json({error: 'Wrong password'})
       }
       if (req.body.email != user.email) {
-        // Check that email is not already taken
-        const other = await db.oneOrNone('SELECT id FROM users WHERE email = ${email}', {email: req.body.email})
-        if (other) {
-          throw Error('An account with that email already exists')
-        }
         // Save new email as unconfirmed
+        // When email clicked: set unconfirmed_email to email
         await db.none(
           'UPDATE users SET unconfirmed_email = ${email} WHERE id = ${id}',
           {id: req.user.id, email: req.body.email}
         )
-        // Send confirmation email
-        const token = tokenizer.sign_email_confirmation(user, req.body.email)
-        await _.send_email_confirmation({email: req.body.email}, token)
-        // When email clicked: set unconfirmed_email to email
+        // Check that email is not already taken
+        const other = await db.oneOrNone('SELECT email, name FROM users WHERE email = ${email}', {email: req.body.email})
+        if (other) {
+          await _.send_email_confirmation_exists(other)
+        } else {
+          // Send confirmation email
+          const token = tokenizer.sign_email_confirmation(user, req.body.email)
+          await _.send_email_confirmation({email: req.body.email}, token)
+        }
       }
       if (req.body.password === req.body.password_confirmation) {
         // Ignore password input
@@ -494,15 +496,15 @@ post(
       {email: email}
     )
     if (!user) {
-      // Phrase: devise.errors.messages.not_found
-      throw Error('Email not found')
+      await _.send_email_confirmation_not_found({email: req.body.email})
+    } else if (user.email === email && user.confirmed_at) {
+      await _.send_email_confirmation_confirmed(user)
+    } else {
+      const token = tokenizer.sign_email_confirmation(
+        user, user.unconfirmed_email ? user.unconfirmed_email : null
+      )
+      await _.send_email_confirmation({email: email}, token)
     }
-    if (user.email === email && user.confirmed_at) {
-      // Phrase: devise.errors.messages.already_confirmed
-      throw Error('Email was already confirmed, please try signing in')
-    }
-    const token = tokenizer.sign_email_confirmation(user, user.unconfirmed_email ? user.unconfirmed_email : null)
-    await _.send_email_confirmation({email: email}, token)
     // Phrase: devise.confirmation.send_instructions
     return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
   }
@@ -542,12 +544,12 @@ post(
       'SELECT id, email, name, confirmed_at, encrypted_password FROM users WHERE email=${email}',
       {email: email}
     )
-    if (!user) {
-      // Phrase: devise.errors.messages.not_found
-      throw Error('Email not found')
+    if (user) {
+      const token = tokenizer.sign_password_reset(user, user.encrypted_password)
+      await _.send_password_reset(user, token)
+    } else {
+      await _.send_password_reset_not_found({email: req.body.email})
     }
-    const token = tokenizer.sign_password_reset(user, user.encrypted_password)
-    await _.send_password_reset(user, token)
     // Phrase: devise.passwords.send_instructions
     return {message: 'You will receive an email with instructions on how to reset your password in a few minutes'}
   }
