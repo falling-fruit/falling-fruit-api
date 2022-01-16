@@ -44,7 +44,7 @@ class Locations {
     }
     const filters = [
       'NOT hidden',
-      _.bounds_to_sql(_.parse_bounds(bounds)),
+      _.bounds_to_sql(_.parse_bounds(bounds), { geography: 'location' }),
       _.muni_to_sql(muni),
       _.types_array_to_sql(types),
       _.invasive_to_sql(invasive)
@@ -59,9 +59,10 @@ class Locations {
       const point = _.parse_point(center)
       values.distance = {
         column: `,
-          ST_Distance(location, ST_SetSRID(
-            ST_Point(${point.x}, ${point.y}), 4326)
-          ) as distance`,
+          location <-> ST_SetSRID(
+            ST_Point(${point.x}, ${point.y}), 4326
+          ) as distance
+        `,
         order: 'ORDER BY distance'
       }
     } else {
@@ -76,7 +77,7 @@ class Locations {
   count({bounds, muni = 'true', types = null, invasive = 'false'}) {
     const filters = [
       'NOT hidden',
-      _.bounds_to_sql(_.parse_bounds(bounds)),
+      _.bounds_to_sql(_.parse_bounds(bounds), { geography: 'location' }),
       _.muni_to_sql(muni),
       _.types_array_to_sql(types),
       _.invasive_to_sql(invasive)

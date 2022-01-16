@@ -80,11 +80,19 @@ _.parse_point = function(value, mercator = false) {
  * or `x` and `y` (cached mercator coordinates).
  * @returns {string} SQL condition.
  */
-_.bounds_to_sql = function(bounds, mercator = false) {
+_.bounds_to_sql = function(
+  bounds, { geography = null, epsg = 4326, mercator = false } = {}
+) {
   var {x, y} = {x: 'lng', y: 'lat'}
   if (mercator) {
     var {x, y} = {x: 'x', y: 'y'}
     bounds = bounds.map(_.wgs84_to_mercator)
+  }
+  if (geography) {
+    return (
+      `${geography} && ST_MakeEnvelope(` +
+      `${bounds[0].x}, ${bounds[0].y}, ${bounds[1].x}, ${bounds[1].y}, ${epsg})`
+    )
   }
   const operator = bounds[1].x > bounds[0].x ? 'AND' : 'OR'
   return (
