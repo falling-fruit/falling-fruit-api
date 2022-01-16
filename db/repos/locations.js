@@ -65,8 +65,7 @@ class Locations {
         order: 'ORDER BY distance'
       }
     } else {
-      // Ensure even spatial spread
-      values.distance.order = 'ORDER BY RANDOM()'
+      values.distance.order = ''
     }
     if (photo === 'true') {
       return this.db.any(sql.listphoto, values)
