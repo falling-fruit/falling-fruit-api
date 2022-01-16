@@ -127,18 +127,28 @@ paths:
       security:
         - key: []
       parameters:
-        - $ref: '#/components/parameters/bounds'
-        - $ref: '#/components/parameters/muni'
-        - $ref: '#/components/parameters/types'
-        - $ref: '#/components/parameters/invasive'
-        - name: limit
+        - name: bounds
           in: query
-          description: Maximum number of Locations to return.
+          description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.'
+          explode: false
+          style: pipeDelimited
           schema:
-            type: integer
-            minimum: 0
-            default: 1000
-        - $ref: '#/components/parameters/offset'
+            type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              type: array
+              minItems: 2
+              maxItems: 2
+              items:
+                type: number
+                minimum: -180
+                maximum: 180
+            example:
+              - - -5
+                - -180
+              - - 5
+                - 180
         - name: center
           in: query
           description: 'Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].'
@@ -154,6 +164,17 @@ paths:
             example:
               - 1.359
               - 103.807
+        - $ref: '#/components/parameters/muni'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/invasive'
+        - name: limit
+          in: query
+          description: Maximum number of Locations to return.
+          schema:
+            type: integer
+            minimum: 0
+            default: 1000
+        - $ref: '#/components/parameters/offset'
         - name: photo
           in: query
           description: 'Whether to include the path to a review photo thumbnail, if available.'

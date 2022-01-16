@@ -38,13 +38,16 @@ class Locations {
     return _.format_location(location)
   }
 
-  async list({bounds, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false'}) {
+  async list({bounds = null, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false'}) {
+    if (!bounds && !center) {
+      throw Error('Either bounds or center are required')
+    }
     if (types === '') {
       return []
     }
     const filters = [
       'NOT hidden',
-      _.bounds_to_sql(_.parse_bounds(bounds), { geography: 'location' }),
+      bounds ? _.bounds_to_sql(_.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
       _.muni_to_sql(muni),
       _.types_array_to_sql(types),
       _.invasive_to_sql(invasive)
