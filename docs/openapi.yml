@@ -549,6 +549,14 @@ paths:
       parameters:
         - $ref: '#/components/parameters/bounds'
         - $ref: '#/components/parameters/muni'
+        - name: zoom
+          description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid. If provided, only counts the Types of Locations whose Cluster centerpoints at this zoom level fall within `bounds` (faster). Otherwise, a full count is performed using Location coordinates.'
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 13
+            default: null
       responses:
         '200':
           description: Success

@@ -43,14 +43,30 @@ class Types {
     return types.map(_.format_type)
   }
 
-  count({bounds, muni = 'true'}) {
-    const filters = [
-      "NOT hidden",
-      _.bounds_to_sql(_.parse_bounds(bounds)),
+  count({bounds, muni = 'true', zoom = null}) {
+    if (zoom) {
+      zoom = parseInt(zoom)
+      if (zoom > 13) {
+        zoom = null
+      }
+    }
+    let filters
+    let values
+    if (zoom === null) {
+      filters = [
+        "NOT hidden",
+        _.bounds_to_sql(_.parse_bounds(bounds)),
+        _.muni_to_sql(muni)
+      ]
+      values = {where: filters.filter(Boolean).join(' AND ')}
+      return this.db.any(sql.count, values)
+    }
+    filters = [
+      _.bounds_to_sql(_.parse_bounds(bounds), { mercator: true }),
       _.muni_to_sql(muni)
     ]
-    const values = {where: filters.filter(Boolean).join(' AND ')}
-    return this.db.any(sql.count, values)
+    values = {where: filters.filter(Boolean).join(' AND '), zoom: zoom}
+    return this.db.any(sql.countClusters, values)
   }
 }
 
