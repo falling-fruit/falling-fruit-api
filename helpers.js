@@ -119,8 +119,8 @@ _.wgs84_to_mercator = function({x, y}) {
 
 _.zoom_to_sql = function(value) {
   const zoom = parseInt(value)
-  if (zoom < 0 || zoom > 13) {
-    throw Error('Zoom not in interval [0, 13]')
+  if (zoom < 0 || zoom > MAX_GRID_ZOOM) {
+    throw Error(`Zoom not in interval [0, ${MAX_GRID_ZOOM}]`)
   }
   return `zoom = ${zoom}`
 }
@@ -569,5 +569,7 @@ _.move_cluster = function({cx, cy}, n, {x, y}, add) {
 _.set_equal = function(a, b) {
   return a.length === b.length && a.every(value => b.includes(value))
 }
+
+_.MAX_GRID_ZOOM = MAX_GRID_ZOOM
 
 module.exports = _

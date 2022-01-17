@@ -24,7 +24,6 @@ class Types {
       scientific_synonymss: null,
       ..._.deconstruct_type(values)
     }
-    console.log(values)
     if (!values.en_name && !values.scientific_name) {
       throw Error('At least one scientific name or (en) common name is required')
     }
@@ -46,7 +45,7 @@ class Types {
   count({bounds, muni = 'true', zoom = null}) {
     if (zoom) {
       zoom = parseInt(zoom)
-      if (zoom > 13) {
+      if (zoom > _.MAX_GRID_ZOOM) {
         zoom = null
       }
     }
