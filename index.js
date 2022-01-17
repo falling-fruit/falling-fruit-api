@@ -13,9 +13,28 @@ const tokenizer = new (require('./tokens'))()
 // Configuration
 const app = express()
 app.use(compression())
-app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+// CORS
+// https://httptoolkit.tech/blog/cache-your-cors
+// https://www.moesif.com/blog/technical/cors/Authoritative-Guide-to-CORS-Cross-Origin-Resource-Sharing-for-REST-APIs
+app.use(cors({
+  // Browser cache time for preflight responses (Access-Control-Max-Age)
+  maxAge: 86400, // seconds
+  // Allow us to manually add to preflights
+  preflightContinue: true
+}))
+// Add cache-control to preflight responses
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    // Vary: origin set automatically
+    return void res.end()
+  } else {
+    return void next()
+  }
+})
 
 // Routes: Docs
 app.use(`${BASE}/openapi.yml`, express.static('docs/openapi.yml'))
