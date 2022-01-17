@@ -147,7 +147,8 @@ _.types_to_sql = function(value) {
 _.types_array_to_sql = function(value) {
   // '1,2,3'
   if (value) {
-    return `type_ids && ARRAY[${value}]`
+    // Sorting shown to reduce db time 4x (?!). Requires intarray extension.
+    return `type_ids && sort(ARRAY[${value}])`
   }
 }
 
