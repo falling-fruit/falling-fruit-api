@@ -555,7 +555,7 @@ paths:
           schema:
             type: integer
             minimum: 0
-            maximum: 13
+            maximum: 14
             default: null
       responses:
         '200':
@@ -971,7 +971,7 @@ components:
       schema:
         type: integer
         minimum: 0
-        maximum: 13
+        maximum: 14
         default: 0
     muni:
       name: muni
