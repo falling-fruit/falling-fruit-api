@@ -9,9 +9,7 @@ const recaptcha = new Recaptcha(
 const _ = {}
 
 _.check_api_key = async function(req, res, next) {
-  // TODO: Store API keys hashed with prefix
-  // TODO: Move API keys from db to config
-  const key = req.header('x-api-key')
+  const key = req.header('x-api-key') || req.query.api_key
   if (!key) {
     return void res.status(401).json({error: 'API key is missing'})
   }

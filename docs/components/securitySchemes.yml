@@ -2,6 +2,7 @@ key:
   type: apiKey
   name: x-api-key
   in: header
+  description: May also be passed as the query parameter `api_key`.
 token:
   type: oauth2
   flows:
