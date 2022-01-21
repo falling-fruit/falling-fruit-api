@@ -1,0 +1,108 @@
+post:
+  summary: Register a new user.
+  description: |
+    When first created, the account is not confirmed and cannot be used.
+    An email is sent with a link that must be clicked to confirm the account.
+
+    `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
+  tags:
+    - Authentication
+  security:
+    - key: []
+  parameters:
+    - $ref: ../components/parameters.yml#/recaptcha
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          allOf:
+            - $ref: ../components/schemas.yml#/EditUser
+            - type: object
+              required:
+                - password
+              properties:
+                password:
+                  $ref: ../components/properties.yml#/password
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                minLength: 1
+                example: You will receive an email with instructions for how to confirm your email address in a few minutes
+get:
+  summary: View the user (self).
+  tags:
+    - Authentication
+  security:
+    - key: []
+      token: []
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/User
+put:
+  summary: Edit the user (self).
+  description: |
+    - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed. If an account with the new email already exists, a different email is sent.
+    - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
+    - In either case, the existing password is required (`password_confirmation`).
+  tags:
+    - Authentication
+  security:
+    - key: []
+      token: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          allOf:
+            - $ref: ../components/schemas.yml#/EditUser
+          type: object
+          properties:
+            password:
+              $ref: ../components/properties.yml#/password
+            password_confirmation:
+              description: Current password. Required for email and password change.
+              type: string
+              format: password
+              minLength: 1
+              example: foo?bar
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/User
+delete:
+  summary: Delete the user (self).
+  tags:
+    - Authentication
+  security:
+    - key: []
+      token: []
+  # requestBody:
+  #   required: true
+  #   content:
+  #     application/json:
+  #       schema:
+  #         type: object
+  #         required:
+  #           - password
+  #         properties:
+  #           password:
+  #             $ref: ../components/properties.yml#/password
+  responses:
+    '204':
+      description: Success (no content)

@@ -1,10 +1,11 @@
 const sql = require('../sql').reviews
-const _ = require('../../helpers')
+const Changes = require('./changes')
 
 class Reviews {
   constructor(db, pgp) {
     this.db = db
     this.pgp = pgp
+    this.changes = new Changes(db, pgp)
   }
 
   async add(id, obj) {
@@ -20,23 +21,25 @@ class Reviews {
       location_id: parseInt(id)
     }
     const review = await this.db.one(sql.add, values)
-    return _.format_review(review)
+    await this.changes.add({description: 'visited', review: review})
+    return review
   }
 
-  async show(id) {
-    const review = await this.db.one(sql.show, {id: parseInt(id)})
-    return _.format_review(review)
+  show(id) {
+    return this.db.one(sql.show, {id: parseInt(id)})
   }
 
-  async edit(id, obj) {
+  edit(id, obj) {
     const values = {...obj, id: parseInt(id)}
-    const review = await this.db.one(sql.edit, values)
-    return _.format_review(review)
+    return this.db.one(sql.edit, values)
   }
 
-  async list(id) {
-    const reviews = await this.db.any(sql.list, {id: parseInt(id)})
-    return reviews.map(_.format_review)
+  list(id) {
+    return this.db.any(sql.list, {id: parseInt(id)})
+  }
+
+  delete(id) {
+    return this.db.none('DELETE FROM observations WHERE id = ${id}', {id: parseInt(id)})
   }
 }
 

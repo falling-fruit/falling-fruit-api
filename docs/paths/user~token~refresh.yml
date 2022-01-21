@@ -1,0 +1,34 @@
+post:
+  summary: Request an access token (refresh token).
+  description: |
+    Follows the OAuth2 spec for refresh token flow, which requires form data with `grant_type: 'refresh_token'` (ignored) and `refresh_token`.
+  tags:
+    - Authentication
+  security:
+    - key: []
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          required:
+            - refresh_token
+          properties:
+            refresh_token:
+              description: Refresh token.
+              type: string
+              minLength: 1
+              example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+            grant_type:
+              description: Grant type.
+              type: string
+              enum: [refresh_token]
+              example: refresh_token
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Token

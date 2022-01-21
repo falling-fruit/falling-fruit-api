@@ -1,0 +1,55 @@
+post:
+  summary: Confirm the user (from a form).
+  tags:
+    - Authentication
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - token
+          properties:
+            token:
+              description: Email-confirmation token.
+              type: string
+              minLength: 1
+              example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                $ref: ../components/properties.yml#/email
+get:
+  summary: Confirm the user (from a link in an email).
+  tags:
+    - Authentication
+  parameters:
+    - name: token
+      description: Email-confirmation token.
+      in: query
+      schema:
+        type: string
+        minLength: 1
+      required: true
+      example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                minLength: 1
+                example: Your email address has been successfully confirmed

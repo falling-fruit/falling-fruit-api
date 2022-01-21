@@ -1,0 +1,53 @@
+get:
+  summary: Fetch a Location's Reviews.
+  tags:
+    - Reviews
+  security:
+    - key: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_id'
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../components/schemas.yml#/Review'
+post:
+  summary: Review a Location.
+  description: If `fruiting` is provided, `observed_on` is required.
+  tags:
+    - Reviews
+  security:
+    - key: []
+    - key: []
+      token: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_id'
+    - $ref: ../components/parameters.yml#/recaptcha
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas.yml#/EditReview
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/Review
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+              type: object
+              properties:
+                error:
+                  description: Error message
+                  type: string
+                  example: observed_on is required if fruiting is provided

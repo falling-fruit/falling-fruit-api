@@ -1,7 +1,5 @@
 const promise = require('bluebird')
 const repos = require('./repos')
-const yaml = require('yaml')
-const fs = require('fs')
 const {types} = require('pg')
 const monitor = require('pg-monitor')
 
@@ -14,6 +12,9 @@ const options = {
     obj.reviews = new repos.Reviews(obj, pgp)
     obj.users = new repos.Users(obj, pgp),
     obj.reports = new repos.Reports(obj, pgp),
+    obj.imports = new repos.Imports(obj, pgp),
+    obj.photos = new repos.Photos(obj, pgp),
+    obj.changes = new repos.Changes(obj, pgp),
     obj.tiles = new repos.Tiles(obj, pgp)
   }
 }
@@ -23,5 +24,5 @@ monitor.attach(options)
 pgp.pg.types.setTypeParser(types.builtins.INT8, parseInt)
 // Return DATE without timestamp (YYYY-MM-DD)
 pgp.pg.types.setTypeParser(types.builtins.DATE, String)
-const db = pgp(yaml.parse(fs.readFileSync('db.yml', 'utf8')))
+const db = pgp(process.env.DB)
 module.exports = db

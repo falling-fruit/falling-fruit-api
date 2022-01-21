@@ -1,0 +1,799 @@
+IdField:
+  required:
+    - id
+  properties:
+    id:
+      description: Unique identifier.
+      type: integer
+      minimum: 1
+      example: 42
+LatLngFields:
+  properties:
+    lat:
+      description: Latitude in WGS84 decimal degrees.
+      type: number
+      minimum: -85.0511
+      maximum: 85.0511
+      example: 45.6789
+    lng:
+      description: Longitude in WGS84 decimal degrees.
+      type: number
+      minimum: -180
+      maximum: 180
+      example: -123.45678
+DateFields:
+  required:
+    - created_at
+    - updated_at
+  properties:
+    created_at:
+      description: Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.
+      type: string
+      format: date-time
+      example: '2014-06-19T01:02:03.456Z'
+    updated_at:
+      description: Date and time last updated in format YYYY-MM-DDThh:mm:ss.sssZ.
+      type: string
+      format: date-time
+      example: '2014-07-20T12:34:56.789Z'
+Cluster:
+  title: Cluster
+  description: Number of Locations in an area.
+  allOf:
+    - $ref: "#/LatLngFields"
+    - type: object
+      required:
+        - lat
+        - lng
+        - count
+      properties:
+        count:
+          type: integer
+          description: Number of Locations. Locations with multiple Types are counted as their number of Types.
+          minimum: 1
+          example: 768
+TypeCount:
+  title: Type count
+  description: Number of Location Types in an area.
+  type: object
+  required:
+    - id
+    - count
+  properties:
+    id:
+      type: integer
+      description: Type ID.
+      minimum: 1
+      example: 1
+    count:
+      type: integer
+      description: Number of Locations with that Type ID.
+      minimum: 1
+      example: 12
+BaseType:
+  title: Type (base)
+  description: Type properties that can be edited.
+  type: object
+  properties:
+    parent_id:
+      description: Type ID of taxonomic parent.
+      type: integer
+      nullable: true
+      minimum: 1
+      example: 114
+    pending:
+      description: Whether pending admin review. This is always true unless set to false by an admin (not implemented).
+      type: boolean
+      example: true
+      default: true
+    scientific_names:
+      description: |
+        Scientific names, starting with the preferred synonym.
+        - Genus (or higher rank): Prunus
+        - Subgenus: Prunus subg. Amygdalus
+        - Species: Prunus domestica
+        - Subspecies: Prunus domestica subsp. domestica, Prunus persica var. nucipersica, Brassica oleracea var. capitata f. rubra
+        - Hybrid: Prunus x eminens, Prunus cerasus x Prunus fruticosa
+        - Cultivar: Prunus persica 'George IV', Prunus domestica subsp. domestica 'Italian', Acer truncatum x platanoides 'Keithsform'
+      type: array
+      items:
+        type: string
+        minLength: 1
+      example: ['Malus pumila', 'Malus domestica', 'Malus communis']
+    taxonomic_rank:
+      description: |
+        Taxonomic rank.
+        - 0: Polyphyletic
+        - 1: Kingdom
+        - 2: Phylum
+        - 3: Class
+        - 4: Order
+        - 5: Family
+        - 6: Genus
+        - 7: Multispecies
+        - 8: Species
+        - 9: Subspecies
+      type: integer
+      minimum: 0
+      maximum: 9
+      nullable: true
+      example: 8
+    common_names:
+      description: Common names, starting with the preferred synonym, by language code (e.g. `en`) and optional region code (e.g. `en_us`). Currently, only `en` can be set.
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+          minLength: 1
+      example:
+        ar: ['تفاح']
+        de: ['Apfel']
+        el: ['Μηλιά']
+        en: ['Apple', 'Orchard apple', 'Paradise apple']
+        es: ['Pero']
+        fr: ['Pommier commun']
+        he: ['תפוח תרבותי']
+        it: ['Melo']
+        nl: ['Appel']
+        pl: ['Jabłoń domowa']
+        pt_br: ['Maçã']
+        sk: ['Jablko']
+        sv: ['Jabolko']
+        tr: ['Elma']
+        zh_tw: ['蘋果']
+SubmitType:
+  title: Type (submit)
+  description: Type properties that can be submitted. At least one name (in `common_names.en` or `scientific_names`) is required.
+  allOf:
+    - $ref: "#/BaseType"
+    - type: object
+      properties:
+        notes:
+          description: Submission notes.
+          type: string
+          minLength: 1
+          nullable: true
+          example: The fruit are edible once cooked.
+Type:
+  title: Type
+  description: All Type properties.
+  allOf:
+    - $ref: "#/IdField"
+    - $ref: "#/DateFields"
+    - $ref: "#/BaseType"
+    - type: object
+      required:
+        - parent_id
+        - pending
+        - scientific_names
+        - taxonomic_rank
+        - common_names
+        - urls
+      properties:
+        urls:
+          description: |
+            Links to more information, by resource code.
+            - wikipedia: English Wikipedia (https://en.wikipedia.org)
+            - eat_the_weeds: Eat the Weeds (https://www.eattheweeds.com)
+            - foraging_texas: Foraging Texas (https://www.foragingtexas.com)
+            - urban_mushrooms: Urban Mushrooms (http://urbanmushrooms.com)
+            - fruitipedia: Fruitipedia (http://www.fruitipedia.com)
+            - usda: USDA Plants Database (https://plants.usda.gov)
+          type: object
+          additionalProperties:
+            type: string
+            minLength: 1
+          example:
+            wikipedia: https://en.wikipedia.org/wiki/Malus_domestica
+            eat_the_weeds: https://www.eattheweeds.com/apples-wild-crabapples
+ListLocation:
+  title: Location (list)
+  allOf:
+    - $ref: "#/IdField"
+    - $ref: "#/LatLngFields"
+    - type: object
+      required:
+        - lat
+        - lng
+        - type_ids
+      properties:
+        type_ids:
+          description: Type IDs.
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          example: [97, 92]
+        distance:
+          description: Distance in meters from provided centerpoint.
+          type: number
+          minimum: 0
+          example: 47.915
+        photo:
+          description: Path to review photo thumbnail, if available.
+EditLocation:
+  title: Location (edit)
+  description: Location properties that can be edited.
+  allOf:
+    - $ref: "#/LatLngFields"
+    - type: object
+      required:
+        - lat
+        - lng
+        - type_ids
+      properties:
+        type_ids:
+          description: Type IDs.
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          example: [97, 92]
+        unverified:
+          description: Whether suspected to be wrong in some way and requires verification.
+          type: boolean
+          example: false
+        access:
+          description: |
+            Access level.
+            - 0: Location is on my property.
+            - 1: I have permission from the owner to add this Location.
+            - 2: Location is on public land.
+            - 3: Location is on private property but overhangs public property.
+            - 4: Location is on private property.
+          type: integer
+          enum: [0, 1, 2, 3, 4]
+          nullable: true
+          example: 3
+        description:
+          description: Description.
+          type: string
+          minLength: 1
+          nullable: true
+          example: Two mulberry trees with a few low branches overhanging the sidewalk.
+        season_start:
+          description: First month in season (zero-based).
+          type: integer
+          minimum: 0
+          maximum: 11
+          example: 6
+        season_stop:
+          description: Last month in season (zero-based).
+          type: integer
+          minimum: 0
+          maximum: 11
+          example: 8
+AddLocation:
+  title: Location (add)
+  description: Location properties that can be added.
+  allOf:
+    - $ref: "#/EditLocation"
+    - type: object
+      properties:
+        review:
+          $ref: '#/EditReview'
+Location:
+  title: Location
+  description: All Location properties.
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/EditLocation'
+    - $ref: '#/DateFields'
+    - type: object
+      required:
+        - lat
+        - lng
+        - type_ids
+        - author
+        - unverified
+        - access
+        - address
+        - city
+        - state
+        - country
+        - description
+        - season_start
+        - season_stop
+        - muni
+      properties:
+        author:
+          description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+          type: string
+          minLength: 1
+          nullable: true
+          example: Ethan
+        address:
+          description: Address. Either provided for imported locations whose coordinates had to be geocoded from the address or reverse-geocoded from coordinates.
+          type: string
+          minLength: 1
+          nullable: true
+          example: '748 10th Street, Boulder CO 80302, USA'
+        city:
+          description: City (reverse-geocoded from coordinates).
+          type: string
+          minLength: 1
+          nullable: true
+          example: Boulder
+        state:
+          description: State (reverse-geocoded from coordinates).
+          type: string
+          minLength: 1
+          nullable: true
+          example: Colorado
+        country:
+          description: County (reverse-geocoded from coordinates).
+          type: string
+          minLength: 1
+          nullable: true
+          example: United States
+        muni:
+          description: Whether imported from a municipal tree inventory.
+          type: boolean
+          nullable: false
+          example: false
+        import_id:
+          description: Import ID.
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 42
+        import:
+          $ref: '#/Import'
+        reviews:
+          description: Location reviews.
+          type: array
+          items:
+            $ref: '#/Review'
+LocationChange:
+  title: Location change
+  type: object
+  required:
+    - created_at
+    - description
+    - location_id
+    - type_ids
+  properties:
+    created_at:
+      description: Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.
+      type: string
+      format: date-time
+      example: '2014-06-19T01:02:03.456Z'
+      nullable: false
+    description:
+      description: |
+        Change type.
+        - `added`: Location added.
+        - `edited`: Location edited.
+        - `visited`: Location reviewed.
+      type: string
+      enum: [added, edited, visited]
+      example: added
+      nullable: false
+    location_id:
+      description: Location ID.
+      type: integer
+      nullable: false
+      minimum: 1
+      example: 114
+    type_ids:
+      description: Current location type IDs.
+      type: array
+      items:
+        type: integer
+        minimum: 1
+      example: [97, 92]
+    review_id:
+      description: Review ID. Only defined for `'visited'`.
+      type: integer
+      nullable: true
+      minimum: 1
+      example: 3383
+    user_id:
+      description: User ID.
+      type: integer
+      nullable: true
+      minimum: 1
+      example: 1
+    author:
+      description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+      type: string
+      minLength: 1
+      nullable: true
+      example: Ethan
+    city:
+      description: Current location city (reverse-geocoded from coordinates).
+      type: string
+      minLength: 1
+      nullable: true
+      example: Boulder
+    state:
+      description: Current location state (reverse-geocoded from coordinates).
+      type: string
+      minLength: 1
+      nullable: true
+      example: Colorado
+    country:
+      description: Current location county (reverse-geocoded from coordinates).
+      type: string
+      minLength: 1
+      nullable: true
+      example: United States
+BaseReview:
+  title: Review (base)
+  type: object
+  properties:
+    comment:
+      description: Comment.
+      type: string
+      minLength: 1
+      nullable: true
+      example: The sidewalk is stained red with mulberries.
+    observed_on:
+      description: Date visited in format YYYY-MM-DD.
+      type: string
+      format: date-time
+      nullable: true
+      example: '2014-06-19'
+    fruiting:
+      description: Fruiting status.
+      type: integer
+      enum: [0, 1, 2]
+      nullable: true
+      example: 2
+    quality_rating:
+      description: Quality rating.
+      type: integer
+      enum: [0, 1, 2, 3, 4]
+      nullable: true
+      example: 2
+    yield_rating:
+      description: Yield rating.
+      type: integer
+      enum: [0, 1, 2, 3, 4]
+      nullable: true
+      example: 3
+EditReview:
+  title: Review (edit)
+  description: Review properties that can be edited.
+  allOf:
+    - $ref: '#/BaseReview'
+    - type: object
+      properties:
+        photo_ids:
+          description: IDs of photos to link to the review. Previously linked photos are unlinked if their ids are omitted. Photos are ordered by the order of their ids.
+          type: array
+          uniqueItems: true
+          items:
+            type: integer
+            minimum: 1
+          example: [3, 1, 2]
+Review:
+  title: Review
+  description: Observations of and opinions about a Location.
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/BaseReview'
+    - $ref: '#/DateFields'
+    - type: object
+      required:
+        - location_id
+        - user_id
+        - author
+        - comment
+        - fruiting
+        - quality_rating
+        - yield_rating
+        - observed_on
+        - created_at
+        - updated_at
+        - photos
+      properties:
+        location_id:
+          description: Location ID.
+          type: integer
+          minimum: 1
+          example: 3383
+        user_id:
+          description: User ID.
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 1
+        author:
+          description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+          type: string
+          nullable: true
+          example: Ethan
+          minLength: 1
+        photos:
+          type: array
+          items:
+            $ref: '#/Photo'
+Photo:
+  title: Photo
+  description: Location photo.
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/DateFields'
+    - type: object
+      required:
+        - thumb
+        - medium
+        - original
+      properties:
+        thumb:
+          description: Path to thumbnail (longest dimension <= 100 px).
+          type: string
+          minLength: 1
+          format: uri
+          example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/thumb/open-uri20131213-3992-1szjh9k.jpg'
+        medium:
+          description: Path to medium size file (longest dimension <= 300 px).
+          type: string
+          minLength: 1
+          format: uri
+          example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
+        original:
+          description: Path to large size file (longest dimension <= 2048 px).
+          type: string
+          minLength: 1
+          format: uri
+          example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
+EditUser:
+  title: User (edit)
+  type: object
+  required:
+    - email
+    - name
+    - bio
+    - range
+  properties:
+    email:
+      $ref: properties.yml#/email
+    name:
+      $ref: properties.yml#/name
+    bio:
+      $ref: properties.yml#/bio
+    range:
+      allOf:
+        - $ref: geojson.yml#/Polygon
+        - type: object
+          description: Foraging range.
+          nullable: true
+PublicUser:
+  title: User (public)
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/DateFields'
+    - type: object
+      required:
+        - name
+        - bio
+        - roles
+        - confirmed_at
+      properties:
+        name:
+          $ref: properties.yml#/name
+        bio:
+          $ref: properties.yml#/bio
+        roles:
+          description: |
+            Roles.
+            - user: Regular user.
+            - admin: Administrator.
+          type: array
+          items:
+            type: string
+            enum: [user, admin]
+          example: [user]
+        confirmed_at:
+          description: Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.
+          type: string
+          format: date-time
+          example: '2014-07-20T12:34:56.789Z'
+          nullable: true
+User:
+  title: User
+  allOf:
+    - $ref: '#/PublicUser'
+    - type: object
+      properties:
+        unconfirmed_email:
+          description: Email change pending confirmation.
+          type: string
+          format: email
+          example: noo@bar.com
+          pattern: (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
+EditReport:
+  title: Report (edit)
+  description: Report properties that can be edited.
+  type: object
+  required:
+    - location_id
+    - problem_code
+  properties:
+    location_id:
+      description: Location ID.
+      type: integer
+      minimum: 1
+      example: 3383
+    problem_code:
+      description: |
+        Problem code.
+        - 0: Location is spam
+        - 1: Location does not exist
+        - 2: Location is a duplicate
+        - 3: Inappropriate review photo
+        - 4: Inappropriate review comment
+        - 5: Other (explain below)
+      type: integer
+      enum: [0, 1, 2, 3, 4, 5]
+      example: 1
+    comment:
+      description: Comment.
+      type: string
+      nullable: true
+      example: This tree was cut down.
+      minLength: 1
+    email:
+      description: Email to use for correspondence. If authenticated, defaults to the user's email. Otherwise, it is required.
+      type: string
+      format: email
+      example: foo@bar.com
+      pattern: (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
+    name:
+      description: Name to use for correspondence. If authenticated, defaults to the user's name.
+      type: string
+      minLength: 1
+      nullable: true
+      example: Ethan
+Report:
+  title: Report
+  description: Report of a problem with a Location.
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/EditReport'
+    - $ref: '#/DateFields'
+    - type: object
+      properties:
+        reporter_id:
+          description: ID of reporting User (if authenticated).
+          type: integer
+          minimum: 1
+          nullable: true
+          example: 321
+        resolution_code:
+          description: |
+            Resolution code.
+            - 0: Made no changes
+            - 1: Edited the location
+            - 2: Deleted the location
+            - 3: Deleted the photo
+            - 4: Deleted the review
+            - 5: Hid the location
+          type: integer
+          enum: [0, 1, 2, 3, 4, 5]
+          nullable: true
+          example: 2
+        response:
+          description: Response comment.
+          type: string
+          minLength: 1
+          nullable: true
+          example: Thank you for alerting us!
+        responder_id:
+          description: ID of responding User.
+          type: integer
+          minimum: 1
+          nullable: true
+Import:
+  title: Import
+  description: Imported dataset.
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/DateFields'
+    - type: object
+      required:
+        - name
+        - url
+        - comments
+        - license
+        - muni
+        - location_count
+      properties:
+        name:
+          description: Name.
+          type: string
+          minLength: 1
+          nullable: false
+          example: Les arbres de Grenoble
+        url:
+          description: Path to a description of the data.
+          type: string
+          format: uri
+          nullable: true
+          example: http://data.metropolegrenoble.fr/ckan/dataset/les-arbres-de-grenoble
+        comments:
+          description: Description and import comments.
+          type: string
+          minLength: 1
+          nullable: true
+          example: Tree inventory of Grenoble, France.
+        license:
+          description: License.
+          type: string
+          minLength: 1
+          nullable: true
+          example: Open Data Commons Open Database License (https://opendefinition.org/licenses/odc-odbl)
+        muni:
+          description: Whether a municipal or university tree inventory.
+          type: boolean
+          nullable: false
+          example: true
+        location_count:
+          description: Number of imported locations.
+          type: integer
+          minimum: 0
+          nullable: false
+          example: 1273
+Token:
+  title: Token
+  type: object
+  required:
+    - access_token
+    - token_type
+    - expires_in
+    - refresh_token
+  properties:
+    access_token:
+      description: Access token.
+      type: string
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+      minLength: 1
+    token_type:
+      description: Token type.
+      type: string
+      enum: [bearer]
+      example: bearer
+    expires_in:
+      description: Seconds until the access token expires. It may expire earlier if revoked.
+      type: integer
+      minimum: 1
+      example: 900
+    refresh_token:
+      description: Refresh token.
+      type: string
+      example: 6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
+      minLength: 1
+# Error:
+#   title: Error
+#   description: |
+#     Error response returned with one of the following status codes:
+#     - `400 Bad Request`: Request was unacceptable, often due to missing a required parameter.
+#     - `401 Unauthorized`: Request was not properly authenticated.
+#     - `402 Request Failed`: Parameters were valid but the request failed.
+#     - `403 Forbidden`: Request is not permitted given the provided authentication.
+#     - `404 Not Found`: The requested resource doesn't exist.
+#     - `500 Internal Server Error`: Something went wrong on the server.
+#   type: object
+#   properties:
+#     code:
+#       description: Error code for errors that could be handled programmatically.
+#       type: string
+#       enum:
+#         - wrong_key
+#         - wrong_token
+#         - wrong_email_password
+#         - missing_parameter
+#         - invalid_parameter
+#         - resource_missing
+#       example: missing_parameter
+#     param:
+#       type: string
+#       description: If applicable, the request parameter related to the error.
+#       example: key
+#     message:
+#       type: string
+#       description: Human-readable error message in English.
+#       example: An API key is required.

@@ -1,15 +1,16 @@
 UPDATE users
 SET (
-  email, encrypted_password,
-  name, add_anonymously,
+  name, bio,
+  range,
   updated_at
 ) = (
-  ${email}, ${password},
-  ${name}, ${add_anonymously},
+  ${name}, ${bio},
+  ST_GeomFromGeoJson(${range:json}),
   NOW()
 )
 WHERE id = ${id}
 RETURNING
-  id, email,
-  name, add_anonymously,
-  created_at, updated_at
+  id, email, name, bio, roles,
+  ST_AsGeoJson(range) as range,
+  created_at, updated_at, confirmed_at,
+  unconfirmed_email

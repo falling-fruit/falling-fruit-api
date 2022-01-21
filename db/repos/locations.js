@@ -1,10 +1,12 @@
 const sql = require('../sql').locations
 const _ = require('../../helpers')
+const Changes = require('./changes')
 
 class Locations {
   constructor(db, pgp) {
     this.db = db
     this.pgp = pgp
+    this.changes = new Changes(db, pgp)
   }
 
   async add(obj) {
@@ -15,16 +17,19 @@ class Locations {
       description: null,
       unverified: false,
       user_id: null,
-      author: null,
       ...obj
     }
     const location = await this.db.one(sql.add, values)
+    await this.changes.add({description: 'added', location: location})
     return _.format_location(location)
   }
 
-  async edit(id, obj) {
+  async edit(id, obj, user) {
     const values = {...obj, id: parseInt(id)}
     const location = await this.db.one(sql.edit, values)
+    await this.changes.add({
+      description: 'edited', location: location, user_id: user ? user.id : null
+    })
     return _.format_location(location)
   }
 
@@ -33,12 +38,19 @@ class Locations {
     return _.format_location(location)
   }
 
-  async list({bounds, center = null, muni = 'true', types = '', limit = '1000', offset = '0', photo = 'false'}) {
+  async list({bounds = null, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false'}) {
+    if (!bounds && !center) {
+      throw Error('Either bounds or center are required')
+    }
+    if (types === '') {
+      return []
+    }
     const filters = [
       'NOT hidden',
-      _.bounds_to_sql(_.parse_bounds(bounds)),
+      bounds ? _.bounds_to_sql(_.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
       _.muni_to_sql(muni),
-      _.types_array_to_sql(types)
+      _.types_array_to_sql(types),
+      _.invasive_to_sql(invasive)
     ]
     const values = {
       where: filters.filter(Boolean).join(' AND '),
@@ -50,35 +62,28 @@ class Locations {
       const point = _.parse_point(center)
       values.distance = {
         column: `,
-          ST_Distance(location, ST_SetSRID(
-            ST_Point(${point.x}, ${point.y}), 4326)
-          ) as distance`,
+          location <-> ST_SetSRID(
+            ST_Point(${point.x}, ${point.y}), 4326
+          ) as distance
+        `,
         order: 'ORDER BY distance'
       }
     } else {
-      // Ensure even spatial spread
-      values.distance.order = 'ORDER BY RANDOM()'
+      values.distance.order = ''
     }
-    if (photo !== 'true') {
-      return this.db.any(sql.list, values)
+    if (photo === 'true') {
+      return this.db.any(sql.listphoto, values)
     }
-    const locations = await this.db.any(sql.listphoto, values)
-    return locations.map(l => {
-      if (l.photo_file_name) {
-        l.photo = _.build_photo_urls(l.review_id, l.photo_file_name).thumb
-      }
-      delete l.review_id
-      delete l.photo_file_name
-      return l
-    })
+    return this.db.any(sql.list, values)
   }
 
-  count({bounds, muni = 'true', types = ''}) {
+  count({bounds, muni = 'true', types = null, invasive = 'false'}) {
     const filters = [
       'NOT hidden',
-      _.bounds_to_sql(_.parse_bounds(bounds)),
+      _.bounds_to_sql(_.parse_bounds(bounds), { geography: 'location' }),
       _.muni_to_sql(muni),
-      _.types_array_to_sql(types)
+      _.types_array_to_sql(types),
+      _.invasive_to_sql(invasive)
     ]
     const values = {where: filters.filter(Boolean).join(' AND ')}
     return this.db.one(sql.count, values)

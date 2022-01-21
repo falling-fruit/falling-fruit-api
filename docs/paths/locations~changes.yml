@@ -1,0 +1,43 @@
+get:
+  summary: Fetch Location changes (activity).
+  description: |
+    A change event is recorded when a location is added (`'added'`), a location is edited (`'edited'`), or a location is reviewed (`'visited'`). Results are sorted in reverse chronological order (most recent first).
+
+    Filtering by user `id` is forbidden if the user is anonymous (`name` is null). Filtering by user `range` is restricted to the user.
+  tags:
+    - Locations
+  security:
+    - key: []
+    - key: []
+      token: []
+  parameters:
+    - name: limit
+      in: query
+      description: Maximum number of changes to return.
+      schema:
+        type: integer
+        minimum: 1
+        default: 100
+        nullable: true
+    - $ref: ../components/parameters.yml#/offset
+    - name: user_id
+      in: query
+      description: User ID of changes to return.
+      schema:
+        type: integer
+        minimum: 1
+        default: null
+    - name: range
+      in: query
+      description: Whether to filter changes within the foraging range of the user with `user_id`, rather than by the user.
+      schema:
+        type: boolean
+        default: false
+      example: false
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/LocationChange

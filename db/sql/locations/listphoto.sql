@@ -1,10 +1,16 @@
-SELECT DISTINCT ON (locations.id)
-  locations.id, lng, lat, type_ids ${distance.column:raw},
-  o.id as review_id, o.photo_file_name
-FROM locations
-  LEFT JOIN observations o
-  ON o.location_id = locations.id
-  AND o.photo_file_name IS NOT NULL
+SELECT
+  l.id, lng, lat, type_ids ${distance.column:raw},
+  j.thumb as photo
+FROM locations l
+  LEFT JOIN (
+    SELECT DISTINCT ON (o.location_id)
+      o.location_id, p.thumb
+    FROM observations o
+    INNER JOIN photos p
+    ON o.id = p.observation_id
+    ORDER BY o.location_id, p.id DESC
+  ) as j
+ON l.id = j.location_id
 WHERE ${where:raw}
 ${distance.order:raw}
 LIMIT ${limit}

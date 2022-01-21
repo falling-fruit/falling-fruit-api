@@ -1,14 +1,13 @@
 INSERT INTO users (
-  email, name, add_anonymously,
-  encrypted_password, authentication_token,
+  email, encrypted_password, name, bio,
+  range,
   created_at, updated_at
 )
 VALUES (
-  ${email}, ${name}, ${add_anonymously},
-  ${password}, ${token},
+  ${email}, ${password}, ${name}, ${bio},
+  ST_GeomFromGeoJson(${range:json}),
   NOW(), NOW()
 )
 RETURNING
-  id, email,
-  name, add_anonymously,
-  created_at, updated_at
+  id, email, name, bio, roles,
+  created_at, updated_at, confirmed_at

@@ -11,10 +11,15 @@ class Tiles {
     const values = {
       x: parseInt(x),
       y: parseInt(y),
-      z: parseInt(z)
+      z: parseInt(z),
+      pixels: 256
     }
-    const result = await this.db.one(sql.show, values)
-    return result.tile
+    let result = await this.db.oneOrNone(sql.get, values)
+    if (!result) {
+      values.size = 40075016.68 / (2**values.z) / values.pixels
+      result = await this.db.one(sql.show, values)
+    }
+    return result.mvt
   }
 }
 

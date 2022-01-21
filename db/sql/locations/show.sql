@@ -1,5 +1,5 @@
 SELECT
-  l.id, l.lat, l.lng, l.type_ids, l.user_id,
+  l.id, l.lat, l.lng, l.type_ids, l.user_id, l.import_id,
   COALESCE(l.author, u.name) as author,
   l.created_at, l.updated_at,
   l.address, l.city, l.state, l.country,
@@ -7,7 +7,8 @@ SELECT
   l.access,
   l.description,
   l.muni,
-  l.unverified
+  l.unverified,
+  l.invasive
 FROM locations l
 LEFT JOIN users u
   ON l.user_id = u.id

@@ -1,0 +1,30 @@
+post:
+  summary: Request another email-confirmation email.
+  description: Alternate email messages are sent if the email is not found or if the email is already confirmed.
+  tags:
+    - Authentication
+  security:
+    - key: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - email
+          properties:
+            email:
+              $ref: ../components/properties.yml#/email
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                minLength: 1
+                example: You will receive an email with instructions for how to confirm your email address in a few minutes

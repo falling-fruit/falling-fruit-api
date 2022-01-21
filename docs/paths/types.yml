@@ -1,0 +1,42 @@
+get:
+  summary: Fetch Types.
+  tags:
+    - Types
+  security:
+    - key: []
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas.yml#/Type
+post:
+  summary: Submit new Type.
+  description: |-
+    Only an admin can submit a type with `pending: false`.
+  tags:
+    - Types
+  security:
+    - key: []
+    - key: []
+      token: []
+  parameters:
+    - $ref: ../components/parameters.yml#/recaptcha
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas.yml#/SubmitType
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas.yml#/Type
