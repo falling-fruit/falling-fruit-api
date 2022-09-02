@@ -23,12 +23,13 @@ You can browse the OpenAPI definition for the main branch [here](https://petstor
 ### Installation
 
 1. Install [Node JS](https://nodejs.org/)
+2. Install [Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
 2. Clone this repo, `cd` into the directory, and install node modules:
 
 ```bash
 git clone https://github.com/falling-fruit/api.git
 cd api
-npm install
+yarn
 ```
 
 3. Copy `.env.example` to `.env` and update the values as needed.
@@ -39,7 +40,7 @@ cp .env.example .env
 
 ### Usage
 
-1. Run `npm start`
+1. Run `yarn start`
 2. Visit http://localhost:3300
 
 ## Core Schema (draft)
