@@ -20,7 +20,7 @@ const _ = {}
 const EARTH_RADIUS = 6378137  // m
 const EARTH_CIRCUMFERENCE = 2 * Math.PI * EARTH_RADIUS  // m
 const MAX_LATITUDE = 85.0511  // degrees
-const MAX_GRID_ZOOM = 13
+const MAX_GRID_ZOOM = 14
 
 /**
  * Point coordinates.
