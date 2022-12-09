@@ -37,6 +37,6 @@
     "pg-monitor": "^1.4.1",
     "pg-promise": "^10.10.2",
     "postmark": "^2.7.8",
-    "sharp": "^0.29.2"
+    "sharp": "^0.30.5"
   }
 }
