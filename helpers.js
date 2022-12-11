@@ -399,7 +399,7 @@ _.send_email_confirmation_confirmed = function(user) {
 }
 
 _.send_password_reset = function(user, token) {
-  const url = `${ORIGIN}${BASE}/user/password?token=${token}`
+  const url = `${ORIGIN}/password/set?token=${token}`
   const email = {
     to: user.email,
     // Phrase: devise.mailer.reset_password_instructions.subject
