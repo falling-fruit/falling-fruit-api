@@ -9,7 +9,6 @@ const s3 = new aws.S3({
   apiVersion: '2006-03-01'
 })
 const sharp = require('sharp')
-const {API_ORIGIN, BASE, WEB_ORIGIN} = require('./constants')
 const postmark = require('postmark')
 const postmark_client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
 const bcrypt = require('bcrypt')
@@ -336,7 +335,12 @@ function send_email({to, subject, body, tag = null}) {
 }
 
 _.send_email_confirmation = function(user, token) {
-  const url = `${API_ORIGIN}${BASE}/user/confirmation?token=${token}`
+  const url = path.join(
+    process.env.API_ORIGIN,
+    process.env.API_BASE,
+    'user',
+    `confirmation?token=${token}`
+  )
   const email = {
     to: user.email,
     // Phrase: devise.mailer.confirmation_instructions.subject
@@ -399,7 +403,9 @@ _.send_email_confirmation_confirmed = function(user) {
 }
 
 _.send_password_reset = function(user, token) {
-  const url = `${WEB_ORIGIN}/password/set?token=${token}`
+  const url = path.join(
+    process.env.WEB_ORIGIN, 'password', `set?token=${token}`
+  )
   const email = {
     to: user.email,
     // Phrase: devise.mailer.reset_password_instructions.subject
