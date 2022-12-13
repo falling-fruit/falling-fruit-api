@@ -37,7 +37,7 @@ app.use((req, res, next) => {
 
 // Routes: Docs
 app.use(
-  `${process.env.BASE}/openapi.yml`,
+  `${process.env.API_BASE}/openapi.yml`,
   express.static('docs/openapi.yml')
 )
 
@@ -45,9 +45,9 @@ app.use(
 app.use((req, res, next) => {
   const skip_api_key = [
     // OpenAPI OAuth2 password flow
-    `${process.env.BASE}/user/token`,
+    `${process.env.API_BASE}/user/token`,
     // Email confirmation link
-    `${process.env.BASE}/user/confirmation`
+    `${process.env.API_BASE}/user/confirmation`
   ]
   if (skip_api_key.includes(req.path)) {
     return next()
@@ -57,17 +57,17 @@ app.use((req, res, next) => {
 
 // Routes: Clusters
 get(
-  `${process.env.BASE}/clusters`,
+  `${process.env.API_BASE}/clusters`,
   req => db.clusters.list(req.query)
 )
 
 // Routes: Types
 get(
-  `${process.env.BASE}/types`,
+  `${process.env.API_BASE}/types`,
   () => db.types.list()
 )
 post(
-  `${process.env.BASE}/types`,
+  `${process.env.API_BASE}/types`,
   middleware.authenticate(),
   middleware.recaptcha,
   (req, res) => {
@@ -80,17 +80,17 @@ post(
   }
 )
 get(
-  `${process.env.BASE}/types/counts`,
+  `${process.env.API_BASE}/types/counts`,
   req => db.types.count(req.query)
 )
 get(
-  `${process.env.BASE}/types/:id`,
+  `${process.env.API_BASE}/types/:id`,
   req => db.types.show(req.params.id)
 )
 
 // Routes: Locations
 get(
-  `${process.env.BASE}/locations`,
+  `${process.env.API_BASE}/locations`,
   async (req, res) => {
     const locations = await db.locations.list(req.query)
     if (req.query.count === 'true') {
@@ -105,7 +105,7 @@ get(
   }
 )
 post(
-  `${process.env.BASE}/locations`,
+  `${process.env.API_BASE}/locations`,
   middleware.authenticate(),
   middleware.recaptcha,
   middleware.test_review('review'),
@@ -130,11 +130,11 @@ post(
   }
 )
 get(
-  `${process.env.BASE}/locations/count`,
+  `${process.env.API_BASE}/locations/count`,
   req => db.locations.count(req.query)
 )
 get(
-  `${process.env.BASE}/locations/changes`,
+  `${process.env.API_BASE}/locations/changes`,
   middleware.authenticate(),
   async (req, res) => {
     if (req.query.user_id && (!req.user || req.user.id != parseInt(req.query.user_id))) {
@@ -152,7 +152,7 @@ get(
   }
 )
 get(
-  `${process.env.BASE}/locations/:id`,
+  `${process.env.API_BASE}/locations/:id`,
   async req => {
     const location = await db.locations.show(req.params.id)
     if (req.query.embed) {
@@ -169,7 +169,7 @@ get(
   }
 )
 put(
-  `${process.env.BASE}/locations/:id`,
+  `${process.env.API_BASE}/locations/:id`,
   middleware.authenticate(),
   middleware.recaptcha,
   async req => {
@@ -189,7 +189,7 @@ put(
 
 // Routes: Location tiles
 get(
-  `${process.env.BASE}/tiles/:z/:x/:y.pbf`,
+  `${process.env.API_BASE}/tiles/:z/:x/:y.pbf`,
   async (req, res) => {
     const mvt = await db.tiles.show(req.params)
     return void res.status(200).end(mvt)
@@ -198,11 +198,11 @@ get(
 
 // Routes: Reviews
 get(
-  `${process.env.BASE}/locations/:id/reviews`,
+  `${process.env.API_BASE}/locations/:id/reviews`,
   req => db.reviews.list(req.params.id)
 )
 post(
-  `${process.env.BASE}/locations/:id/reviews`,
+  `${process.env.API_BASE}/locations/:id/reviews`,
   middleware.authenticate(),
   middleware.recaptcha,
   middleware.test_review(),
@@ -218,7 +218,7 @@ post(
   }
 )
 get(
-  `${process.env.BASE}/reviews/:id`,
+  `${process.env.API_BASE}/reviews/:id`,
   async (req) => {
     const review = await db.reviews.show(req.params.id)
     review.photos = await db.photos.list(req.params.id)
@@ -226,7 +226,7 @@ get(
   }
 )
 put(
-  `${process.env.BASE}/reviews/:id`,
+  `${process.env.API_BASE}/reviews/:id`,
   middleware.authenticate('user'),
   middleware.test_review(),
   async (req, res) => {
@@ -244,7 +244,7 @@ put(
   }
 )
 drop(
-  `${process.env.BASE}/reviews/:id`,
+  `${process.env.API_BASE}/reviews/:id`,
   middleware.authenticate('user'),
   async (req, res) => {
     const original = await db.reviews.show(req.params.id)
@@ -260,7 +260,7 @@ drop(
 
 // Routes: Photos
 post(
-  `${process.env.BASE}/photos`,
+  `${process.env.API_BASE}/photos`,
   middleware.authenticate(),
   // middleware.recaptcha,
   uploads.single('file'),
@@ -272,7 +272,7 @@ post(
 
 // Routes: Users (public)
 get(
-  `${process.env.BASE}/users/:id`,
+  `${process.env.API_BASE}/users/:id`,
   async (req, res) => {
     const user = await db.users.show_public(req.params.id)
     if (!user.name) {
@@ -284,7 +284,7 @@ get(
 
 // Routes: Users (private)
 post(
-  `${process.env.BASE}/user`,
+  `${process.env.API_BASE}/user`,
   middleware.recaptcha,
   async (req) => {
     // Email uniqueness is case-insensitive
@@ -305,12 +305,12 @@ post(
   }
 )
 get(
-  `${process.env.BASE}/user`,
+  `${process.env.API_BASE}/user`,
   middleware.authenticate('user'),
   (req) => db.users.show(req.user.id)
 )
 put(
-  `${process.env.BASE}/user`,
+  `${process.env.API_BASE}/user`,
   middleware.authenticate('user'),
   async (req, res) => {
     const user = await db.one(
@@ -362,7 +362,7 @@ put(
   }
 )
 post(
-  `${process.env.BASE}/user/token`,
+  `${process.env.API_BASE}/user/token`,
   uploads.none(),
   async (req, res) => {
     let user
@@ -395,7 +395,7 @@ post(
   }
 )
 post(
-  `${process.env.BASE}/user/token/refresh`,
+  `${process.env.API_BASE}/user/token/refresh`,
   uploads.none(),
   async (req, res) => {
     // req.body.grant_type=refresh_token
@@ -425,7 +425,7 @@ post(
   }
 )
 drop(
-  `${process.env.BASE}/user`,
+  `${process.env.API_BASE}/user`,
   middleware.authenticate('user'),
   async (req, res) => {
     // // Check password
@@ -443,7 +443,7 @@ drop(
 
 // Routes: User email
 get(
-  `${process.env.BASE}/user/confirmation`,
+  `${process.env.API_BASE}/user/confirmation`,
   async (req, res) => {
     const token = req.query.token
     const data = tokenizer.verify_email_confirmation(token, res)
@@ -480,7 +480,7 @@ get(
   }
 )
 post(
-  `${process.env.BASE}/user/confirmation`,
+  `${process.env.API_BASE}/user/confirmation`,
   async (req, res) => {
     const token = req.body.token
     const data = tokenizer.verify_email_confirmation(token, res)
@@ -517,7 +517,7 @@ post(
   }
 )
 post(
-  `${process.env.BASE}/user/confirmation/retry`,
+  `${process.env.API_BASE}/user/confirmation/retry`,
   middleware.recaptcha,
   async (req) => {
     const email = req.body.email.toLowerCase()
@@ -542,7 +542,7 @@ post(
 
 // Routes: User password
 put(
-  `${process.env.BASE}/user/password`,
+  `${process.env.API_BASE}/user/password`,
   async (req, res) => {
     const token = req.body.token
     let data = tokenizer.decode_password_reset(token, res)
@@ -566,7 +566,7 @@ put(
   }
 )
 post(
-  `${process.env.BASE}/user/password/reset`,
+  `${process.env.API_BASE}/user/password/reset`,
   middleware.recaptcha,
   async (req) => {
     const email = req.body.email.toLowerCase()
@@ -587,7 +587,7 @@ post(
 
 // Routes: Reports
 post(
-  `${process.env.BASE}/reports`,
+  `${process.env.API_BASE}/reports`,
   middleware.authenticate(),
   middleware.recaptcha,
   async (req) => {
@@ -609,8 +609,8 @@ post(
 )
 
 // Routes: Imports
-get(`${process.env.BASE}/imports`, () => db.imports.list())
-get(`${process.env.BASE}/imports/:id`, req => db.imports.show(req.params.id))
+get(`${process.env.API_BASE}/imports`, () => db.imports.list())
+get(`${process.env.API_BASE}/imports/:id`, req => db.imports.show(req.params.id))
 
 // Generic handlers
 function register_route(method, url, handlers) {
