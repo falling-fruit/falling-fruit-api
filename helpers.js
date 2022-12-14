@@ -13,6 +13,7 @@ const postmark = require('postmark')
 const postmark_client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
+const urlJoin = (await import('url-join')).default
 
 const _ = {}
 
@@ -262,15 +263,15 @@ function upload_photo(input, output) {
 
 function id_partition(id) {
   const pad = String(id).padStart(9, '0')
-  return path.join(pad.substr(0, 3), pad.substr(3, 3), pad.substr(6, 3))
+  return urlJoin(pad.substr(0, 3), pad.substr(3, 3), pad.substr(6, 3))
 }
 
 function build_s3_photo_keys(observation_id, filename = 'first.jpg') {
-  const base = path.join('observations', 'photos', id_partition(observation_id))
+  const base = urlJoin('observations', 'photos', id_partition(observation_id))
   return {
-    thumb: path.join(base, 'thumb', filename),
-    medium: path.join(base, 'medium', filename),
-    original: path.join(base, 'original', filename)
+    thumb: urlJoin(base, 'thumb', filename),
+    medium: urlJoin(base, 'medium', filename),
+    original: urlJoin(base, 'original', filename)
   }
 }
 
@@ -308,7 +309,7 @@ _.resize_and_upload_photo = async function(input) {
     const job = async function() {
       const resized = `${input}-${style}.jpg`
       const to_upload = await resize_photo(input, resized, sizes[style])
-      const output = path.join('photos', path.basename(input), `${style}.jpg`)
+      const output = urlJoin('photos', path.basename(input), `${style}.jpg`)
       const upload = await upload_photo(to_upload, output, 'image/jpeg')
       if (to_upload === resized) {
         await fs.promises.unlink(resized)
@@ -335,7 +336,7 @@ function send_email({to, subject, body, tag = null}) {
 }
 
 _.send_email_confirmation = function(user, token) {
-  const url = path.join(
+  const url = urlJoin(
     process.env.API_ORIGIN,
     process.env.API_BASE,
     'user',
@@ -403,7 +404,7 @@ _.send_email_confirmation_confirmed = function(user) {
 }
 
 _.send_password_reset = function(user, token) {
-  const url = path.join(
+  const url = urlJoin(
     process.env.WEB_ORIGIN, 'password', `set?token=${token}`
   )
   const email = {
