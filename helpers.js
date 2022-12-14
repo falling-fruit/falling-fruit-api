@@ -361,7 +361,7 @@ _.send_email_confirmation_exists = function(user) {
     body: `
       <p>Hello ${user.name || user.email},</p>
       <p>Someone (maybe you) tried to sign up using this email (${user.email}). If this was you, sign in here instead:
-      <br/>https://fallingfruit.org/users/sign_in</p>
+      <br/>${process.env.WEB_ORIGIN}/login</p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'email-confirmation'
@@ -375,8 +375,8 @@ _.send_email_confirmation_not_found = function(user) {
     subject: 'Email confirmation attempt',
     body: `
       <p>Hello,</p>
-      <p>Someone (possibly you) requested a link to confirm a Falling Fruit (https://fallingfruit.org) account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:
-      <br/>https://fallingfruit.org/users/confirmation/new</p>
+      <p>Someone (possibly you) requested a link to confirm a Falling Fruit account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:
+      <br/>${process.env.WEB_ORIGIN}/confirmation/new</p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'email-confirmation'
@@ -391,7 +391,7 @@ _.send_email_confirmation_confirmed = function(user) {
     body: `
       <p>Hello ${user.name || user.email},</p>
       <p>Someone (most likely you) requested a link to confirm your email (${user.email}). Your email is already confirmed, so you can simply sign in here:
-      <br/>https://fallingfruit.org/users/sign_in</p>
+      <br/>${process.env.WEB_ORIGIN}/login</p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'email-confirmation'
@@ -425,8 +425,8 @@ _.send_password_reset_not_found = function(user) {
     subject: 'Password reset attempt',
     body: `
       <p>Hello,</p>
-      <p>Someone (possibly you) requested a link to change the password for a Falling Fruit (https://fallingfruit.org) account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:
-      <br/>https://fallingfruit.org/users/password/new</p>
+      <p>Someone (possibly you) requested a link to change the password for a Falling Fruit account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:
+      <br/>${process.env.WEB_ORIGIN}/password/reset</p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'password-reset'
