@@ -16,7 +16,6 @@ class Reviews {
       quality_rating: null,
       yield_rating: null,
       user_id: null,
-      author: null,
       ...obj,
       location_id: parseInt(id)
     }

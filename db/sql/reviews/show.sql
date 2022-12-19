@@ -1,9 +1,18 @@
 SELECT
-  o.id, o.location_id, o.user_id,
-  COALESCE(o.author, u.name) AS author,
-  o.created_at, o.updated_at, o.observed_on,
-  o.comment, o.fruiting, o.quality_rating, o.yield_rating
-FROM observations o
-LEFT JOIN users u
-  ON o.user_id = u.id
-WHERE o.id = ${id}
+  id,
+  location_id,
+  user_id,
+  -- TEMP: Update author from current user name
+  COALESCE(
+    (SELECT name FROM users WHERE id = user_id),
+    author
+  ) AS author,
+  comment,
+  quality_rating,
+  yield_rating,
+  fruiting,
+  observed_on,
+  created_at,
+  updated_at
+FROM observations
+WHERE id = ${id}
