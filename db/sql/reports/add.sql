@@ -1,15 +1,29 @@
 INSERT INTO problems (
-  location_id, reporter_id, name, email,
-  problem_code, comment,
-  created_at, updated_at
+  location_id,
+  reporter_id,
+  name,
+  email,
+  problem_code,
+  comment
 )
 VALUES (
-  ${location_id}, ${reporter_id}, ${name}, ${email},
-  ${problem_code}, ${comment},
-  NOW(), NOW()
+  ${location_id},
+  ${reporter_id},
+  ${name},
+  ${email},
+  ${problem_code},
+  ${comment}
 )
 RETURNING
-  id, location_id, reporter_id, name, email,
-  problem_code, comment,
-  created_at, updated_at,
-  resolution_code, response, responder_id
+  id,
+  location_id,
+  reporter_id,
+  name,
+  email,
+  problem_code,
+  comment,
+  created_at,
+  updated_at,
+  resolution_code,
+  response,
+  responder_id
