@@ -16,15 +16,18 @@ class Users {
     }
     // Store encrypted password
     values.password = await _.hash_password(values.password)
-    return this.db.one(sql.add, values)
+    const user = await this.db.one(sql.add, values)
+    return _.format_user(user)
   }
 
-  show(id) {
-    return this.db.one(sql.show, {id: id})
+  async show(id) {
+    const user = await this.db.one(sql.show, {id: id})
+    return _.format_user(user)
   }
 
-  show_public(id) {
-    return this.db.one(sql.showPublic, {id: parseInt(id)})
+  async show_public(id) {
+    const user = await this.db.one(sql.showPublic, {id: parseInt(id)})
+    return _.format_user(user)
   }
 
   async edit(req) {
@@ -36,7 +39,8 @@ class Users {
       values.password = await _.hash_password(values.password)
       return this.db.one(sql.editPassword, values)
     }
-    return this.db.one(sql.edit, values)
+    const user = await this.db.one(sql.edit, values)
+    return _.format_user(user)
   }
 
   confirm(id) {

@@ -231,6 +231,13 @@ _.format_location = function(location) {
   return location
 }
 
+_.format_user = function(user) {
+  if (user.range) {
+    user.range = JSON.parse(user.range)
+  }
+  return user
+}
+
 async function resize_photo(input, output, size = null) {
   const image = sharp(input)
   const metadata = await image.metadata()
