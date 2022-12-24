@@ -342,8 +342,8 @@ function send_email({to, subject, body, tag = null}) {
 }
 
 _.send_email_confirmation = function(user, token) {
-  const url = process.env.API_ORIGIN + path.join(
-    '/', process.env.API_BASE, 'user', `confirmation?token=${token}`
+  const url = process.env.WEB_ORIGIN + path.join(
+    '/', `confirmation?token=${token}`
   )
   const email = {
     to: user.email,
