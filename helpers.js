@@ -34,17 +34,15 @@ const MAX_GRID_ZOOM = 14
  *
  * @param {string} value - Coordinates in the format 'lat,lng' (WGS84 decimal degrees).
  * Expects longitude in interval [-180, 180] and latitude in interval [-90, 90].
- * @param {boolean} [mercator=false] - Whether to limit latitude to Web Mercator
- * interval [-85.0511, 85.0511].
  * @returns {Point} Parsed point in WGS84 decimal degrees.
  */
-_.parse_point = function(value, mercator = false) {
+_.parse_point = function(value) {
   const latlng = value.split(',').map(parseFloat)
   if (latlng.length != 2) {
     throw Error('Coordinates not in the format {latitude},{longitude}')
   }
   const point = {x: latlng[1], y: latlng[0]}
-  const max = {x: 180, y: mercator ? MAX_LATITUDE : 90}
+  const max = {x: 180, y: 90}
   if (Math.abs(point.x) > max.x) {
     throw Error(`Longitude not in the interval [-${max.x}, ${max.x}]`)
   }
@@ -85,7 +83,7 @@ _.bounds_to_sql = function(
   var {x, y} = {x: 'lng', y: 'lat'}
   if (mercator) {
     var {x, y} = {x: 'x', y: 'y'}
-    bounds = bounds.map(_.wgs84_to_mercator)
+    bounds = bounds.map(point => _.wgs84_to_mercator(point, clip = true))
   }
   if (geography) {
     return (
@@ -104,9 +102,13 @@ _.bounds_to_sql = function(
  * Transform point from WGS84 to Web Mercator.
  *
  * @param {Point} point - Point (WGS84) with latitude in interval [-85.0511, 85.0511].
+ * @param {Boolean} clip - Whether to clip out of bound latitude to interval.
  * @returns {Point} Point (Web Mercator).
  */
-_.wgs84_to_mercator = function({x, y}) {
+_.wgs84_to_mercator = function({x, y}, clip = false) {
+  if (clip) {
+    y = Math.sign(y) * Math.min(Math.abs(y), MAX_LATITUDE)
+  }
   if (Math.abs(y) > MAX_LATITUDE) {
     throw Error(`Latitude not in the interval [-${MAX_LATITUDE}, ${MAX_LATITUDE}]`)
   }
