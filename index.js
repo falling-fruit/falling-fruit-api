@@ -609,6 +609,9 @@ post(
     if (!req.body.email) {
       throw Error('An email is required')
     }
+    if (req.body.problem_code === 5 && !req.body.comment) {
+      throw Error('comment is required when problem_code = 5')
+    }
     return db.reports.add(req.body)
   }
 )

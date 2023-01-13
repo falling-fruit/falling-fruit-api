@@ -631,7 +631,7 @@ EditReport:
       enum: [0, 1, 2, 3, 4, 5]
       example: 1
     comment:
-      description: Comment.
+      description: Comment. Required if `problem_code` is 5.
       type: string
       nullable: true
       example: This tree was cut down.
