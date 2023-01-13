@@ -24,15 +24,20 @@ app.use(cors({
   // Allow us to manually add to preflights
   preflightContinue: true
 }))
-// Add cache-control to preflight responses
+
+// Register default handlers
 app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
+    // Add cache-control to preflight responses
     res.setHeader('Cache-Control', 'public, max-age=86400');
     // Vary: origin set automatically
     return void res.end()
-  } else {
-    return void next()
   }
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    // Null empty strings in JSON body
+    req.body = _.null_empty_strings(req.body)
+  }
+  return void next()
 })
 
 // Routes: Docs
