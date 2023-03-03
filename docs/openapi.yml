@@ -7,7 +7,7 @@ info:
     ### General usage
 
     - GET requests rely on path and query parameters.
-    - POST and PUT requests rely on path parameters and body content. If the request includes a file, a `multipart/form-data` body is used with a `json` key (if needed) whose value is a JSON-formatted string; otherwise, raw JSON is used.
+    - POST and PUT requests rely on path parameters and body content. If the request includes a file, a `multipart/form-data` body is used; otherwise, raw JSON is used.
     - The values of array query parameters are comma-delimited, e.g. `types=1,2,3`, and arrays of arrays are pipe-delimited, e.g. `bounds=-85,-180|85,180`.
     - All endpoints return JSON responses.
     - Success and error responses use conventional HTTP status codes: `2xx` for success (implemented: `200`), `4xx` for incorrect requests (implemented: `400`, `401`, `403`), and `5xx` for server errors (not implemented). `4xx` errors will typically include an error message.
@@ -127,6 +127,20 @@ paths:
       security:
         - key: []
       parameters:
+        - name: ids
+          in: query
+          description: 'Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored.'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: integer
+              minimum: 0
+            default: null
+            example:
+              - 3383
+              - 3384
         - name: bounds
           in: query
           description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.'
@@ -187,6 +201,12 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: locale
+          in: query
+          description: 'Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`. Ignored if `center` is provided.'
+          schema:
+            type: string
+            deprecated: true
       responses:
         '200':
           description: Success
@@ -943,7 +963,7 @@ components:
   parameters:
     bounds:
       name: bounds
-      description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180].'
+      description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-90, 90] and longitude must be in the interval [-180, 180].'
       in: query
       explode: false
       style: pipeDelimited
@@ -1298,6 +1318,14 @@ components:
               example: 47.915
             photo:
               description: 'Path to review photo thumbnail, if available.'
+            type_names:
+              description: Type names.
+              type: array
+              items:
+                type: string
+              example:
+                - Apple
+                - Pear
     EditLocation:
       title: Location (edit)
       description: Location properties that can be edited.
@@ -1808,7 +1836,7 @@ components:
             - 5
           example: 1
         comment:
-          description: Comment.
+          description: Comment. Required if `problem_code` is 5.
           type: string
           nullable: true
           example: This tree was cut down.
