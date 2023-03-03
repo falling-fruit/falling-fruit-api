@@ -59,6 +59,12 @@ get:
       schema:
         type: boolean
         default: false
+    - name: locale
+      in: query
+      description: Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`.
+      schema:
+        type: string
+        deprecated: true
   responses:
     '200':
       description: Success

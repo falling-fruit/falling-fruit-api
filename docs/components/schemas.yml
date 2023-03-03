@@ -212,6 +212,12 @@ ListLocation:
           example: 47.915
         photo:
           description: Path to review photo thumbnail, if available.
+        type_names:
+          description: Type names.
+          type: array
+          items:
+            type: string
+          example: [Apple, Pear]
 EditLocation:
   title: Location (edit)
   description: Location properties that can be edited.
