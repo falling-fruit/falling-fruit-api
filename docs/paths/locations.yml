@@ -16,7 +16,6 @@ get:
           type: integer
           minimum: 0
         default: null
-        example: [3383, 3384]
     - name: bounds
       in: query
       description: The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.
