@@ -5,6 +5,18 @@ get:
   security:
     - key: []
   parameters:
+    - name: ids
+      in: query
+      description: Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored.
+      explode: false
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: integer
+          minimum: 0
+        default: null
+        example: [3383, 3384]
     - name: bounds
       in: query
       description: The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.
@@ -61,7 +73,7 @@ get:
         default: false
     - name: locale
       in: query
-      description: Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`.
+      description: Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`. Ignored if `center` is provided.
       schema:
         type: string
         deprecated: true

@@ -63,20 +63,24 @@ class Locations {
     return _.format_location(location)
   }
 
-  async list({bounds = null, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false', locale = null}) {
-    if (!bounds && !center) {
-      throw Error('Either bounds or center are required')
+  async list({ids = null, bounds = null, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false', locale = null}) {
+    if (!ids && !bounds && !center) {
+      throw Error('Either ids, bounds, or center are required')
     }
-    if (types === '') {
+    if (types === '' || ids === '') {
       return []
     }
-    const filters = [
-      'NOT hidden',
-      bounds ? _.bounds_to_sql(_.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
-      _.muni_to_sql(muni),
-      _.types_array_to_sql(types),
-      _.invasive_to_sql(invasive)
-    ]
+    const filters = ['NOT hidden']
+    if (ids) {
+      filters.push(_.ids_to_sql(ids))
+    } else {
+      filters.push(
+        bounds ? _.bounds_to_sql(_.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
+        _.muni_to_sql(muni),
+        _.types_array_to_sql(types),
+        _.invasive_to_sql(invasive)
+      )
+    }
     const values = {
       where: filters.filter(Boolean).join(' AND '),
       limit: parseInt(limit),

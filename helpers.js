@@ -138,6 +138,13 @@ _.invasive_to_sql = function(value) {
   }
 }
 
+_.ids_to_sql = function(value) {
+  // '1,2,3'
+  if (value) {
+    return `id IN (${value})`
+  }
+}
+
 _.types_to_sql = function(value) {
   // '1,2,3'
   if (value) {
