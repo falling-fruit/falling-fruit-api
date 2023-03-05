@@ -9,7 +9,7 @@ You can browse the OpenAPI definition for the main branch [here](https://petstor
 
 # Status
 
-Under development as v0.3 of the API, served at https://fallingfruit.org/api/0.3 (production) and https://fallingfruit.org/test-api/0.3 (test).
+Live at https://fallingfruit.org/api/0.3. Used by https://fallingfruit.org ([falling-fruit](https://github.com/falling-fruit/falling-fruit)) and extensively by https://beta.fallingfruit.org ([falling-fruit-web](https://github.com/falling-fruit/falling-fruit-web)).
 
 # Layout
 
@@ -31,7 +31,7 @@ Under development as v0.3 of the API, served at https://fallingfruit.org/api/0.3
 
 1. Install [Node JS](https://nodejs.org/)
 2. Install [Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
-2. Clone this repo, `cd` into the directory, and install node modules:
+3. Clone this repo, `cd` into the directory, and install node modules:
 
 ```bash
 git clone https://github.com/falling-fruit/api.git
@@ -39,7 +39,7 @@ cd api
 yarn
 ```
 
-3. Copy `.env.example` to `.env` and update the values as needed.
+4. Copy `.env.example` to `.env` and update the values as needed.
 
 ```bash
 cp .env.example .env
