@@ -118,9 +118,9 @@ components:
   schemas:
     $ref: components/schemas.yml
 servers:
-  - description: Falling Fruit test server.
-    url: https://fallingfruit.org/test-api/0.3/
-  - description: SwaggerHub mock server.
+  - description: Production (Falling Fruit)
+    url: https://fallingfruit.org/api/0.3/
+  - description: Development (localhost)
+    url: http://localhost:3300/api/0.3/
+  - description: SwaggerHub mock server
     url: https://virtserver.swaggerhub.com/ezwelty/falling-fruit-api/0.3/
-  - description: Localhost.
-    url: http://localhost:3300/test-api/0.3/
