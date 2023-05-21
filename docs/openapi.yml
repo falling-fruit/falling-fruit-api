@@ -129,7 +129,7 @@ paths:
       parameters:
         - name: ids
           in: query
-          description: 'Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored.'
+          description: 'Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored and locations are returned whether or not they are hidden.'
           explode: false
           schema:
             type: array

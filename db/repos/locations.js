@@ -70,16 +70,17 @@ class Locations {
     if (types === '' || ids === '') {
       return []
     }
-    const filters = ['NOT hidden']
+    let filters
     if (ids) {
-      filters.push(_.ids_to_sql(ids))
+      filters = [_.ids_to_sql(ids)]
     } else {
-      filters.push(
+      filters = [
+        'NOT hidden',
         bounds ? _.bounds_to_sql(_.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
         _.muni_to_sql(muni),
         _.types_array_to_sql(types),
         _.invasive_to_sql(invasive)
-      )
+      ]
     }
     const values = {
       where: filters.filter(Boolean).join(' AND '),
