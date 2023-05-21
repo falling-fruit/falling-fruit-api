@@ -351,9 +351,6 @@ function send_email({to, subject, body, tag = null}) {
 }
 
 _.send_email_confirmation = function(user, token) {
-  const url = process.env.WEB_ORIGIN + path.join(
-    '/', `confirmation?token=${token}`
-  )
   const email = {
     to: user.email,
     // Phrase: devise.mailer.confirmation_instructions.subject
@@ -362,7 +359,7 @@ _.send_email_confirmation = function(user, token) {
     body: `
       <p>Welcome to Falling Fruit,</p>
       <p>To activate your account, you must confirm your email (${user.email}) by visiting the link below:
-      <br/>${url}</p>
+      <br/>${process.env.WEB_ORIGIN}/users/confirmation?token=${token}</p>
       <p>Falling Fruit is powered by its users, so if you have the opportunity to add or improve it, please do so. Happy foraging!</p>
     `,
     tag: 'email-confirmation'
@@ -377,7 +374,7 @@ _.send_email_confirmation_exists = function(user) {
     body: `
       <p>Hello ${user.name || user.email},</p>
       <p>Someone (maybe you) tried to sign up using this email (${user.email}). If this was you, sign in here instead:
-      <br/>${process.env.WEB_ORIGIN}/login</p>
+      <br/>${process.env.WEB_ORIGIN}/users/sign_in</p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'email-confirmation'
@@ -392,7 +389,7 @@ _.send_email_confirmation_not_found = function(user) {
     body: `
       <p>Hello,</p>
       <p>Someone (possibly you) requested a link to confirm a Falling Fruit account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:
-      <br/>${process.env.WEB_ORIGIN}/confirmation/new</p>
+      <br/>${process.env.WEB_ORIGIN}/users/confirmation/new</p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'email-confirmation'
@@ -407,7 +404,7 @@ _.send_email_confirmation_confirmed = function(user) {
     body: `
       <p>Hello ${user.name || user.email},</p>
       <p>Someone (most likely you) requested a link to confirm your email (${user.email}). Your email is already confirmed, so you can simply sign in here:
-      <br/>${process.env.WEB_ORIGIN}/login</p>
+      <br/>${process.env.WEB_ORIGIN}/users/sign_in</p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'email-confirmation'
@@ -416,9 +413,6 @@ _.send_email_confirmation_confirmed = function(user) {
 }
 
 _.send_password_reset = function(user, token) {
-  const url = process.env.WEB_ORIGIN + path.join(
-    '/', 'password', `set?token=${token}`
-  )
   const email = {
     to: user.email,
     // Phrase: devise.mailer.reset_password_instructions.subject
@@ -427,7 +421,7 @@ _.send_password_reset = function(user, token) {
     body: `
       <p>Hello ${user.name || user.email},</p>
       <p>Someone (most likely you) requested a link to change your password:
-      <br/>${url}</p>
+      <br/>${process.env.WEB_ORIGIN}/users/password/edit?token=${token}</p>
       <p>If you didn't request this, you can ignore this email. Your password won't change unless you visit the link above and create a new one.</p>
     `,
     tag: 'password-reset'
@@ -442,7 +436,7 @@ _.send_password_reset_not_found = function(user) {
     body: `
       <p>Hello,</p>
       <p>Someone (possibly you) requested a link to change the password for a Falling Fruit account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:
-      <br/>${process.env.WEB_ORIGIN}/password/reset</p>
+      <br/>${process.env.WEB_ORIGIN}/users/password/new</p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'password-reset'
