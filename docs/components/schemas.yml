@@ -554,6 +554,7 @@ EditUser:
     - name
     - bio
     - range
+    - announcements_email
   properties:
     email:
       $ref: properties.yml#/email
@@ -567,6 +568,11 @@ EditUser:
         - type: object
           description: Foraging range.
           nullable: true
+    announcements_email:
+      description: Whether user woud like to receive announcements by email.
+      type: boolean
+      example: true
+      default: true
 PublicUser:
   title: User (public)
   allOf:

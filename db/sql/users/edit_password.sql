@@ -4,12 +4,14 @@ SET (
   bio,
   encrypted_password,
   range,
+  announcements_email,
   updated_at
 ) = (
   ${name},
   ${bio},
   ${password},
   ST_GeomFromGeoJson(${range:json}),
+  ${announcements_email},
   NOW()
 )
 WHERE id = ${id}
@@ -18,8 +20,9 @@ RETURNING
   email,
   name,
   bio,
-  roles,
   ST_AsGeoJson(range) as range,
+  announcements_email,
+  roles,
   created_at,
   updated_at,
   confirmed_at,

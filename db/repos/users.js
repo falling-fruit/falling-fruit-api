@@ -12,6 +12,7 @@ class Users {
       name: null,
       bio: null,
       range: null,
+      announcements_email: true,
       ...req.body
     }
     // Store encrypted password
