@@ -15,6 +15,7 @@ class Types {
       taxonomic_rank: null,
       notes: null,
       pending: true,
+      categories: [],
       ...obj
     }
     values = {

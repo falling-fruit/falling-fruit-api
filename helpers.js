@@ -160,6 +160,16 @@ _.types_array_to_sql = function(value) {
   }
 }
 
+TYPE_CATEGORIES = ['forager', 'freegan', 'honeybee', 'grafter']
+
+_.mask_bits = function(selected, all) {
+  return all.reduce((acc, curr, i) => acc | (selected.includes(curr) ? 1 << i : 0), 0)
+}
+
+_.unmask_bits = function(mask, all) {
+  return all.filter((_, i) => mask & (1 << i))
+}
+
 _.format_type = function(type) {
   const replaced = []
   // Format scientific names: [name, synonyms...]
@@ -206,6 +216,9 @@ _.format_type = function(type) {
     type.urls.usda = `https://plants.usda.gov/home/plantProfile?symbol=${type.usda_symbol}`
   }
   replaced.push('usda_symbol')
+  // Format categories: {categories: [category, ...]}
+  type.categories = _.unmask_bits(type.category_mask, TYPE_CATEGORIES)
+  replaced.push('category_mask')
   // Drop replaced properties
   for (const key of replaced) {
     delete type[key]
@@ -226,6 +239,10 @@ _.deconstruct_type = function(type) {
     type.scientific_name = type.scientific_names[0]
     type.scientific_synonyms = type.scientific_names.slice(1).join(', ')
     delete type.scientific_names
+  }
+  if (type.categories) {
+    type.category_mask = _.mask_bits(type.categories, TYPE_CATEGORIES)
+    delete type.categories
   }
   return type
 }
