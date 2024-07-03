@@ -311,9 +311,14 @@ function parse_s3_url(url) {
   const regex = /^https?:\/\/(?<bucket>[^\.]+)\.s3\.(?<region>[^\.]+)\.amazonaws\.com\/(?<key>.*)$/
   const match = regex.exec(url)
   if (match == null) {
-    throw Error(`Photo URL not formatted as expected: ${url}`)
+    throw Error(`S3 URL not formatted as expected: ${url}`)
   }
   return match.groups
+}
+
+_.is_new_photo_url = function(url) {
+  const parsed = parse_s3_url(url)
+  return parsed.key.startsWith('photos/')
 }
 
 _.copy_photo_to_old_urls = function(urls, observation_id) {

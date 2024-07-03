@@ -46,13 +46,16 @@ class Photos {
       // NOTE: For backwards compatibility only
       // Copy first photo
       const urls = await this.db.one('SELECT thumb, medium, original FROM photos WHERE id = ${id}', {id: photo_ids[0]})
-      await _.copy_photo_to_old_urls(urls, review_id)
-      await this.db.none("UPDATE observations SET photo_file_name = 'first.jpg' WHERE id = ${id}", {id: review_id})
+      if (_.is_new_photo_url(urls['original'])) {
+        await _.copy_photo_to_old_urls(urls, review_id)
+        await this.db.none("UPDATE observations SET photo_file_name = 'first.jpg' WHERE id = ${id}", {id: review_id})
+      }
     } else {
       // NOTE: For backwards compatibility only
       // Clear first photo
       await this.db.none('UPDATE observations SET photo_file_name = NULL WHERE id = ${id}', {id: review_id})
     }
+    // Unlink photos with ids NOT in photo_ids
     await this.db.none(sql.unlink, {id: review_id, ids: photo_ids})
   }
 }
