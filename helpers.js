@@ -279,6 +279,16 @@ _.format_user = function(user) {
   return user
 }
 
+_.is_date_in_future = function(datestamp) {
+  // Compare date to current date + 1 day (accounting for timezones)
+  const date = new Date(datestamp)
+  date.setUTCHours(0, 0, 0, 0)
+  const today = new Date()
+  today.setUTCHours(0,0,0,0)
+  today.setDate(today.getDate() + 1)
+  return date > today
+}
+
 async function resize_photo(input, output, size = null) {
   const image = sharp(input)
   const metadata = await image.metadata()

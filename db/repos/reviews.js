@@ -1,5 +1,6 @@
 const sql = require('../sql').reviews
 const Changes = require('./changes')
+const _ = require('../../helpers')
 
 class Reviews {
   constructor(db, pgp) {
@@ -18,6 +19,10 @@ class Reviews {
       user_id: null,
       ...obj,
       location_id: parseInt(id)
+    }
+    // Forbid observed_on date in the future (accounting for timezones)
+    if (values.observed_on && _.is_date_in_future(values.observed_on)) {
+      throw Error('observed_on cannot be in the future')
     }
     const review = await this.db.one(sql.add, values)
     await this.changes.add({description: 'visited', review: review})

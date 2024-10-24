@@ -1565,9 +1565,9 @@ components:
           nullable: true
           example: The sidewalk is stained red with mulberries.
         observed_on:
-          description: Date visited in format YYYY-MM-DD.
+          description: Date visited in format YYYY-MM-DD. Cannot be in the future.
           type: string
-          format: date-time
+          format: date
           nullable: true
           example: '2014-06-19'
         fruiting:
