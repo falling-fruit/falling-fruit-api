@@ -24,6 +24,15 @@ class Reviews {
     if (values.observed_on && _.is_date_in_future(values.observed_on)) {
       throw Error('observed_on cannot be in the future')
     }
+    // Require observed_on date if fruiting is not null
+    if (!_.is_null(values.fruiting) && !values.observed_on) {
+      throw Error('observed_on is required if fruiting is not null')
+    }
+    // Require at least comment, fruiting, quality_rating, or yield_rating
+    const required = ['comment', 'fruiting', 'quality_rating', 'yield_rating']
+    if (required.every(key => _.is_null(values[key]))) {
+      throw Error(`One of {${required.join(', ')}} is required`)
+    }
     const review = await this.db.one(sql.add, values)
     await this.changes.add({description: 'visited', review: review})
     return review

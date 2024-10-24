@@ -289,6 +289,14 @@ _.is_date_in_future = function(datestamp) {
   return date > today
 }
 
+_.is_null = function(value, zero = false) {
+  const nulls = ['', null, undefined]
+  if (zero) {
+    nulls.push(0)
+  }
+  return nulls.includes(value)
+}
+
 async function resize_photo(input, output, size = null) {
   const image = sharp(input)
   const metadata = await image.metadata()
