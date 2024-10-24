@@ -7,6 +7,7 @@ SELECT
   pl_name, pt_br_name, sk_name, sv_name, tr_name, zh_tw_name,
   eat_the_weeds_url, foraging_texas_url, fruitipedia_url, urban_mushrooms_url, wikipedia_url,
   usda_symbol,
-  category_mask
+  category_mask,
+  notes
 FROM types
 WHERE id = ${id}

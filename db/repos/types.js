@@ -5,6 +5,23 @@ class Types {
   constructor(db, pgp) {
     this.db = db
     this.pgp = pgp
+    // Load name columns from db
+    db.any('SELECT * FROM types LIMIT 1').then(result => {
+      this.names = Object.keys(result[0]).filter(
+        key => key.endsWith('_name')
+      )
+    })
+    this.default_names = ['en_name', 'scientific_name']
+  }
+
+  locale_to_names(value) {
+    const column = _.locale_to_name(value)
+    if (this.names.includes(column)) {
+      return [column, ...this.default_names].filter(
+        (value, index, array) => array.indexOf(value) === index
+      )
+    }
+    return this.default_names
   }
 
   async add(obj) {
@@ -19,16 +36,31 @@ class Types {
       ...obj
     }
     values = {
-      en_name: null,
+      ...Object.fromEntries(this.names.map(x => [x, null])),
       en_synonyms: null,
-      scientific_name: null,
-      scientific_synonymss: null,
+      scientific_synonyms: null,
+      category_mask: null,
       ..._.deconstruct_type(values)
     }
-    if (!values.en_name && !values.scientific_name) {
-      throw Error('At least one scientific name or (en) common name is required')
+    // Determine whether default name is present
+    let has_default = this.default_names.some(name => Boolean(values[name]))
+    // Transfer non-English names to a language_name column, if it exists, or to notes
+    for (const [locale, names] of Object.entries(values.common_names)) {
+      const column = _.locale_to_name(locale)
+      if (this.names.includes(column)) {
+        values[column] = names.join(', ')
+      } else {
+        values.notes = [
+          values.notes || '', `common_names.${locale}: ${names.join(', ')}`
+        ].filter(Boolean).join('\n')
+      }
+      // Use first name as default if no default name is present
+      if (!has_default) {
+        values[this.default_names[0]] = names[0]
+        has_default = true
+      }
     }
-    // TODO: Check for existing matching types
+    delete values.common_names
     const type = await this.db.one(sql.add, values)
     return _.format_type(type)
   }

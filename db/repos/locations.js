@@ -1,37 +1,14 @@
 const sql = require('../sql').locations
 const _ = require('../../helpers')
 const Changes = require('./changes')
+const Types = require('./types')
 
 class Locations {
   constructor(db, pgp) {
     this.db = db
     this.pgp = pgp
     this.changes = new Changes(db, pgp)
-    // Load name columns from db
-    db.any('SELECT * FROM types LIMIT 1').then(result => {
-      this.names = Object.keys(result[0]).filter(
-        key => key.endsWith('_name')
-      )
-    })
-    this.default_names = ['en_name', 'scientific_name']
-  }
-
-  locale_to_names(value) {
-    // Extract language code (discard region code)
-    let language = value.toLowerCase().replace(
-      /^([A-z]{2})[-_][A-z]{2}$/, '$1'
-    )
-    // HACK: Redirect pt to pt-BR
-    if (language === 'pt') {
-      language = 'pt_br'
-    }
-    const column = `${language}_name`
-    if (this.names.includes(column)) {
-      return [column, ...this.default_names].filter(
-        (value, index, array) => array.indexOf(value) === index
-      )
-    }
-    return this.default_names
+    this.types = new Types(db, pgp)
   }
 
   async add(obj) {
@@ -103,7 +80,7 @@ class Locations {
       return this.db.any(sql.listphoto, values)
     }
     if (!center && locale) {
-      const names = this.locale_to_names(locale).join(', ')
+      const names = this.types.locale_to_names(locale).join(', ')
       return this.db.any(sql.listname, {...values, names: names})
     }
     return this.db.any(sql.list, values)

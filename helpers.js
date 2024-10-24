@@ -201,6 +201,16 @@ _.format_type = function(type) {
       }
     }
   }
+  // Extract common names from notes
+  if (type.notes) {
+    const regex = /^common_names\.([a-z]{2}(?:_[a-z]{2})?): ([^\n]+)$/gm
+    let match
+    while ((match = regex.exec(type.notes)) !== null) {
+      const [_, locale, names] = match
+      type.common_names[locale] = names.split(', ')
+    }
+  }
+  delete type.notes
   // Append English synonyms
   if (type.en_synonyms) {
     const synonyms = type.en_synonyms.split(', ')
@@ -226,18 +236,23 @@ _.format_type = function(type) {
   return type
 }
 
+_.locale_to_name = function(locale) {
+  const prefix = locale.toLowerCase().replace('-', '_')
+  return `${prefix}_name`
+}
+
 _.deconstruct_type = function(type) {
-  // TODO: Handle additional locales
   if (type.common_names) {
+    // Extract English name and synonyms
     if ('en' in type.common_names) {
       type.en_name = type.common_names.en[0]
-      type.en_synonyms = type.common_names.en.slice(1).join(', ')
+      type.en_synonyms = type.common_names.en.slice(1).join(', ') || null
+      delete type.common_names['en']
     }
-    delete type.common_names
   }
   if (type.scientific_names) {
     type.scientific_name = type.scientific_names[0]
-    type.scientific_synonyms = type.scientific_names.slice(1).join(', ')
+    type.scientific_synonyms = type.scientific_names.slice(1).join(', ') || null
     delete type.scientific_names
   }
   if (type.categories) {
