@@ -10,7 +10,7 @@ info:
     - POST and PUT requests rely on path parameters and body content. If the request includes a file, a `multipart/form-data` body is used; otherwise, raw JSON is used.
     - The values of array query parameters are comma-delimited, e.g. `types=1,2,3`, and arrays of arrays are pipe-delimited, e.g. `bounds=-85,-180|85,180`.
     - All endpoints return JSON responses.
-    - Success and error responses use conventional HTTP status codes: `2xx` for success (implemented: `200`), `4xx` for incorrect requests (implemented: `400`, `401`, `403`), and `5xx` for server errors (not implemented). `4xx` errors will typically include an error message.
+    - Success and error responses use conventional HTTP status codes: `2xx` for success (implemented: `200`), `4xx` for incorrect requests (implemented: `400`, `401`, `403`, `404`), and `5xx` for server errors (not implemented). `4xx` errors will typically include an error message.
 
     ### Security
 
