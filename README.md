@@ -47,5 +47,16 @@ cp .env.example .env
 
 ## Usage
 
-1. Run `yarn start`
-2. Visit http://localhost:3300
+```sh
+yarn start
+```
+
+Visit http://localhost:3300.
+
+## Documentation
+
+Validate and build the OpenAPI documentation:
+
+```sh
+yarn validate && yarn build
+```
