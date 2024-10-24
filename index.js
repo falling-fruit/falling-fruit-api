@@ -8,6 +8,7 @@ const multer = require('multer')
 const uploads = multer({ dest: 'uploads' })
 const compression = require('compression')
 const tokenizer = new (require('./tokens'))()
+const pgp = require('pg-promise')
 
 // Configuration
 const app = express()
@@ -632,6 +633,11 @@ function register_route(method, url, handlers) {
       }
     } catch (err) {
       console.log('[caught]', err || err.message)
+      if (method === 'get' && err.code === pgp.errors.queryResultErrorCode.noData) {
+        return void res.status(404).json({
+          error: err.message || err
+        })
+      }
       return void res.status(400).json({
         error: err.message || err
       })
