@@ -192,7 +192,7 @@ _.format_type = function(type) {
     if (key.endsWith('_name')) {
       replaced.push(key)
       if (type[key]) {
-        type.common_names[key.replace('_name', '')] = type[key].split(' / ')
+        type.common_names[key.replace('_name', '')] = type[key].split(', ')
       }
     } else if (key.endsWith('_url')) {
       replaced.push(key)
