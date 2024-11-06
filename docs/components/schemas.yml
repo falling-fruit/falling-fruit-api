@@ -310,6 +310,12 @@ Location:
         - season_stop
         - muni
       properties:
+        user_id:
+          description: User ID.
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 1
         author:
           description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
           type: string
