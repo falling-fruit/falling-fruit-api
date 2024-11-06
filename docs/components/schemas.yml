@@ -370,6 +370,8 @@ LocationChange:
     - $ref: "#/LatLngFields"
     - type: object
       required:
+        - lat
+        - lng
         - created_at
         - description
         - location_id

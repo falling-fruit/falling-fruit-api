@@ -1487,6 +1487,8 @@ components:
         - $ref: '#/components/schemas/LatLngFields'
         - type: object
           required:
+            - lat
+            - lng
             - created_at
             - description
             - location_id
