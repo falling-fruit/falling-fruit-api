@@ -6,6 +6,8 @@ SELECT
   l.type_ids,
   c.user_id,
   COALESCE(c.author, u.name) AS author,
+  l.lat,
+  l.lng,
   l.city,
   l.state,
   l.country
