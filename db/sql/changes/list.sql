@@ -12,7 +12,7 @@ SELECT
 FROM changes c
 JOIN locations l
   ON c.location_id = l.id
-JOIN users u
+LEFT JOIN users u
   ON c.user_id = u.id
 WHERE ${where:raw}
 ORDER BY c.created_at DESC
