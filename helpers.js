@@ -38,7 +38,7 @@ const MAX_GRID_ZOOM = 14
  */
 _.parse_point = function(value) {
   const latlng = value.split(',').map(parseFloat)
-  if (latlng.length != 2) {
+  if (latlng.length != 2 || latlng.some(isNaN)) {
     throw Error('Coordinates not in the format {latitude},{longitude}')
   }
   const point = {x: latlng[1], y: latlng[0]}
@@ -65,6 +65,9 @@ _.parse_point = function(value) {
   const points = value.split('|').map(x => _.parse_point(x, mercator))
   if (points.length != 2) {
     throw Error('Bounds not in the format {lat},{lng}|{lat},{lng}')
+  }
+  if (points[0].x > points[1].x || points[0].y > points[1].y) {
+    throw Error('Bounds not in the format {swlat},{swlng}|{nelat},{nelng}')
   }
   return points
 }
