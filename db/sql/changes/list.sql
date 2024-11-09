@@ -18,5 +18,3 @@ LEFT JOIN users u
   ON c.user_id = u.id
 WHERE ${where:raw}
 ORDER BY c.created_at DESC
-LIMIT ${limit}
-OFFSET ${offset}

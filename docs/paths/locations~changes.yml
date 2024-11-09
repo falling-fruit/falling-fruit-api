@@ -11,15 +11,22 @@ get:
     - key: []
       token: []
   parameters:
-    - name: limit
+    - name: earliest
       in: query
-      description: Maximum number of changes to return.
+      description: Earliest UTC datetime of change (inclusive).
       schema:
-        type: integer
-        minimum: 1
-        default: 100
-        nullable: true
-    - $ref: ../components/parameters.yml#/offset
+        type: string
+        format: date-time
+        default: null
+      example: '2024-11-09T00:00:00Z'
+    - name: latest
+      in: query
+      description: Latest UTC datetime of change (exclusive).
+      schema:
+        type: string
+        format: date-time
+        default: null
+      example: null
     - name: user_id
       in: query
       description: User ID of changes to return.
