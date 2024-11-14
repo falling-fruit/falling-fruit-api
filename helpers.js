@@ -66,7 +66,7 @@ _.parse_point = function(value) {
   if (points.length != 2) {
     throw Error('Bounds not in the format {lat},{lng}|{lat},{lng}')
   }
-  if (points[0].x > points[1].x || points[0].y > points[1].y) {
+  if (points[0].y > points[1].y) {
     throw Error('Bounds not in the format {swlat},{swlng}|{nelat},{nelng}')
   }
   return points

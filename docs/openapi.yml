@@ -967,7 +967,7 @@ components:
   parameters:
     bounds:
       name: bounds
-      description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-90, 90] and longitude must be in the interval [-180, 180].'
+      description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-90, 90] and longitude must be in the interval [-180, 180]. `swlat` must be less than `nelat`, but `swlng` can be larger than `nelng` if the box crosses the line of 180 degrees longitude.'
       in: query
       explode: false
       style: pipeDelimited
