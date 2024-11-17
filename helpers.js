@@ -335,12 +335,37 @@ _.is_date_in_future = function(datestamp) {
   return date > today
 }
 
+/**
+ * Check if value should be considered null (empty).
+ *
+ * @param {*} value - Value to check.
+ * @param {*} zero - Whether to consider zero as null.
+ * @returns {boolean} Whether value is null.
+ * @example
+ * is_null(null)  // true
+ * is_null(undefined)  // true
+ * is_null('')  // true
+ * is_null('a')  // false
+ * is_null(0)  // false
+ * is_null(0, true)  // true
+ * is_null(1)  // false
+ * is_null([])  // true
+ * is_null([0])  // false
+ * is_null({})  // true
+ * is_null({a: 0})  // false
+ */
 _.is_null = function(value, zero = false) {
-  const nulls = ['', null, undefined]
-  if (zero) {
-    nulls.push(0)
+  if (Array.isArray(value)) {
+    return value.length == 0
+  } else if (Object.prototype.toString.call(value) === '[object Object]') {
+    return Object.keys(value).length == 0
+  } else {
+    const nulls = ['', null, undefined]
+    if (zero) {
+      nulls.push(0)
+    }
+    return nulls.includes(value)
   }
-  return nulls.includes(value)
 }
 
 async function resize_photo(input, output, size = null) {

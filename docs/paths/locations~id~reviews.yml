@@ -17,7 +17,7 @@ get:
               $ref: '../components/schemas.yml#/Review'
 post:
   summary: Review a Location.
-  description: If `fruiting` is provided, `observed_on` is required.
+  description: If `fruiting` is provided, `observed_on` is required. One of `comment`, `fruiting`, `quality_rating`, `yield_rating`, or `photo_ids` is required.
   tags:
     - Reviews
   security:

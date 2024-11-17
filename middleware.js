@@ -1,14 +1,15 @@
 const db = require('./db')
 const tokenizer = new (require('./tokens'))()
+const _ = require('./helpers')
 const Recaptcha = require('express-recaptcha').RecaptchaV2
 const recaptcha = new Recaptcha(
   process.env.RECAPTCHA_SITE_KEY,
   process.env.RECAPTCHA_SECRET_KEY
 )
 
-const _ = {}
+const middleware = {}
 
-_.check_api_key = async function(req, res, next) {
+middleware.check_api_key = async function(req, res, next) {
   const key = req.header('x-api-key') || req.query.api_key
   if (!key) {
     return void res.status(401).json({error: 'API key is missing'})
@@ -53,14 +54,14 @@ function require_user(role = 'user') {
   }
 }
 
-_.authenticate = function(role) {
+middleware.authenticate = function(role) {
   if (role) {
     return [get_user_from_token, require_user(role)]
   }
   return [get_user_from_token]
 }
 
-_.recaptcha = function(req, res, next) {
+middleware.recaptcha = function(req, res, next) {
   if (req.user) {
     return void next()
   }
@@ -77,17 +78,31 @@ _.recaptcha = function(req, res, next) {
   })
 }
 
-_.test_review = function(...path) {
+middleware.test_review = function(...path) {
   return function(req, res, next) {
     const review = path.reduce((prev, curr) => prev && prev[curr], req.body)
     if (!review) {
       return void next()
     }
-    if (review.fruiting && !review.observed_on) {
-      return void res.status(400).json({error: 'observed_on is required when fruiting is provided'})
+    // Forbid observed_on date in the future (accounting for timezones)
+    if (review.observed_on && _.is_date_in_future(review.observed_on)) {
+      return void res.status(400).join({error: 'observed_on cannot be in the future'})
+    }
+    // Require observed_on date if fruiting is not null
+    if (!_.is_null(review.fruiting) && !review.observed_on) {
+      return void res.status(400).json(
+        {error: 'observed_on is required when fruiting is provided'}
+      )
+    }
+    // Require content
+    const required = ['photo_ids', 'comment', 'fruiting', 'quality_rating', 'yield_rating']
+    if (required.every(key => _.is_null(review[key]))) {
+      return void res.status(400).json(
+        {error: `One of {${required.join(', ')}} is required`}
+      )
     }
     return void next()
   }
 }
 
-module.exports = _
+module.exports = middleware
