@@ -57,6 +57,14 @@ class Users {
     // TODO: What happens to user content (photos, reviews, locations, ...) ?
     return this.db.none('DELETE FROM users WHERE id = ${id}', {id: parseInt(id)})
   }
+
+  subscribe(email) {
+    return this.db.none(sql.subscribe, {email})
+  }
+
+  unsubscribe(email) {
+    return this.db.none(sql.unsubscribe, {email})
+  }
 }
 
 module.exports = Users

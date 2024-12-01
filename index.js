@@ -53,7 +53,9 @@ app.use((req, res, next) => {
     // OpenAPI OAuth2 password flow
     `${process.env.API_BASE}/user/token`,
     // Email confirmation link
-    `${process.env.API_BASE}/user/confirmation`
+    `${process.env.API_BASE}/user/confirmation`,
+    // Postmark subscription webhook
+    `${process.env.API_BASE}/postmark/subscription`,
   ]
   if (skip_api_key.includes(req.path)) {
     return next()
@@ -588,6 +590,30 @@ post(
     }
     // Phrase: devise.passwords.send_instructions
     return {message: 'You will receive an email with instructions on how to reset your password in a few minutes'}
+  }
+)
+
+// Routes: Mailing list subscription (via Postmark)
+// https://postmarkapp.com/developer/webhooks/subscription-change-webhook
+post(
+  `${process.env.API_BASE}/postmark/subscription`,
+  middleware.authenticate_postmark,
+  async (req) => {
+    if (
+      req.body.ServerID !== parseInt(process.env.POSTMARK_SERVER_ID) ||
+      req.body.MessageStream !== process.env.POSTMARK_BROADCAST_STREAM ||
+      req.body.RecordType !== 'SubscriptionChange' ||
+      typeof req.body.SuppressSending !== 'boolean'
+    ) {
+      throw Error(`Unexpected request from Postmark: ${JSON.stringify(req.body)}`)
+    }
+    if (req.body.SuppressSending) {
+      await db.users.unsubscribe(req.body.Recipient)
+      return {message: 'Unsubscribe successful'}
+    } else {
+      await db.users.subscribe(req.body.Recipient)
+      return {message: 'Subscribe successful'}
+    }
   }
 )
 

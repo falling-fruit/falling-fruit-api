@@ -61,6 +61,13 @@ middleware.authenticate = function(role) {
   return [get_user_from_token]
 }
 
+middleware.authenticate_postmark = function(req, res, next) {
+  if (req.params.POSTMARK_SECRET !== process.env.POSTMARK_SECRET) {
+    return void res.status(401).json({error: 'Invalid secret'})
+  }
+  return void next()
+}
+
 middleware.recaptcha = function(req, res, next) {
   if (req.user) {
     return void next()
