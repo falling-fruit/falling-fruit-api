@@ -93,7 +93,7 @@ middleware.test_review = function(...path) {
     }
     // Forbid observed_on date in the future (accounting for timezones)
     if (review.observed_on && _.is_date_in_future(review.observed_on)) {
-      return void res.status(400).join({error: 'observed_on cannot be in the future'})
+      return void res.status(400).json({error: 'observed_on cannot be in the future'})
     }
     // Require observed_on date if fruiting is not null
     if (!_.is_null(review.fruiting) && !review.observed_on) {
