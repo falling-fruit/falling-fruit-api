@@ -397,7 +397,7 @@ post(
     // Store refresh token id in database
     await db.none(
       'INSERT INTO refresh_tokens (user_id, jti, exp) VALUES (${user_id}, ${jti}, ${exp})',
-      {user_id: user.id, jti: jti, exp: exp}
+      {user_id: user.id, jti, exp}
     )
     return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
   }
@@ -423,7 +423,7 @@ post(
     const [tokens, jti, exp] = tokenizer.sign_and_wrap_access(user, data.exp)
     // Replace with new refresh token if old refresh token exists
     const refreshed = await db.oneOrNone(
-      'UPDATE refresh_tokens SET jti = ${new} WHERE user_id = ${user_id} AND jti = ${old} RETURNING jti',
+      'UPDATE refresh_tokens SET jti = ${new}, updated_at = NOW() WHERE user_id = ${user_id} AND jti = ${old} RETURNING jti',
       {user_id: user.id, old: data.jti, new: jti}
     )
     if (!refreshed) {

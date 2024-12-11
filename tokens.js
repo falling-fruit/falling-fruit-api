@@ -25,12 +25,12 @@ class Tokenizer {
     exp = exp || Math.floor(Date.now() / 1000) + REFRESH_EXPIRES_IN
     const tokens = {
       access_token: this.sign(
-        {id: user.id, roles: user.roles, jti: jti},
+        {id: user.id, roles: user.roles, jti},
         {expiresIn: ACCESS_EXPIRES_IN}
       ),
       token_type: 'bearer',
       expires_in: ACCESS_EXPIRES_IN,
-      refresh_token: this.sign({id: user.id, exp: exp, jti: jti}
+      refresh_token: this.sign({id: user.id, exp, jti}
       )
     }
     return [tokens, jti, exp]
