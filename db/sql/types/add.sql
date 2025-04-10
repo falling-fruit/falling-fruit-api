@@ -6,7 +6,8 @@ INSERT INTO types (
   scientific_name,
   scientific_synonyms,
   ar_name, de_name, el_name, es_name, fr_name, he_name, it_name, nl_name,
-  pl_name, pt_br_name, sk_name, sv_name, tr_name, zh_tw_name,
+  pl_name, pt_name, sk_name, sv_name, tr_name, uk_name,
+  zh_hans_name, zh_hant_name,
   taxonomic_rank,
   notes,
   category_mask
@@ -19,7 +20,8 @@ VALUES (
   ${scientific_name},
   ${scientific_synonyms},
   ${ar_name}, ${de_name}, ${el_name}, ${es_name}, ${fr_name}, ${he_name}, ${it_name}, ${nl_name},
-  ${pl_name}, ${pt_br_name}, ${sk_name}, ${sv_name}, ${tr_name}, ${zh_tw_name},
+  ${pl_name}, ${pt_name}, ${sk_name}, ${sv_name}, ${tr_name}, ${uk_name},
+  ${zh_hans_name}, ${zh_hant_name},
   ${taxonomic_rank},
   ${notes},
   ${category_mask}
@@ -36,7 +38,7 @@ RETURNING
   en_name,
   en_synonyms,
   ar_name, de_name, el_name, es_name, fr_name, he_name, it_name, nl_name,
-  pl_name, pt_br_name, sk_name, sv_name, tr_name, zh_tw_name,
+  pl_name, pt_name, sk_name, sv_name, tr_name, zh_hant_name,
   eat_the_weeds_url, foraging_texas_url, fruitipedia_url, urban_mushrooms_url, wikipedia_url,
   usda_symbol,
   category_mask,

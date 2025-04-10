@@ -119,7 +119,7 @@ BaseType:
       nullable: true
       example: 8
     common_names:
-      description: Common names, starting with the preferred synonym, by language code. Use `pt_br` for Portuguese (Brazilian or otherwise). Use `zh_tw` for traditional Chinese characters. Any language not in the example is read and written to the notes. If no scientific name or English (`en`) common name is provided, the first common name is used as the default name.
+      description: Common names, starting with the preferred synonym, by language code. Use `zh-hans` for simplified Chinese characters and `zh-hant` for traditional Chinese. Any language not in the example is read and written to the notes. If no scientific name or English (`en`) common name is provided, the first common name is used as the default name.
       type: object
       additionalProperties:
         type: array
@@ -137,11 +137,13 @@ BaseType:
         it: ['Melo']
         nl: ['Appel']
         pl: ['Jabłoń domowa']
-        pt_br: ['Maçã']
+        pt: ['Maçã']
         sk: ['Jablko']
         sv: ['Jabolko']
         tr: ['Elma']
-        zh_tw: ['蘋果']
+        uk: ['Яблуко']
+        zh-hans: ['苹果']
+        zh-hant: ['蘋果']
     categories:
       description: Categories.
       type: array

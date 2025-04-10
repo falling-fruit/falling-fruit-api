@@ -267,6 +267,14 @@ _.format_type = function(type) {
     }
   }
   replaced.push('en_synonyms')
+  // Replace _ with - in all common name keys
+  for (const key in type.common_names) {
+    if (key.includes('_')) {
+      const new_key = key.replace('_', '-')
+      type.common_names[new_key] = type.common_names[key]
+      delete type.common_names[key]
+    }
+  }
   // TEMP: Generate USDA URL from symbol
   if (type.usda_symbol) {
     type.urls.usda = `https://plants.usda.gov/home/plantProfile?symbol=${type.usda_symbol}`
