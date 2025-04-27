@@ -142,6 +142,7 @@ BaseType:
         sv: ['Jabolko']
         tr: ['Elma']
         uk: ['Яблуко']
+        vi: ['Táo tây']
         zh-hans: ['苹果']
         zh-hant: ['蘋果']
     categories:
