@@ -33,7 +33,7 @@
     "express": "^4.20.0",
     "express-recaptcha": "^5.0.2",
     "jsonwebtoken": "^9.0.0",
-    "multer": "1.4.5-lts.1",
+    "multer": "2.0.0",
     "pg-monitor": "^1.4.1",
     "pg-promise": "^10.10.2",
     "postmark": "^2.7.8",
