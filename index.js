@@ -84,7 +84,8 @@ post(
         {error: 'Only admins can approve a type (pending: false)'}
       )
     }
-    return db.types.add(req.body)
+    const user_id = req.user ? req.user.id : null
+    return db.types.add({...req.body, user_id: user_id})
   }
 )
 get(

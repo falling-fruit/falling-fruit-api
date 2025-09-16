@@ -1,4 +1,5 @@
 INSERT INTO types (
+  user_id,
   parent_id,
   pending,
   en_name,
@@ -13,6 +14,7 @@ INSERT INTO types (
   category_mask
 )
 VALUES (
+  ${user_id},
   ${parent_id},
   ${pending},
   ${en_name},

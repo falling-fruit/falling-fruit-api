@@ -33,6 +33,7 @@ class Types {
       notes: null,
       pending: true,
       categories: [],
+      user_id: null,
       ...obj
     }
     values = {
