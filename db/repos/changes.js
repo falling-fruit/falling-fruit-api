@@ -45,8 +45,19 @@ class Changes {
     return this.db.none(sql.add, values)
   }
 
+  list_location_edits(id) {
+    return this.db.any(
+      "SELECT * FROM changes WHERE location_id = ${id} and description = 'edited'",
+      {id: parseInt(id)}
+    )
+  }
+
   delete_review(id) {
     return this.db.none('DELETE FROM changes WHERE observation_id = ${id}', {id: parseInt(id)})
+  }
+
+  delete_location(id) {
+    return this.db.none('DELETE FROM changes WHERE location_id = ${id}', {id: parseInt(id)})
   }
 }
 

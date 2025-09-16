@@ -98,6 +98,10 @@ class Locations {
     return this.db.one(sql.count, values)
   }
 
+  delete(id) {
+    return this.db.none('DELETE FROM locations WHERE id = ${id}', {id: parseInt(id)})
+  }
+
 }
 
 module.exports = Locations

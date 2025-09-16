@@ -1,0 +1,20 @@
+SELECT
+  c.created_at,
+  c.description,
+  c.location_id,
+  c.observation_id AS review_id,
+  l.type_ids,
+  c.user_id,
+  COALESCE(c.author, u.name) AS author,
+  l.lat,
+  l.lng,
+  l.city,
+  l.state,
+  l.country
+FROM changes c
+JOIN locations l
+  ON c.location_id = l.id
+LEFT JOIN users u
+  ON c.user_id = u.id
+WHERE c.location_id = ${id}
+ORDER BY c.created_at DESC
