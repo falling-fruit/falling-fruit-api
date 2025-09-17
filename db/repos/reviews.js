@@ -22,7 +22,7 @@ class Reviews {
     }
     // Assumes validation by middleware.test_review
     const review = await this.db.one(sql.add, values)
-    await this.changes.add({description: 'visited', review: review})
+    await this.changes.add({description: 'visited', review: review, user_id: review.user_id})
     return review
   }
 

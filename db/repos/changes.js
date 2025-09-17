@@ -39,8 +39,7 @@ class Changes {
       location_id: is_review ? review.location_id : location.id,
       review: review,
       review_id: review ? review.id : null,
-      // User ID override for location edits
-      user_id: user_id || (is_review ? review.user_id : location.user_id)
+      user_id: user_id
     }
     return this.db.none(sql.add, values)
   }
