@@ -22,7 +22,7 @@ class Locations {
       ...obj
     }
     const location = await this.db.one(sql.add, values)
-    await this.changes.add({description: 'added', location: location})
+    await this.changes.add({description: 'added', location: location, user_id: location.user_id})
     return _.format_location(location)
   }
 
@@ -96,6 +96,10 @@ class Locations {
     ]
     const values = {where: filters.filter(Boolean).join(' AND ')}
     return this.db.one(sql.count, values)
+  }
+
+  delete(id) {
+    return this.db.none('DELETE FROM locations WHERE id = ${id}', {id: parseInt(id)})
   }
 
 }

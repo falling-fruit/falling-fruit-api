@@ -39,14 +39,23 @@ class Changes {
       location_id: is_review ? review.location_id : location.id,
       review: review,
       review_id: review ? review.id : null,
-      // User ID override for location edits
-      user_id: user_id || (is_review ? review.user_id : location.user_id)
+      user_id: user_id
     }
     return this.db.none(sql.add, values)
   }
 
-  delete_review(id) {
-    return this.db.none('DELETE FROM changes WHERE observation_id = ${id}', {id: parseInt(id)})
+  list_location_edits(id) {
+    return this.db.any(
+      "SELECT * FROM changes WHERE location_id = ${id} and description = 'edited'",
+      {id: parseInt(id)}
+    )
+  }
+
+  edit_review(review_id, review) {
+    return this.db.none(
+      "UPDATE changes SET review = ${review:json}, updated_at = NOW() WHERE observation_id = ${review_id}",
+      {review_id: parseInt(review_id), review: review}
+    )
   }
 }
 

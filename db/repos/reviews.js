@@ -22,7 +22,7 @@ class Reviews {
     }
     // Assumes validation by middleware.test_review
     const review = await this.db.one(sql.add, values)
-    await this.changes.add({description: 'visited', review: review})
+    await this.changes.add({description: 'visited', review: review, user_id: review.user_id})
     return review
   }
 
@@ -30,9 +30,11 @@ class Reviews {
     return this.db.one(sql.show, {id: parseInt(id)})
   }
 
-  edit(id, obj) {
+  async edit(id, obj) {
     const values = {...obj, id: parseInt(id)}
-    return this.db.one(sql.edit, values)
+    const review = await this.db.one(sql.edit, values)
+    await this.changes.edit_review(id, review)
+    return review
   }
 
   list(id) {

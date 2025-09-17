@@ -195,6 +195,48 @@ put(
     return updated
   }
 )
+drop(
+  `${process.env.API_BASE}/locations/:id`,
+  middleware.authenticate('user'),
+  async (req, res) => {
+    const original = await db.locations.show(req.params.id)
+    // Restrict to linked user
+    if (req.user.id != original.user_id) {
+      return void res.status(403).json(
+        {error: 'Location was created by another user'}
+      )
+    }
+    // Check that all associated reviews belong to the user
+    const reviews = await db.reviews.list(req.params.id)
+    for (const review of reviews) {
+      if (review.user_id != req.user.id) {
+        return void res.status(403).json(
+          {error: 'Location contains reviews from other users'}
+        )
+      }
+    }
+    // Check that no other (non-admin) user edited the location in the meantime
+    const changes = await db.changes.list_location_edits(req.params.id)
+    for (const change of changes) {
+      if (change.user_id != req.user.id) {
+        let user
+        if (change.user_id) {
+          // Retrieve user details
+          user = await db.users.show(change.user_id)
+        }
+        // Abort if user is not same user or an admin
+        if (!user || !user.roles.includes('admin')) {
+          return void res.status(403).json(
+            {error: 'Location was edited by another user'}
+          )
+        }
+      }
+    }
+    // Delete location
+    await db.locations.delete(req.params.id)
+    return void res.status(204).send()
+  }
+)
 
 // Routes: Location tiles
 get(
@@ -262,7 +304,6 @@ drop(
       return void res.status(403).json({error: 'Insufficient permissions'})
     }
     await db.reviews.delete(req.params.id)
-    await db.changes.delete_review(req.params.id)
     return void res.status(204).send()
   }
 )
