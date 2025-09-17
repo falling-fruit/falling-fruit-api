@@ -215,7 +215,7 @@ drop(
       }
     }
     // Check that no other (non-admin) user edited the location in the meantime
-    const changes = await db.changes.list_location(req.params.id)
+    const changes = await db.changes.list_location_edits(req.params.id)
     for (const change of changes) {
       if (change.user_id != req.user.id) {
         let user
@@ -232,14 +232,7 @@ drop(
       }
     }
     // Delete location
-    db.tx(`locations/${req.params.id}/delete`, async t => {
-      reviews.forEach(async review => {
-        await t.changes.delete_review(review.id)
-        await t.reviews.delete(review.id)
-      })
-      await t.changes.delete_location(req.params.id)
-      await t.locations.delete(req.params.id)
-    })
+    await db.locations.delete(req.params.id)
     return void res.status(204).send()
   }
 )
@@ -310,7 +303,6 @@ drop(
       return void res.status(403).json({error: 'Insufficient permissions'})
     }
     await db.reviews.delete(req.params.id)
-    await db.changes.delete_review(req.params.id)
     return void res.status(204).send()
   }
 )
