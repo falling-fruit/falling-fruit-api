@@ -51,12 +51,11 @@ class Changes {
     )
   }
 
-  delete_review(id) {
-    return this.db.none('DELETE FROM changes WHERE observation_id = ${id}', {id: parseInt(id)})
-  }
-
-  delete_location(id) {
-    return this.db.none('DELETE FROM changes WHERE location_id = ${id}', {id: parseInt(id)})
+  edit_review(review_id, review) {
+    return this.db.none(
+      "UPDATE changes SET review = ${review:json}, updated_at = NOW() WHERE observation_id = ${review_id}",
+      {review_id: parseInt(review_id), review: review}
+    )
   }
 }
 

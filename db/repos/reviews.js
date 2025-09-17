@@ -30,9 +30,11 @@ class Reviews {
     return this.db.one(sql.show, {id: parseInt(id)})
   }
 
-  edit(id, obj) {
+  async edit(id, obj) {
     const values = {...obj, id: parseInt(id)}
-    return this.db.one(sql.edit, values)
+    const review = await this.db.one(sql.edit, values)
+    await this.changes.edit_review(id, review)
+    return review
   }
 
   list(id) {
