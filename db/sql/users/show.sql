@@ -5,6 +5,7 @@ SELECT
   bio,
   ST_AsGeoJson(range) as range,
   announcements_email,
+  private,
   roles,
   created_at,
   updated_at,

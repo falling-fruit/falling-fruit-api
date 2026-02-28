@@ -12,7 +12,7 @@ VALUES (
   ${location_id},
   ${user_id},
   -- TEMP: Hardcode author from user name for old website
-  (SELECT name FROM users WHERE id = ${user_id}),
+  (SELECT name FROM users WHERE id = ${user_id} AND NOT private),
   ${comment},
   ${quality_rating},
   ${yield_rating},

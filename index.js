@@ -152,9 +152,9 @@ get(
         return void res.status(403).json({error: 'Only a user can filter by their own foraging range'})
       }
       const user = await db.users.show(req.query.user_id)
-      // Cannot filter by anonymous user
-      if (!user.name) {
-        return void res.status(403).json({error: 'User prefers to remain anonymous'})
+      // Cannot filter by private user
+      if (user.private) {
+        return void res.status(403).json({error: 'User profile is private'})
       }
     }
     return db.changes.list(req.query)
@@ -325,9 +325,10 @@ get(
   `${process.env.API_BASE}/users/:id`,
   async (req, res) => {
     const user = await db.users.show_public(req.params.id)
-    if (!user.name) {
-      return void res.status(403).json({error: 'User prefers to remain anonymous'})
+    if (user.private) {
+      return void res.status(403).json({error: 'User profile is private'})
     }
+    delete user.private
     return user
   }
 )
@@ -345,6 +346,10 @@ post(
     if (exists) {
       await _.send_email_confirmation_exists(exists)
     } else {
+      // If private is not set, set it based on name
+      if (req.body.private === undefined) {
+        req.body.private = !req.body.name
+      }
       const user = await db.users.add(req)
       // Send confirmation email
       const token = tokenizer.sign_email_confirmation(user)
@@ -364,7 +369,7 @@ put(
   middleware.authenticate('user'),
   async (req, res) => {
     const user = await db.one(
-      'SELECT id, name, encrypted_password, email FROM users WHERE id = ${id}',
+      'SELECT id, name, encrypted_password, email, private FROM users WHERE id = ${id}',
       {id: req.user.id}
     )
     if (req.body.email != user.email || req.body.password) {
@@ -407,6 +412,10 @@ put(
           {id: req.user.id, jti: req.user.jti}
         )
       }
+    }
+    // If private is not set, set it based on name
+    if (req.body.private === undefined) {
+      req.body.private = req.body.name === undefined ? user.private : !req.body.name
     }
     return db.users.edit(req)
   }

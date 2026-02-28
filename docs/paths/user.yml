@@ -4,7 +4,8 @@ post:
     When first created, the account is not confirmed and cannot be used.
     An email is sent with a link that must be clicked to confirm the account.
 
-    `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
+    - If `private` is false, `name` is required.
+    - `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
   tags:
     - Authentication
   security:
@@ -53,9 +54,10 @@ get:
 put:
   summary: Edit the user (self).
   description: |
+    - If `private` is false, `name` is required.
     - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed. If an account with the new email already exists, a different email is sent.
     - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
-    - In either case, the existing password is required (`password_confirmation`).
+    - To change email or password, the existing password is required (`password_confirmation`).
   tags:
     - Authentication
   security:

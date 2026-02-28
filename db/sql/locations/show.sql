@@ -1,28 +1,26 @@
 SELECT
-  id,
-  lat,
-  lng,
-  type_ids,
-  user_id,
-  -- TEMP: Update author from current user name
-  COALESCE(
-    (SELECT name FROM users WHERE id = user_id),
-    author
-  ) AS author,
-  import_id,
-  season_start,
-  season_stop,
-  no_season,
-  access,
-  description,
-  unverified,
-  created_at,
-  updated_at,
-  address,
-  city,
-  state,
-  country,
-  muni,
-  invasive
-FROM locations
-WHERE id = ${id}
+  l.id,
+  l.lat,
+  l.lng,
+  l.type_ids,
+  l.user_id,
+  CASE WHEN u.private THEN null ELSE COALESCE(u.name, l.author) END AS author,
+  l.import_id,
+  l.season_start,
+  l.season_stop,
+  l.no_season,
+  l.access,
+  l.description,
+  l.unverified,
+  l.created_at,
+  l.updated_at,
+  l.address,
+  l.city,
+  l.state,
+  l.country,
+  l.muni,
+  l.invasive
+FROM locations l
+LEFT JOIN users u
+  ON l.user_id = u.id
+WHERE l.id = ${id}

@@ -13,7 +13,11 @@ class Users {
       bio: null,
       range: null,
       announcements_email: true,
+      private: false,
       ...req.body
+    }
+    if (!values.name && !values.private) {
+      throw new Error('User name is required for public profiles')
     }
     // Store encrypted password
     values.password = await _.hash_password(values.password)
@@ -35,6 +39,9 @@ class Users {
     const values = {
       ...req.body,
       id: req.user.id
+    }
+    if (!values.name && !values.private) {
+      throw new Error('User name is required for public profiles')
     }
     if (values.password) {
       values.password = await _.hash_password(values.password)

@@ -4,7 +4,8 @@ INSERT INTO users (
   name,
   bio,
   range,
-  announcements_email
+  announcements_email,
+  private
 )
 VALUES (
   ${email},
@@ -12,7 +13,8 @@ VALUES (
   ${name},
   ${bio},
   ST_GeomFromGeoJson(${range:json}),
-  ${announcements_email}
+  ${announcements_email},
+  ${private}
 )
 RETURNING
   id,
@@ -21,6 +23,7 @@ RETURNING
   bio,
   ST_AsGeoJson(range) as range,
   announcements_email,
+  private,
   roles,
   created_at,
   updated_at,

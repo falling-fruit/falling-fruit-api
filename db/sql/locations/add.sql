@@ -3,6 +3,7 @@ INSERT INTO locations (
   lng,
   type_ids,
   user_id,
+  -- TEMP: Hardcode for old website
   author,
   season_start,
   season_stop,
@@ -17,8 +18,8 @@ VALUES (
   ${lng},
   ${type_ids},
   ${user_id},
-  -- TEMP: Hardcode author from user name for old website
-  (SELECT name FROM users WHERE id = ${user_id}),
+  -- TEMP: Hardcode for old website
+  (SELECT name FROM users WHERE id = ${user_id} AND NOT private),
   ${season_start},
   ${season_stop},
   ${access},

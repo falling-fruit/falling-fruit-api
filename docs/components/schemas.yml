@@ -566,49 +566,58 @@ Photo:
           minLength: 1
           format: uri
           example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
-EditUser:
-  title: User (edit)
+BaseUser:
+  title: User (base)
   type: object
   required:
-    - email
     - name
     - bio
-    - range
-    - announcements_email
   properties:
-    email:
-      $ref: properties.yml#/email
     name:
       $ref: properties.yml#/name
     bio:
       $ref: properties.yml#/bio
-    range:
-      allOf:
-        - $ref: geojson.yml#/Polygon
-        - type: object
-          description: Foraging range.
-          nullable: true
-    announcements_email:
-      description: Whether user woud like to receive announcements by email.
-      type: boolean
-      example: true
-      default: true
+EditUser:
+  title: User (edit)
+  description: User properties that can be edited.
+  allOf:
+    - $ref: '#/BaseUser'
+    - type: object
+      required:
+        - email
+        - range
+        - announcements_email
+        - private
+      properties:
+        email:
+          $ref: properties.yml#/email
+        range:
+          allOf:
+            - $ref: geojson.yml#/Polygon
+            - type: object
+              description: Foraging range.
+              nullable: true
+        announcements_email:
+          description: Whether to receive the email newsletter.
+          type: boolean
+          example: true
+          default: true
+        private:
+          description: Whether profile should be private. If false, `name` is required. If true, Location and Review `author` is null and profile cannot be viewed publicly.
+          type: boolean
+          example: false
+          default: false
 PublicUser:
   title: User (public)
   allOf:
     - $ref: '#/IdField'
     - $ref: '#/DateFields'
+    - $ref: '#/BaseUser'
     - type: object
       required:
-        - name
-        - bio
         - roles
         - confirmed_at
       properties:
-        name:
-          $ref: properties.yml#/name
-        bio:
-          $ref: properties.yml#/bio
         roles:
           description: |
             Roles.
@@ -629,6 +638,7 @@ User:
   title: User
   allOf:
     - $ref: '#/PublicUser'
+    - $ref: '#/EditUser'
     - type: object
       properties:
         unconfirmed_email:

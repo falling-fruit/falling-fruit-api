@@ -4,12 +4,14 @@ SET (
   bio,
   range,
   announcements_email,
+  private,
   updated_at
 ) = (
   ${name},
   ${bio},
   ST_GeomFromGeoJson(${range:json}),
   ${announcements_email},
+  ${private},
   NOW()
 )
 WHERE id = ${id}
@@ -20,6 +22,7 @@ RETURNING
   bio,
   ST_AsGeoJson(range) as range,
   announcements_email,
+  private,
   roles,
   created_at,
   updated_at,
