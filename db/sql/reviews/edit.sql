@@ -22,7 +22,7 @@ SELECT
   o.id,
   o.location_id,
   o.user_id,
-  CASE WHEN u.private THEN null ELSE COALESCE(u.name, o.author) END AS author,
+  COALESCE(u.name, o.author) AS author,
   o.comment,
   o.quality_rating,
   o.yield_rating,

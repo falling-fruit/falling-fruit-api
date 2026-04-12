@@ -1,6 +1,5 @@
 get:
   summary: View a user (public).
-  description: Forbidden for private users (`private` is true).
   tags:
     - Users
   security:

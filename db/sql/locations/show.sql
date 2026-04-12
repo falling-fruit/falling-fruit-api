@@ -4,7 +4,7 @@ SELECT
   l.lng,
   l.type_ids,
   l.user_id,
-  CASE WHEN u.private THEN null ELSE COALESCE(u.name, l.author) END AS author,
+  COALESCE(u.name, l.author) AS author,
   l.import_id,
   l.season_start,
   l.season_stop,

@@ -2,7 +2,6 @@ SELECT
   id,
   name,
   bio,
-  private,
   roles,
   created_at,
   updated_at,

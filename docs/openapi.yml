@@ -248,7 +248,7 @@ paths:
       description: |
         A change event is recorded when a location is added (`'added'`), a location is edited (`'edited'`), or a location is reviewed (`'visited'`). Results are sorted in reverse chronological order (most recent first).
 
-        Filtering by user `id` is forbidden for `private`` users. Filtering by user `range` is restricted to the user.
+        Filtering by user `range` is restricted to the user.
       tags:
         - Locations
       security:
@@ -634,8 +634,7 @@ paths:
         When first created, the account is not confirmed and cannot be used.
         An email is sent with a link that must be clicked to confirm the account.
 
-        - If `private` is false, `name` is required.
-        - `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
+        `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
       tags:
         - Authentication
       security:
@@ -684,7 +683,6 @@ paths:
     put:
       summary: Edit the user (self).
       description: |
-        - If `private` is false, `name` is required.
         - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed. If an account with the new email already exists, a different email is sent.
         - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
         - To change email or password, the existing password is required (`password_confirmation`).
@@ -951,7 +949,6 @@ paths:
   '/users/{id}':
     get:
       summary: View a user (public).
-      description: Forbidden for private users (`private` is true).
       tags:
         - Users
       security:
@@ -1760,7 +1757,6 @@ components:
             - email
             - range
             - announcements_email
-            - private
           properties:
             email:
               description: Email.
@@ -1821,11 +1817,6 @@ components:
               type: boolean
               example: true
               default: true
-            private:
-              description: 'Whether profile should be private. If false, `name` is required. If true, Location and Review `author` is null and profile cannot be viewed publicly.'
-              type: boolean
-              example: false
-              default: false
     PublicUser:
       title: User (public)
       allOf:
