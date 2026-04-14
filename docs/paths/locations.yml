@@ -4,6 +4,8 @@ get:
     - Locations
   security:
     - key: []
+    - key: []
+      token: []
   parameters:
     - name: ids
       in: query
@@ -26,14 +28,9 @@ get:
         minItems: 2
         maxItems: 2
         items:
-          type: array
-          minItems: 2
-          maxItems: 2
-          items:
-            type: number
-            minimum: -180
-            maximum: 180
-        example: [[-5, -180], [5, 180]]
+          type: string
+          pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
+        example: ['-5,-180', '5,180']
     - name: center
       in: query
       description: Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].

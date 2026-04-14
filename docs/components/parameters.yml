@@ -10,14 +10,9 @@ bounds:
     minItems: 2
     maxItems: 2
     items:
-      type: array
-      minItems: 2
-      maxItems: 2
-      items:
-        type: number
-        minimum: -180
-        maximum: 180
-    example: [[-5, -180], [5, 180]]
+      type: string
+      pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
+    example: ['-5,-180', '5,180']
 zoom:
   name: zoom
   description: Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid.
@@ -57,6 +52,14 @@ location_id:
   name: id
   in: path
   description: Location ID.
+  required: true
+  schema:
+    type: integer
+    minimum: 1
+location_list_id:
+  name: list_id
+  in: path
+  description: Location List ID.
   required: true
   schema:
     type: integer

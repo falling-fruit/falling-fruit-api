@@ -1,0 +1,26 @@
+post:
+  summary: Add a Location to a Location List.
+  tags:
+    - Location lists
+  security:
+    - key: []
+      token: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_id'
+    - $ref: '../components/parameters.yml#/location_list_id'
+  responses:
+    '204':
+      description: Success
+delete:
+  summary: Remove a Location from a Location List.
+  tags:
+    - Location lists
+  security:
+    - key: []
+      token: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_id'
+    - $ref: '../components/parameters.yml#/location_list_id'
+  responses:
+    '204':
+      description: Success

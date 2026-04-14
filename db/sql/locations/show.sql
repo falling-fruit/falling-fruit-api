@@ -1,3 +1,21 @@
+WITH lists AS (
+  SELECT
+    locations_routes.location_id,
+    json_agg(
+      json_build_object(
+        'id', routes.id,
+        'name', routes.name,
+        'description', routes.description,
+        'user_id', routes.user_id,
+        'created_at', routes.created_at,
+        'updated_at', routes.updated_at
+      )
+    ) AS lists
+  FROM locations_routes
+  JOIN routes ON routes.id = locations_routes.route_id
+  WHERE routes.user_id = ${user_id} AND locations_routes.location_id = ${id}
+  GROUP BY locations_routes.location_id
+)
 SELECT
   l.id,
   l.lat,
@@ -19,8 +37,11 @@ SELECT
   l.state,
   l.country,
   l.muni,
-  l.invasive
+  l.invasive,
+  coalesce(lists.lists, '[]'::json) AS lists
 FROM locations l
 LEFT JOIN users u
   ON l.user_id = u.id
+LEFT JOIN lists
+  ON lists.location_id = l.id
 WHERE l.id = ${id}

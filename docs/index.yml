@@ -52,6 +52,8 @@ tags:
     description: Types describe the plants, fungi, or other resources present at a Location.
   - name: Locations
     description: Locations describe resources at a particular position in the world.
+  - name: Location lists
+    description: User-created lists of Locations.
   - name: Reviews
     description: Reviews describe observations of, and opinions about, a Location.
   - name: Photos
@@ -74,12 +76,18 @@ paths:
     $ref: paths/imports~id.yml
   /locations:
     $ref: paths/locations.yml
+  /locations/lists:
+    $ref: paths/locations~lists.yml
+  /locations/lists/{list_id}:
+    $ref: paths/locations~lists~list_id.yml
   /locations/changes:
     $ref: paths/locations~changes.yml
   /locations/count:
     $ref: paths/locations~count.yml
   /locations/{id}:
     $ref: paths/locations~id.yml
+  /locations/{id}/lists/{list_id}:
+    $ref: paths/locations~id~lists~list_id.yml
   /locations/{id}/reviews:
     $ref: paths/locations~id~reviews.yml
   /photos:

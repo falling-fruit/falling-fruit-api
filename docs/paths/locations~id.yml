@@ -4,6 +4,8 @@ get:
     - Locations
   security:
     - key: []
+    - key: []
+      token: []
   parameters:
     - $ref: ../components/parameters.yml#/location_id
     - name: embed

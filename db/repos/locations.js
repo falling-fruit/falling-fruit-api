@@ -1,4 +1,5 @@
 const sql = require('../sql').locations
+const { parse } = require('dotenv')
 const _ = require('../../helpers')
 const Changes = require('./changes')
 const Types = require('./types')
@@ -35,12 +36,12 @@ class Locations {
     return _.format_location(location)
   }
 
-  async show(id) {
-    const location = await this.db.one(sql.show, {id: parseInt(id)})
+  async show(id, user) {
+    const location = await this.db.one(sql.show, {id: parseInt(id), user_id: user ? user.id : null})
     return _.format_location(location)
   }
 
-  async list({ids = null, bounds = null, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false', locale = null}) {
+  async list({ids = null, bounds = null, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false', locale = null}, user) {
     if (!ids && !bounds && !center) {
       throw Error('Either ids, bounds, or center are required')
     }
@@ -64,6 +65,7 @@ class Locations {
       limit: parseInt(limit),
       offset: parseInt(offset),
       distance: {column: '', order: ''},
+      in_list: ''
     }
     if (center) {
       const point = _.parse_point(center)
@@ -75,6 +77,16 @@ class Locations {
         `,
         order: 'ORDER BY distance'
       }
+    }
+    if (user) {
+      values.in_list = `,
+      exists (
+        select 1
+        from locations_routes
+        join routes on routes.id = locations_routes.route_id
+        where routes.user_id = ${parseInt(user.id)} and locations_routes.location_id = locations.id
+      ) as in_list
+      `
     }
     if (photo === 'true') {
       return this.db.any(sql.listphoto, values)
