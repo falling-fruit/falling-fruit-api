@@ -216,6 +216,10 @@ ListLocation:
             type: integer
             minimum: 1
           example: [97, 92]
+        in_list:
+          description: Whether the Location is in any of the current user's lists. Only included if the user is authenticated.
+          type: boolean
+          example: true
         distance:
           description: Distance in meters from provided centerpoint.
           type: number
@@ -313,6 +317,7 @@ Location:
         - season_start
         - season_stop
         - muni
+        - lists
       properties:
         user_id:
           description: User ID.
@@ -368,6 +373,11 @@ Location:
           type: array
           items:
             $ref: '#/Review'
+        lists:
+          description: User's lists that include the Location.
+          type: array
+          items:
+            $ref: '#/LocationList'
 LocationChange:
   title: Location change
   allOf:
@@ -446,6 +456,79 @@ LocationChange:
           minLength: 1
           nullable: true
           example: United States
+EditLocationList:
+  title: Location List (edit)
+  description: Location List properties that can be edited.
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      description: Name.
+      type: string
+      minLength: 1
+      example: My favorite trees
+    description:
+      description: Description.
+      type: string
+      minLength: 1
+      nullable: true
+      example: My favorite trees in Boulder, Colorado.
+LocationList:
+  title: Location List
+  description: List of saved locations.
+  type: object
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/DateFields'
+    - $ref: '#/EditLocationList'
+    - type: object
+      required:
+        - name
+        - user_id
+      properties:
+        user_id:
+          description: User ID.
+          type: integer
+          nullable: false
+          minimum: 1
+          example: 1
+        locations:
+          description: Locations in the list, in order of addition or, for legacy routes, custom arbitrary order.
+          type: array
+          items:
+            $ref: '#/LocationListLocation'
+LocationListLocation:
+  title: Location List Location
+  description: Location in a Location List.
+  allOf:
+    - $ref: '#/IdField'
+    - $ref: '#/LatLngFields'
+    - type: object
+      required:
+        - lat
+        - lng
+        - type_ids
+        - added_at
+      properties:
+        type_ids:
+          description: Type IDs.
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          example: [97, 92]
+        added_at:
+          description: Date and time added to list, in format YYYY-MM-DDThh:mm:ss.sssZ.
+          type: string
+          format: date-time
+          example: '2014-06-19T01:02:03.456Z'
+        address:
+          description: Address.
+          type: string
+          minLength: 1
+          nullable: true
+          example: '748 10th Street, Boulder CO 80302, USA'
 BaseReview:
   title: Review (base)
   type: object

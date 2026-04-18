@@ -97,11 +97,100 @@ get(
   req => db.types.show(req.params.id)
 )
 
+// Routes: Location lists
+post(
+  `${process.env.API_BASE}/locations/lists`,
+  middleware.authenticate('user'),
+  async (req, res) => {
+    // Require name
+    if (!req.body.name) {
+      return void res.status(400).json({error: 'Name is required'})
+    }
+    return await db.locationLists.addList(req.body, req.user)
+  }
+)
+get(
+  `${process.env.API_BASE}/locations/lists`,
+  middleware.authenticate('user'),
+  async (req) => {
+    if (req.query.embed === 'locations') {
+      return await db.locationLists.listUserListsWithLocations(req.user.id)
+    }
+    return await db.locationLists.listUserLists(req.user.id)
+  }
+)
+get(
+  `${process.env.API_BASE}/locations/lists/:id`,
+  middleware.authenticate('user'),
+  async (req) => {
+    if (req.query.embed === 'locations') {
+      return await db.locationLists.listUserListsWithLocations(req.user.id)
+    }
+    return await db.locationLists.listUserLists(req.user.id)
+  }
+)
+put(
+  `${process.env.API_BASE}/locations/lists/:id`,
+  middleware.authenticate('user'),
+  async (req, res) => {
+    // Restrict to linked user
+    const list = await db.locationLists.showList(req.params.id)
+    if (list.user_id != req.user.id) {
+      return void res.status(403).json({error: 'Insufficient permissions'})
+    }
+    // Require name
+    if (!req.body.name) {
+      return void res.status(400).json({error: 'Name is required'})
+    }
+    return await db.locationLists.editList(req.params.id, req.body)
+  }
+)
+drop(
+  `${process.env.API_BASE}/locations/lists/:id`,
+  middleware.authenticate('user'),
+  async (req, res) => {
+    // Restrict to linked user
+    const list = await db.locationLists.showList(req.params.id)
+    if (list.user_id != req.user.id) {
+      return void res.status(403).json({error: 'Insufficient permissions'})
+    }
+    await db.locationLists.deleteList(req.params.id)
+    return void res.status(204).send()
+  }
+)
+post(
+  `${process.env.API_BASE}/locations/:id/lists/:list_id`,
+  middleware.authenticate('user'),
+  async (req, res) => {
+    // Restrict to linked user
+    const list = await db.locationLists.showList(req.params.list_id)
+    if (list.user_id != req.user.id) {
+      return void res.status(403).json({error: 'Insufficient permissions'})
+    }
+    await db.locationLists.addLocationToList(req.params.id, req.params.list_id)
+    return void res.status(204).send()
+  }
+)
+drop(
+  `${process.env.API_BASE}/locations/:id/lists/:list_id`,
+  middleware.authenticate('user'),
+  async (req, res) => {
+    // Restrict to linked user
+    const list = await db.locationLists.showList(req.params.list_id)
+    if (list.user_id != req.user.id) {
+      return void res.status(403).json({error: 'Insufficient permissions'})
+    }
+    await db.locationLists.dropLocationFromList(req.params.id, req.params.list_id)
+    return void res.status(204).send()
+  }
+)
+
 // Routes: Locations
 get(
   `${process.env.API_BASE}/locations`,
+  middleware.authenticate(),
   async (req, res) => {
-    const locations = await db.locations.list(req.query)
+    const locations = await db.locations.list(req.query, req.user)
     if (req.query.count === 'true') {
       const limit = req.query.limit ? parseInt(req.query.limit) : 1000
       let count = locations.length
@@ -158,8 +247,9 @@ get(
 )
 get(
   `${process.env.API_BASE}/locations/:id`,
+  middleware.authenticate(),
   async req => {
-    const location = await db.locations.show(req.params.id)
+    const location = await db.locations.show(req.params.id, req.user)
     if (req.query.embed) {
       const embedded = req.query.embed.split(',')
       if (embedded.includes('reviews')) {

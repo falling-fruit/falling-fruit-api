@@ -1,0 +1,62 @@
+get:
+  summary: Get a Location List.
+  tags:
+    - Location lists
+  security:
+    - key: []
+      token: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_list_id'
+    - name: embed
+      description: |
+        Additional information to include.
+        - locations: List locations.
+      in: query
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [locations]
+        default: null
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/LocationList
+put:
+  summary: Edit a Location List.
+  tags:
+    - Location lists
+  security:
+    - key: []
+      token: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_list_id'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas.yml#/EditLocationList
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/LocationList
+delete:
+  summary: Delete a Location List.
+  tags:
+    - Location lists
+  security:
+    - key: []
+      token: []
+  parameters:
+    - $ref: '../components/parameters.yml#/location_list_id'
+  responses:
+    '200':
+      description: Success

@@ -1,7 +1,11 @@
 SELECT
-  l.id, lng, lat, type_ids ${distance.column:raw},
+  locations.id,
+  lng,
+  lat,
+  type_ids ${distance.column:raw},
   j.thumb as photo
-FROM locations l
+  ${in_list:raw}
+FROM locations
   LEFT JOIN (
     SELECT DISTINCT ON (o.location_id)
       o.location_id, p.thumb
@@ -10,7 +14,7 @@ FROM locations l
     ON o.id = p.observation_id
     ORDER BY o.location_id, p.id DESC
   ) as j
-ON l.id = j.location_id
+ON locations.id = j.location_id
 WHERE ${where:raw}
 ${distance.order:raw}
 LIMIT ${limit}

@@ -1,0 +1,49 @@
+post:
+  summary: Create a new Location List.
+  tags:
+    - Location lists
+  security:
+    - key: []
+      token: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas.yml#/EditLocationList
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yml#/LocationList
+get:
+  summary: Fetch User's Location Lists.
+  tags:
+    - Location lists
+  security:
+    - key: []
+      token: []
+  parameters:
+    - name: embed
+      description: |
+        Additional information to include.
+        - locations: List locations.
+      in: query
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [locations]
+        default: null
+  responses:
+    '200':
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../components/schemas.yml#/LocationList
