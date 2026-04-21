@@ -2,10 +2,13 @@ const db = require('./db')
 const tokenizer = new (require('./tokens'))()
 const _ = require('./helpers')
 const Recaptcha = require('express-recaptcha').RecaptchaV2
-const recaptcha = new Recaptcha(
-  process.env.RECAPTCHA_SITE_KEY,
-  process.env.RECAPTCHA_SECRET_KEY
-)
+
+const recaptcha = process.env.RECAPTCHA_DISABLED
+  ? null
+  : new Recaptcha(
+      process.env.RECAPTCHA_SITE_KEY,
+      process.env.RECAPTCHA_SECRET_KEY
+    )
 
 const middleware = {}
 
@@ -69,7 +72,7 @@ middleware.authenticate_postmark = function(req, res, next) {
 }
 
 middleware.recaptcha = function(req, res, next) {
-  if (req.user) {
+  if (req.user || !recaptcha) {
     return void next()
   }
   const header = req.header('g-recaptcha-response')
