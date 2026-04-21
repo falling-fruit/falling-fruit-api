@@ -10,7 +10,9 @@ const s3 = new aws.S3({
 })
 const sharp = require('sharp')
 const postmark = require('postmark')
-const postmark_client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
+const postmark_client = process.env.POSTMARK_DISABLED
+  ? null
+  : new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
 
@@ -474,6 +476,12 @@ _.resize_and_upload_photo = async function(input) {
 
 
 function send_email({to, subject, body, tag = null}) {
+  if (process.env.POSTMARK_DISABLED) {
+    console.log(
+      `[Email disabled] To: ${to} | Subject: ${subject} | Tag: ${tag}\n${body}`
+    )
+    return Promise.resolve()
+  }
   return postmark_client.sendEmail({
     From: 'info@fallingfruit.org',
     To: to,
