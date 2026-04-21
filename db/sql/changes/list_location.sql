@@ -5,7 +5,7 @@ SELECT
   c.observation_id AS review_id,
   l.type_ids,
   c.user_id,
-  COALESCE(u.name, c.author) AS author,
+  CASE WHEN c.user_id IS NULL THEN c.author ELSE u.name END AS author,
   l.lat,
   l.lng,
   l.city,

@@ -34,7 +34,7 @@ WITH o AS (
 )
 SELECT
   o.*,
-  COALESCE(u.name, o.author) AS author
+  CASE WHEN o.user_id IS NULL THEN o.author ELSE u.name END AS author
 FROM o
 LEFT JOIN users u
   ON o.user_id = u.id

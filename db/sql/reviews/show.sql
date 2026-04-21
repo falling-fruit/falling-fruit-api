@@ -2,7 +2,7 @@ SELECT
   o.id,
   o.location_id,
   o.user_id,
-  COALESCE(u.name, o.author) AS author,
+  CASE WHEN o.user_id IS NULL THEN o.author ELSE u.name END AS author,
   o.comment,
   o.quality_rating,
   o.yield_rating,

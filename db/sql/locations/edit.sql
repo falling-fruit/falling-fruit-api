@@ -33,7 +33,7 @@ SELECT
   l.lng,
   l.type_ids,
   l.user_id,
-  COALESCE(u.name, l.author) AS author,
+  CASE WHEN l.user_id IS NULL THEN l.author ELSE u.name END AS author,
   l.import_id,
   l.season_start,
   l.season_stop,
