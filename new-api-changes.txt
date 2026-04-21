@@ -1,0 +1,744 @@
+diff --git a/components/parameters.yml b/components/parameters.yml
+index 72839c9..7675b62 100644
+--- a/components/parameters.yml
++++ b/components/parameters.yml
+@@ -10,14 +10,9 @@ bounds:
+     minItems: 2
+     maxItems: 2
+     items:
+-      type: array
+-      minItems: 2
+-      maxItems: 2
+-      items:
+-        type: number
+-        minimum: -180
+-        maximum: 180
+-    example: [[-5, -180], [5, 180]]
++      type: string
++      pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
++    example: ['-5,-180', '5,180']
+ zoom:
+   name: zoom
+   description: Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid.
+@@ -61,6 +56,14 @@ location_id:
+   schema:
+     type: integer
+     minimum: 1
++location_list_id:
++  name: list_id
++  in: path
++  description: Location List ID.
++  required: true
++  schema:
++    type: integer
++    minimum: 1
+ type_id:
+   name: id
+   in: path
+diff --git a/components/schemas.yml b/components/schemas.yml
+index b4f1bae..6c3dba7 100644
+--- a/components/schemas.yml
++++ b/components/schemas.yml
+@@ -216,6 +216,10 @@ ListLocation:
+             type: integer
+             minimum: 1
+           example: [97, 92]
++        in_list:
++          description: Whether the Location is in any of the current user's lists. Only included if the user is authenticated.
++          type: boolean
++          example: true
+         distance:
+           description: Distance in meters from provided centerpoint.
+           type: number
+@@ -313,6 +317,7 @@ Location:
+         - season_start
+         - season_stop
+         - muni
++        - lists
+       properties:
+         user_id:
+           description: User ID.
+@@ -368,6 +373,11 @@ Location:
+           type: array
+           items:
+             $ref: '#/Review'
++        lists:
++          description: User's lists that include the Location.
++          type: array
++          items:
++            $ref: '#/LocationList'
+ LocationChange:
+   title: Location change
+   allOf:
+@@ -446,6 +456,79 @@ LocationChange:
+           minLength: 1
+           nullable: true
+           example: United States
++EditLocationList:
++  title: Location List (edit)
++  description: Location List properties that can be edited.
++  type: object
++  required:
++    - name
++  properties:
++    name:
++      description: Name.
++      type: string
++      minLength: 1
++      example: My favorite trees
++    description:
++      description: Description.
++      type: string
++      minLength: 1
++      nullable: true
++      example: My favorite trees in Boulder, Colorado.
++LocationList:
++  title: Location List
++  description: List of saved locations.
++  type: object
++  allOf:
++    - $ref: '#/IdField'
++    - $ref: '#/DateFields'
++    - $ref: '#/EditLocationList'
++    - type: object
++      required:
++        - name
++        - user_id
++      properties:
++        user_id:
++          description: User ID.
++          type: integer
++          nullable: false
++          minimum: 1
++          example: 1
++        locations:
++          description: Locations in the list, in order of addition or, for legacy routes, custom arbitrary order.
++          type: array
++          items:
++            $ref: '#/LocationListLocation'
++LocationListLocation:
++  title: Location List Location
++  description: Location in a Location List.
++  allOf:
++    - $ref: '#/IdField'
++    - $ref: '#/LatLngFields'
++    - type: object
++      required:
++        - lat
++        - lng
++        - type_ids
++        - added_at
++      properties:
++        type_ids:
++          description: Type IDs.
++          type: array
++          items:
++            type: integer
++            minimum: 1
++          example: [97, 92]
++        added_at:
++          description: Date and time added to list, in format YYYY-MM-DDThh:mm:ss.sssZ.
++          type: string
++          format: date-time
++          example: '2014-06-19T01:02:03.456Z'
++        address:
++          description: Address.
++          type: string
++          minLength: 1
++          nullable: true
++          example: '748 10th Street, Boulder CO 80302, USA'
+ BaseReview:
+   title: Review (base)
+   type: object
+diff --git a/index.yml b/index.yml
+index eb0d92b..a3486df 100644
+--- a/index.yml
++++ b/index.yml
+@@ -52,6 +52,8 @@ tags:
+     description: Types describe the plants, fungi, or other resources present at a Location.
+   - name: Locations
+     description: Locations describe resources at a particular position in the world.
++  - name: Location lists
++    description: User-created lists of Locations.
+   - name: Reviews
+     description: Reviews describe observations of, and opinions about, a Location.
+   - name: Photos
+@@ -74,12 +76,18 @@ paths:
+     $ref: paths/imports~id.yml
+   /locations:
+     $ref: paths/locations.yml
++  /locations/lists:
++    $ref: paths/locations~lists.yml
++  /locations/lists/{list_id}:
++    $ref: paths/locations~lists~list_id.yml
+   /locations/changes:
+     $ref: paths/locations~changes.yml
+   /locations/count:
+     $ref: paths/locations~count.yml
+   /locations/{id}:
+     $ref: paths/locations~id.yml
++  /locations/{id}/lists/{list_id}:
++    $ref: paths/locations~id~lists~list_id.yml
+   /locations/{id}/reviews:
+     $ref: paths/locations~id~reviews.yml
+   /photos:
+diff --git a/openapi.yml b/openapi.yml
+index 5efc88d..92fe18c 100644
+--- a/openapi.yml
++++ b/openapi.yml
+@@ -52,6 +52,8 @@ tags:
+     description: 'Types describe the plants, fungi, or other resources present at a Location.'
+   - name: Locations
+     description: Locations describe resources at a particular position in the world.
++  - name: Location lists
++    description: User-created lists of Locations.
+   - name: Reviews
+     description: 'Reviews describe observations of, and opinions about, a Location.'
+   - name: Photos
+@@ -126,6 +128,8 @@ paths:
+         - Locations
+       security:
+         - key: []
++        - key: []
++          token: []
+       parameters:
+         - name: ids
+           in: query
+@@ -148,18 +152,11 @@ paths:
+             minItems: 2
+             maxItems: 2
+             items:
+-              type: array
+-              minItems: 2
+-              maxItems: 2
+-              items:
+-                type: number
+-                minimum: -180
+-                maximum: 180
++              type: string
++              pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
+             example:
+-              - - -5
+-                - -180
+-              - - 5
+-                - 180
++              - '-5,-180'
++              - '5,180'
+         - name: center
+           in: query
+           description: 'Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].'
+@@ -242,6 +239,121 @@ paths:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/Location'
++  /locations/lists:
++    post:
++      summary: Create a new Location List.
++      tags:
++        - Location lists
++      security:
++        - key: []
++          token: []
++      requestBody:
++        required: true
++        content:
++          application/json:
++            schema:
++              $ref: '#/components/schemas/EditLocationList'
++      responses:
++        '200':
++          description: Success
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/LocationList'
++    get:
++      summary: Fetch User's Location Lists.
++      tags:
++        - Location lists
++      security:
++        - key: []
++          token: []
++      parameters:
++        - name: embed
++          description: |
++            Additional information to include.
++            - locations: List locations.
++          in: query
++          explode: false
++          schema:
++            type: array
++            items:
++              type: string
++              enum:
++                - locations
++            default: null
++      responses:
++        '200':
++          description: Success
++          content:
++            application/json:
++              schema:
++                type: array
++                items:
++                  $ref: '#/components/schemas/LocationList'
++  '/locations/lists/{list_id}':
++    get:
++      summary: Get a Location List.
++      tags:
++        - Location lists
++      security:
++        - key: []
++          token: []
++      parameters:
++        - $ref: '#/components/parameters/location_list_id'
++        - name: embed
++          description: |
++            Additional information to include.
++            - locations: List locations.
++          in: query
++          explode: false
++          schema:
++            type: array
++            items:
++              type: string
++              enum:
++                - locations
++            default: null
++      responses:
++        '200':
++          description: Success
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/LocationList'
++    put:
++      summary: Edit a Location List.
++      tags:
++        - Location lists
++      security:
++        - key: []
++          token: []
++      parameters:
++        - $ref: '#/components/parameters/location_list_id'
++      requestBody:
++        required: true
++        content:
++          application/json:
++            schema:
++              $ref: '#/components/schemas/EditLocationList'
++      responses:
++        '200':
++          description: Success
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/LocationList'
++    delete:
++      summary: Delete a Location List.
++      tags:
++        - Location lists
++      security:
++        - key: []
++          token: []
++      parameters:
++        - $ref: '#/components/parameters/location_list_id'
++      responses:
++        '200':
++          description: Success
+   /locations/changes:
+     get:
+       summary: Fetch Location changes (activity).
+@@ -320,6 +432,8 @@ paths:
+         - Locations
+       security:
+         - key: []
++        - key: []
++          token: []
+       parameters:
+         - $ref: '#/components/parameters/location_id'
+         - name: embed
+@@ -381,6 +495,33 @@ paths:
+       responses:
+         '204':
+           description: Success (no content)
++  '/locations/{id}/lists/{list_id}':
++    post:
++      summary: Add a Location to a Location List.
++      tags:
++        - Location lists
++      security:
++        - key: []
++          token: []
++      parameters:
++        - $ref: '#/components/parameters/location_id'
++        - $ref: '#/components/parameters/location_list_id'
++      responses:
++        '204':
++          description: Success
++    delete:
++      summary: Remove a Location from a Location List.
++      tags:
++        - Location lists
++      security:
++        - key: []
++          token: []
++      parameters:
++        - $ref: '#/components/parameters/location_id'
++        - $ref: '#/components/parameters/location_list_id'
++      responses:
++        '204':
++          description: Success
+   '/locations/{id}/reviews':
+     get:
+       summary: Fetch a Location's Reviews.
+@@ -989,18 +1130,11 @@ components:
+         minItems: 2
+         maxItems: 2
+         items:
+-          type: array
+-          minItems: 2
+-          maxItems: 2
+-          items:
+-            type: number
+-            minimum: -180
+-            maximum: 180
++          type: string
++          pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
+         example:
+-          - - -5
+-            - -180
+-          - - 5
+-            - 180
++          - '-5,-180'
++          - '5,180'
+     zoom:
+       name: zoom
+       description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid.'
+@@ -1044,6 +1178,14 @@ components:
+       schema:
+         type: integer
+         minimum: 1
++    location_list_id:
++      name: list_id
++      in: path
++      description: Location List ID.
++      required: true
++      schema:
++        type: integer
++        minimum: 1
+     type_id:
+       name: id
+       in: path
+@@ -1347,6 +1489,10 @@ components:
+               example:
+                 - 97
+                 - 92
++            in_list:
++              description: Whether the Location is in any of the current user's lists. Only included if the user is authenticated.
++              type: boolean
++              example: true
+             distance:
+               description: Distance in meters from provided centerpoint.
+               type: number
+@@ -1453,6 +1599,7 @@ components:
+             - season_start
+             - season_stop
+             - muni
++            - lists
+           properties:
+             user_id:
+               description: User ID.
+@@ -1508,6 +1655,11 @@ components:
+               type: array
+               items:
+                 $ref: '#/components/schemas/Review'
++            lists:
++              description: User's lists that include the Location.
++              type: array
++              items:
++                $ref: '#/components/schemas/LocationList'
+     LocationChange:
+       title: Location change
+       allOf:
+@@ -1591,6 +1743,81 @@ components:
+               minLength: 1
+               nullable: true
+               example: United States
++    EditLocationList:
++      title: Location List (edit)
++      description: Location List properties that can be edited.
++      type: object
++      required:
++        - name
++      properties:
++        name:
++          description: Name.
++          type: string
++          minLength: 1
++          example: My favorite trees
++        description:
++          description: Description.
++          type: string
++          minLength: 1
++          nullable: true
++          example: 'My favorite trees in Boulder, Colorado.'
++    LocationList:
++      title: Location List
++      description: List of saved locations.
++      type: object
++      allOf:
++        - $ref: '#/components/schemas/IdField'
++        - $ref: '#/components/schemas/DateFields'
++        - $ref: '#/components/schemas/EditLocationList'
++        - type: object
++          required:
++            - name
++            - user_id
++          properties:
++            user_id:
++              description: User ID.
++              type: integer
++              nullable: false
++              minimum: 1
++              example: 1
++            locations:
++              description: 'Locations in the list, in order of addition or, for legacy routes, custom arbitrary order.'
++              type: array
++              items:
++                $ref: '#/components/schemas/LocationListLocation'
++    LocationListLocation:
++      title: Location List Location
++      description: Location in a Location List.
++      allOf:
++        - $ref: '#/components/schemas/IdField'
++        - $ref: '#/components/schemas/LatLngFields'
++        - type: object
++          required:
++            - lat
++            - lng
++            - type_ids
++            - added_at
++          properties:
++            type_ids:
++              description: Type IDs.
++              type: array
++              items:
++                type: integer
++                minimum: 1
++              example:
++                - 97
++                - 92
++            added_at:
++              description: 'Date and time added to list, in format YYYY-MM-DDThh:mm:ss.sssZ.'
++              type: string
++              format: date-time
++              example: '2014-06-19T01:02:03.456Z'
++            address:
++              description: Address.
++              type: string
++              minLength: 1
++              nullable: true
++              example: '748 10th Street, Boulder CO 80302, USA'
+     BaseReview:
+       title: Review (base)
+       type: object
+diff --git a/paths/locations.yml b/paths/locations.yml
+index 440af6f..51269f3 100644
+--- a/paths/locations.yml
++++ b/paths/locations.yml
+@@ -4,6 +4,8 @@ get:
+     - Locations
+   security:
+     - key: []
++    - key: []
++      token: []
+   parameters:
+     - name: ids
+       in: query
+@@ -26,14 +28,9 @@ get:
+         minItems: 2
+         maxItems: 2
+         items:
+-          type: array
+-          minItems: 2
+-          maxItems: 2
+-          items:
+-            type: number
+-            minimum: -180
+-            maximum: 180
+-        example: [[-5, -180], [5, 180]]
++          type: string
++          pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
++        example: ['-5,-180', '5,180']
+     - name: center
+       in: query
+       description: Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].
+diff --git a/paths/locations~id.yml b/paths/locations~id.yml
+index e95998c..7933bd8 100644
+--- a/paths/locations~id.yml
++++ b/paths/locations~id.yml
+@@ -4,6 +4,8 @@ get:
+     - Locations
+   security:
+     - key: []
++    - key: []
++      token: []
+   parameters:
+     - $ref: ../components/parameters.yml#/location_id
+     - name: embed
+diff --git a/paths/locations~id~lists~list_id.yml b/paths/locations~id~lists~list_id.yml
+new file mode 100644
+index 0000000..636f45e
+--- /dev/null
++++ b/paths/locations~id~lists~list_id.yml
+@@ -0,0 +1,26 @@
++post:
++  summary: Add a Location to a Location List.
++  tags:
++    - Location lists
++  security:
++    - key: []
++      token: []
++  parameters:
++    - $ref: '../components/parameters.yml#/location_id'
++    - $ref: '../components/parameters.yml#/location_list_id'
++  responses:
++    '204':
++      description: Success
++delete:
++  summary: Remove a Location from a Location List.
++  tags:
++    - Location lists
++  security:
++    - key: []
++      token: []
++  parameters:
++    - $ref: '../components/parameters.yml#/location_id'
++    - $ref: '../components/parameters.yml#/location_list_id'
++  responses:
++    '204':
++      description: Success
+diff --git a/paths/locations~lists.yml b/paths/locations~lists.yml
+new file mode 100644
+index 0000000..e47880a
+--- /dev/null
++++ b/paths/locations~lists.yml
+@@ -0,0 +1,49 @@
++post:
++  summary: Create a new Location List.
++  tags:
++    - Location lists
++  security:
++    - key: []
++      token: []
++  requestBody:
++    required: true
++    content:
++      application/json:
++        schema:
++          $ref: ../components/schemas.yml#/EditLocationList
++  responses:
++    '200':
++      description: Success
++      content:
++        application/json:
++          schema:
++            $ref: ../components/schemas.yml#/LocationList
++get:
++  summary: Fetch User's Location Lists.
++  tags:
++    - Location lists
++  security:
++    - key: []
++      token: []
++  parameters:
++    - name: embed
++      description: |
++        Additional information to include.
++        - locations: List locations.
++      in: query
++      explode: false
++      schema:
++        type: array
++        items:
++          type: string
++          enum: [locations]
++        default: null
++  responses:
++    '200':
++      description: Success
++      content:
++        application/json:
++          schema:
++            type: array
++            items:
++              $ref: ../components/schemas.yml#/LocationList
+diff --git a/paths/locations~lists~list_id.yml b/paths/locations~lists~list_id.yml
+new file mode 100644
+index 0000000..b8f4388
+--- /dev/null
++++ b/paths/locations~lists~list_id.yml
+@@ -0,0 +1,62 @@
++get:
++  summary: Get a Location List.
++  tags:
++    - Location lists
++  security:
++    - key: []
++      token: []
++  parameters:
++    - $ref: '../components/parameters.yml#/location_list_id'
++    - name: embed
++      description: |
++        Additional information to include.
++        - locations: List locations.
++      in: query
++      explode: false
++      schema:
++        type: array
++        items:
++          type: string
++          enum: [locations]
++        default: null
++  responses:
++    '200':
++      description: Success
++      content:
++        application/json:
++          schema:
++            $ref: ../components/schemas.yml#/LocationList
++put:
++  summary: Edit a Location List.
++  tags:
++    - Location lists
++  security:
++    - key: []
++      token: []
++  parameters:
++    - $ref: '../components/parameters.yml#/location_list_id'
++  requestBody:
++    required: true
++    content:
++      application/json:
++        schema:
++          $ref: ../components/schemas.yml#/EditLocationList
++  responses:
++    '200':
++      description: Success
++      content:
++        application/json:
++          schema:
++            $ref: ../components/schemas.yml#/LocationList
++delete:
++  summary: Delete a Location List.
++  tags:
++    - Location lists
++  security:
++    - key: []
++      token: []
++  parameters:
++    - $ref: '../components/parameters.yml#/location_list_id'
++  responses:
++    '200':
++      description: Success
