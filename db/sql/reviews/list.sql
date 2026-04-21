@@ -33,8 +33,18 @@ WITH o AS (
   GROUP BY o.id
 )
 SELECT
-  o.*,
-  CASE WHEN o.user_id IS NULL THEN o.author ELSE u.name END AS author
+  o.id,
+  o.location_id,
+  o.user_id,
+  CASE WHEN o.user_id IS NULL THEN o.author ELSE u.name END AS author,
+  o.created_at,
+  o.updated_at,
+  o.observed_on,
+  o.comment,
+  o.fruiting,
+  o.quality_rating,
+  o.yield_rating,
+  photos
 FROM o
 LEFT JOIN users u
   ON o.user_id = u.id
