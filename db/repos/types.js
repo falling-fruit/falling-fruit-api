@@ -5,11 +5,13 @@ class Types {
   constructor(db, pgp) {
     this.db = db
     this.pgp = pgp
-    // Load name columns from db
-    db.any('SELECT * FROM types LIMIT 1').then(result => {
-      this.names = Object.keys(result[0]).filter(
-        key => key.endsWith('_name')
-      )
+    // Load name columns from db using schema instead of data
+    db.any(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = 'types'"
+    ).then(result => {
+      this.names = result
+        .map(row => row.column_name)
+        .filter(key => key.endsWith('_name'))
     })
     this.default_names = ['en_name', 'scientific_name']
   }
