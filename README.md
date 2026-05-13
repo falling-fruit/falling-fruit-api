@@ -29,17 +29,27 @@ Live at https://fallingfruit.org/api/0.3. Used by https://fallingfruit.org ([fal
 
 ## Installation
 
-1. Install [Node JS](https://nodejs.org/)
-2. Install [Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
-3. Clone this repo, `cd` into the directory, and install node modules:
+- Clone the repo and change into the new directory.
 
-```bash
-git clone https://github.com/falling-fruit/api.git
-cd api
-yarn
-```
+  ```sh
+  git clone https://github.com/falling-fruit/falling-fruit-api
+  cd falling-fruit-api
+  ```
 
-4. Copy `.env.example` to `.env` and update the values as needed.
+- Install the [`node`](https://nodejs.org) version specified in the `.nvmrc` file. This is easiest using [`nvm`](https://github.com/nvm-sh/nvm#installing-and-updating).
+
+  ```sh
+  nvm install
+  nvm use
+  ```
+
+- [`yarn`](https://classic.yarnpkg.com/en/docs/install) is already provided (see [`.yarn/releases`](.yarn/releases)). Use it to install dependencies.
+
+  ```sh
+  yarn
+  ```
+
+- Copy `.env.example` to `.env` and update the values as needed.
 
 ```bash
 cp .env.example .env
