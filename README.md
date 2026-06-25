@@ -9,7 +9,7 @@ You can browse the OpenAPI definition for the main branch [here](https://petstor
 
 # Status
 
-Live at https://fallingfruit.org/api/0.3. Used by https://fallingfruit.org ([falling-fruit](https://github.com/falling-fruit/falling-fruit)) and extensively by https://beta.fallingfruit.org ([falling-fruit-web](https://github.com/falling-fruit/falling-fruit-web)).
+Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([falling-fruit-web](https://github.com/falling-fruit/falling-fruit-web)).
 
 # Layout
 
