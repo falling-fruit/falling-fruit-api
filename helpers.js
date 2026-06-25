@@ -483,7 +483,6 @@ function send_email({to, subject, body, tag = null}) {
     Tag: tag
   })
 }
-
 _.send_email_confirmation = function(user, token) {
   const email = {
     to: user.email,
@@ -493,8 +492,10 @@ _.send_email_confirmation = function(user, token) {
     body: `
       <p>Welcome to Falling Fruit,</p>
       <p>To activate your account, you must confirm your email (${user.email}) by visiting the link below:
-      <br/>${process.env.WEB_ORIGIN}/auth/confirmation?token=${token}</p>
+      <br/><a href="${process.env.WEB_ORIGIN}/auth/confirmation?token=${token}">confirm</a></p>
       <p>Falling Fruit is powered by its users, so if you have the opportunity to add or improve it, please do so. Happy foraging!</p>
+      <hr/>
+      <p style="font-size: 12px; color: #666;">If you're having trouble clicking the link above, copy and paste this URL into your browser:<br/>${process.env.WEB_ORIGIN}/auth/confirmation?token=${token}</p>
     `,
     tag: 'email-confirmation'
   }
@@ -507,8 +508,9 @@ _.send_email_confirmation_exists = function(user) {
     subject: 'Registration attempt',
     body: `
       <p>Hello ${user.name || user.email},</p>
-      <p>Someone (maybe you) tried to sign up using this email (${user.email}). If this was you, sign in here instead:
-      <br/>${process.env.WEB_ORIGIN}/auth/sign_in</p>
+      <p>An account already exists for this email (${user.email}). If you forgot your password, reset it at <a href="${process.env.WEB_ORIGIN}/auth/password/new">here</a>.</p>
+      <p>Otherwise, you can sign in here instead:
+      <br/><a href="${process.env.WEB_ORIGIN}/auth/sign_in">sign in</a></p>
       <p>If you didn't request this, please ignore this email or contact us (info@fallingfruit.org) if you have questions.</p>
     `,
     tag: 'email-confirmation'
