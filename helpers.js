@@ -573,7 +573,7 @@ _.send_password_reset = function(user, token) {
       <p style="color: #666;">If you're having trouble clicking the link above, copy and paste this URL into your browser:<br/>
       ${process.env.WEB_ORIGIN}/auth/password/edit?token=${token}
       </p>
-      <p>If you didn't request this, you can safely ignore this email. Your password won't change unless you visit the link above and create a new one.</p>
+      <p style="color: #666;">If you didn't request this, you can safely ignore this email. Your password won't change unless you visit the link above and create a new one.</p>
     `,
     tag: 'password-reset'
   }
