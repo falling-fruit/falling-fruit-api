@@ -785,7 +785,7 @@ function register_route(method, url, handlers) {
       console.log('[caught]', err || err.message)
       if (method === 'get' && err.code === pgp.errors.queryResultErrorCode.noData) {
         return void res.status(404).json({
-          error: err.message || err
+          error: 'Not found'
         })
       }
       return void res.status(400).json({
