@@ -23,7 +23,7 @@ select
   routes.user_id,
   routes.created_at,
   routes.updated_at,
-  lists.locations
+  coalesce(lists.locations, '[]'::json) as locations
 from routes
 left join lists on lists.id = routes.id
 where routes.id = ${id}
