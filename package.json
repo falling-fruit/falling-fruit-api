@@ -27,7 +27,7 @@
     "base64url": "^3.0.1",
     "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
-    "compression": "^1.7.4",
+    "compression": "^1.8.2",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.20.0",
