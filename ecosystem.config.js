@@ -1,6 +1,6 @@
 module.exports = {
   name: 'api',
-  script: './index.js',
+  script: './src/index.js',
   node_args: '--max-http-header-size=32768',
   instances: 4,
   exec_mode: 'cluster',
