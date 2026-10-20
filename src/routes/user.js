@@ -1,5 +1,6 @@
 const db = require('../db')
 const _ = require('../helpers')
+const mailer = require('../mailer')
 const middleware = require('../middleware')
 const multer = require('multer')
 const uploads = multer({ dest: 'uploads' })
@@ -19,12 +20,12 @@ post(
       'SELECT email, name FROM users WHERE email=${email}', {email: req.body.email}
     )
     if (exists) {
-      await _.send_email_confirmation_exists(exists)
+      await mailer.send_email_confirmation_exists(exists)
     } else {
       const user = await db.users.add(req)
       // Send confirmation email
       const token = tokenizer.sign_email_confirmation(user)
-      await _.send_email_confirmation(user, token)
+      await mailer.send_email_confirmation(user, token)
     }
     // Phrase: devise.confirmations.send_instructions
     return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
@@ -66,11 +67,11 @@ put(
         // Check that email is not already taken
         const other = await db.oneOrNone('SELECT email, name FROM users WHERE email = ${email}', {email: req.body.email})
         if (other) {
-          await _.send_email_confirmation_exists(other)
+          await mailer.send_email_confirmation_exists(other)
         } else {
           // Send confirmation email
           const token = tokenizer.sign_email_confirmation(user, req.body.email)
-          await _.send_email_confirmation({email: req.body.email}, token)
+          await mailer.send_email_confirmation({email: req.body.email}, token)
         }
       }
       if (req.body.password === req.body.password_confirmation) {
@@ -252,14 +253,14 @@ post(
       {email: email}
     )
     if (!user) {
-      await _.send_email_confirmation_not_found({email: req.body.email})
+      await mailer.send_email_confirmation_not_found({email: req.body.email})
     } else if (user.email === email && user.confirmed_at) {
-      await _.send_email_confirmation_confirmed(user)
+      await mailer.send_email_confirmation_confirmed(user)
     } else {
       const token = tokenizer.sign_email_confirmation(
         user, user.unconfirmed_email ? user.unconfirmed_email : null
       )
-      await _.send_email_confirmation({email: email}, token)
+      await mailer.send_email_confirmation({email: email}, token)
     }
     // Phrase: devise.confirmation.send_instructions
     return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
@@ -302,9 +303,9 @@ post(
     )
     if (user) {
       const token = tokenizer.sign_password_reset(user, user.encrypted_password)
-      await _.send_password_reset(user, token)
+      await mailer.send_password_reset(user, token)
     } else {
-      await _.send_password_reset_not_found({email: req.body.email})
+      await mailer.send_password_reset_not_found({email: req.body.email})
     }
     // Phrase: devise.passwords.send_instructions
     return {message: 'You will receive an email with instructions on how to reset your password in a few minutes'}

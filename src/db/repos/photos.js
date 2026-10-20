@@ -1,5 +1,5 @@
 const sql = require('../sql').photos
-const _ = require('../../helpers')
+const photos = require('../../photos')
 
 class Photos {
   constructor(db, pgp) {
@@ -46,8 +46,8 @@ class Photos {
       // NOTE: For backwards compatibility only
       // Copy first photo
       const urls = await this.db.one('SELECT thumb, medium, original FROM photos WHERE id = ${id}', {id: photo_ids[0]})
-      if (_.is_new_photo_url(urls['original'])) {
-        await _.copy_photo_to_old_urls(urls, review_id)
+      if (photos.is_new_photo_url(urls['original'])) {
+        await photos.copy_photo_to_old_urls(urls, review_id)
         await this.db.none("UPDATE observations SET photo_file_name = 'first.jpg' WHERE id = ${id}", {id: review_id})
       }
     } else {
