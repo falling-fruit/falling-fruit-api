@@ -1,6 +1,4 @@
 require('dotenv').config()
-const bcrypt = require('bcrypt')
-const crypto = require('crypto')
 
 const _ = {}
 
@@ -172,81 +170,6 @@ _.format_user = function(user) {
     user.range = JSON.parse(user.range)
   }
   return user
-}
-
-_.is_date_in_future = function(datestamp) {
-  // Compare date to current date + 1 day (accounting for timezones)
-  const date = new Date(datestamp)
-  date.setUTCHours(0, 0, 0, 0)
-  const today = new Date()
-  today.setUTCHours(0,0,0,0)
-  today.setDate(today.getDate() + 1)
-  return date > today
-}
-
-/**
- * Check if value should be considered null (empty).
- *
- * @param {*} value - Value to check.
- * @param {*} zero - Whether to consider zero as null.
- * @returns {boolean} Whether value is null.
- * @example
- * is_null(null)  // true
- * is_null(undefined)  // true
- * is_null('')  // true
- * is_null('a')  // false
- * is_null(0)  // false
- * is_null(0, true)  // true
- * is_null(1)  // false
- * is_null([])  // true
- * is_null([0])  // false
- * is_null({})  // true
- * is_null({a: 0})  // false
- */
-_.is_null = function(value, zero = false) {
-  if (Array.isArray(value)) {
-    return value.length == 0
-  } else if (Object.prototype.toString.call(value) === '[object Object]') {
-    return Object.keys(value).length == 0
-  } else {
-    const nulls = ['', null, undefined]
-    if (zero) {
-      nulls.push(0)
-    }
-    return nulls.includes(value)
-  }
-}
-
-// /**
-//  * Hash text using SHA256.
-//  *
-//  * Always produces a string that is 256 bits (32 bytes) long.
-//  * In base64, that is ceil(32/3) * 4 = 44 bytes, under the bcrypt 72 byte limit.
-//  *
-//  * @param {*} text
-//  * @returns
-//  */
-// function sha256(text) {
-//   return crypto.createHash("sha256").update(text).digest("base64")
-// }
-
-/**
- * Compare password to password hash.
- *
- * bcrypt truncates the input to 72 bytes, so the first 72 bytes of a password
- * would pass. To prevent this, we could prehash the password with sha256.
- * See https://security.stackexchange.com/q/6623.
- *
- * @param {*} password
- * @param {*} hash
- * @returns
- */
-_.compare_password = function(password, hash) {
-  return bcrypt.compare(password, hash)
-}
-
-_.hash_password = function(password) {
-  return bcrypt.hash(password, 10)
 }
 
 

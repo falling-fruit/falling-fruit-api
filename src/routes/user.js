@@ -1,5 +1,5 @@
 const db = require('../db')
-const _ = require('../helpers')
+const passwords = require('../passwords')
 const mailer = require('../mailer')
 const middleware = require('../middleware')
 const multer = require('multer')
@@ -51,7 +51,7 @@ put(
           {error: 'Current password is required to change email or password'}
         )
       }
-      const confirmed = await _.compare_password(
+      const confirmed = await passwords.compare_password(
         req.body.password_confirmation, user.encrypted_password
       )
       if (!confirmed) {
@@ -107,7 +107,7 @@ post(
       // Phrase: devise.failure.unconfirmed
       throw Error('You have to confirm your email address before continuing')
     }
-    if (!await _.compare_password(req.body.password, user.encrypted_password)) {
+    if (!await passwords.compare_password(req.body.password, user.encrypted_password)) {
       // Wrong password
       // Phrase: devise.failure.invalid
       return void res.status(401).json({error: 'Invalid email or password'})
@@ -160,7 +160,7 @@ drop(
     //   'SELECT encrypted_password FROM users WHERE id = ${id}',
     //   {id: req.user.id}
     // )
-    // if (!await _.compare_password(req.body.password, user.encrypted_password)) {
+    // if (!await passwords.compare_password(req.body.password, user.encrypted_password)) {
     //   return void res.status(401).json({error: 'Wrong password'})
     // }
     await db.users.delete(req.user.id)

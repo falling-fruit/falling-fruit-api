@@ -1,5 +1,6 @@
 const sql = require('../sql').users
 const _ = require('../../helpers')
+const passwords = require('../../passwords')
 
 class Users {
   constructor(db, pgp) {
@@ -16,7 +17,7 @@ class Users {
       ...req.body
     }
     // Store encrypted password
-    values.password = await _.hash_password(values.password)
+    values.password = await passwords.hash_password(values.password)
     const user = await this.db.one(sql.add, values)
     return _.format_user(user)
   }
@@ -37,7 +38,7 @@ class Users {
       id: req.user.id
     }
     if (values.password) {
-      values.password = await _.hash_password(values.password)
+      values.password = await passwords.hash_password(values.password)
       return this.db.one(sql.editPassword, values)
     }
     const user = await this.db.one(sql.edit, values)
@@ -49,7 +50,7 @@ class Users {
   }
 
   async set_password(id, password) {
-    const hash = await _.hash_password(password)
+    const hash = await passwords.hash_password(password)
     return this.db.none(sql.setPassword, {id: id, password: hash})
   }
 
