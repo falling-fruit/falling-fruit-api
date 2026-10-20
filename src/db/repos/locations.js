@@ -2,6 +2,7 @@ const sql = require('../sql').locations
 const { parse } = require('dotenv')
 const _ = require('../../helpers')
 const geo = require('../../geo')
+const sqlf = require('../../sql_formatters')
 const Changes = require('./changes')
 const Types = require('./types')
 
@@ -51,14 +52,14 @@ class Locations {
     }
     let filters
     if (ids) {
-      filters = [_.ids_to_sql(ids)]
+      filters = [sqlf.ids_to_sql(ids)]
     } else {
       filters = [
         'NOT hidden',
-        bounds ? geo.bounds_to_sql(geo.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
-        _.muni_to_sql(muni),
-        _.types_array_to_sql(types),
-        _.invasive_to_sql(invasive)
+        bounds ? sqlf.bounds_to_sql(geo.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
+        sqlf.muni_to_sql(muni),
+        sqlf.types_array_to_sql(types),
+        sqlf.invasive_to_sql(invasive)
       ]
     }
     const values = {
@@ -102,10 +103,10 @@ class Locations {
   count({bounds, muni = 'true', types = null, invasive = 'false'}) {
     const filters = [
       'NOT hidden',
-      geo.bounds_to_sql(geo.parse_bounds(bounds), { geography: 'location' }),
-      _.muni_to_sql(muni),
-      _.types_array_to_sql(types),
-      _.invasive_to_sql(invasive)
+      sqlf.bounds_to_sql(geo.parse_bounds(bounds), { geography: 'location' }),
+      sqlf.muni_to_sql(muni),
+      sqlf.types_array_to_sql(types),
+      sqlf.invasive_to_sql(invasive)
     ]
     const values = {where: filters.filter(Boolean).join(' AND ')}
     return this.db.one(sql.count, values)

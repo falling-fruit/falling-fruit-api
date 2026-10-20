@@ -1,6 +1,6 @@
 const sql = require('../sql').clusters
-const _ = require('../../helpers')
 const geo = require('../../geo')
+const sqlf = require('../../sql_formatters')
 
 class Clusters {
   constructor(db, pgp) {
@@ -20,10 +20,10 @@ class Clusters {
       return []
     }
     const filters = [
-      geo.bounds_to_sql(geo.parse_bounds(bounds), { mercator: true }),
-      geo.zoom_to_sql(zoom),
-      _.muni_to_sql(muni),
-      _.types_to_sql(types)
+      sqlf.bounds_to_sql(geo.parse_bounds(bounds), { mercator: true }),
+      sqlf.zoom_to_sql(zoom),
+      sqlf.muni_to_sql(muni),
+      sqlf.types_to_sql(types)
     ]
     const values = {where: filters.filter(Boolean).join(' AND ')}
     return this.db.any(sql.list, values)

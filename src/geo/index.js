@@ -3,14 +3,12 @@ const coordinates = require('./coordinates')
 const projection = require('./projection')
 const grid = require('./grid')
 const clusters = require('./clusters')
-const sql = require('./sql')
 
 const _ = {
   ...coordinates,
   ...projection,
   ...grid,
-  ...clusters,
-  ...sql
+  ...clusters
 }
 
 _.MAX_GRID_ZOOM = MAX_GRID_ZOOM

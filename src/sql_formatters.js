@@ -1,8 +1,41 @@
-const {MAX_GRID_ZOOM} = require('./constants')
-const projection = require('./projection')
+const {MAX_GRID_ZOOM, wgs84_to_mercator} = require('./geo')
 
 const _ = {}
-_.wgs84_to_mercator = projection.wgs84_to_mercator
+_.wgs84_to_mercator = wgs84_to_mercator
+
+_.muni_to_sql = function(value) {
+  if (value == 'false') {
+    return 'NOT muni'
+  }
+}
+
+_.invasive_to_sql = function(value) {
+  if (value == 'true') {
+    return 'invasive'
+  }
+}
+
+_.ids_to_sql = function(value) {
+  // '1,2,3'
+  if (value) {
+    return `id IN (${value})`
+  }
+}
+
+_.types_to_sql = function(value) {
+  // '1,2,3'
+  if (value) {
+    return `type_id IN (${value})`
+  }
+}
+
+_.types_array_to_sql = function(value) {
+  // '1,2,3'
+  if (value) {
+    // Sorting shown to reduce db time 4x (?!). Requires intarray extension.
+    return `type_ids && sort(ARRAY[${value}])`
+  }
+}
 
 /**
  * Convert bounding box to SQL condition.

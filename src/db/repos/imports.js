@@ -1,6 +1,6 @@
 const sql = require('../sql').imports
-const _ = require('../../helpers')
 const geo = require('../../geo')
+const sqlf = require('../../sql_formatters')
 
 class Imports {
   constructor(db, pgp) {
@@ -19,8 +19,8 @@ class Imports {
   count({bounds, muni = 'true'}) {
     const filters = [
       "NOT hidden",
-      geo.bounds_to_sql(geo.parse_bounds(bounds)),
-      _.muni_to_sql(muni)
+      sqlf.bounds_to_sql(geo.parse_bounds(bounds)),
+      sqlf.muni_to_sql(muni)
     ]
     const values = {where: filters.filter(Boolean).join(' AND ')}
     return this.db.any(sql.count, values)
