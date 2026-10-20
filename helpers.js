@@ -2,12 +2,14 @@ require('dotenv').config()
 const fs = require('fs')
 const path = require('path')
 const aws = require('aws-sdk')
-const s3 = new aws.S3({
-  region: process.env.S3_REGION,
-  accessKeyId: process.env.S3_ACCESS_KEY_ID,
-  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-  apiVersion: '2006-03-01'
-})
+const s3 = process.env.S3_DISABLED
+  ? null
+  : new aws.S3({
+      region: process.env.S3_REGION,
+      accessKeyId: process.env.S3_ACCESS_KEY_ID,
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+      apiVersion: '2006-03-01'
+    })
 const sharp = require('sharp')
 const postmark = require('postmark')
 const postmark_client = process.env.POSTMARK_DISABLED
@@ -395,7 +397,16 @@ async function resize_photo(input, output, size = null) {
   return output
 }
 
-function upload_photo(input, output) {
+const LOCAL_PHOTO_DIR = 'uploads'
+
+async function upload_photo(input, output) {
+  if (process.env.S3_DISABLED) {
+    const dest = path.join(LOCAL_PHOTO_DIR, output)
+    await fs.promises.mkdir(path.dirname(dest), {recursive: true})
+    await fs.promises.copyFile(input, dest)
+    const base = (process.env.API_ORIGIN || '').replace(/\/+$/, '')
+    return {Location: `${base}/${LOCAL_PHOTO_DIR}/${output.split(path.sep).join('/')}`}
+  }
   return s3.upload({
     ACL: 'public-read',
     Bucket: process.env.S3_BUCKET,
@@ -431,6 +442,9 @@ function parse_s3_url(url) {
 }
 
 _.is_new_photo_url = function(url) {
+  if (process.env.S3_DISABLED) {
+    return false
+  }
   const parsed = parse_s3_url(url)
   return parsed.key.startsWith('photos/')
 }
