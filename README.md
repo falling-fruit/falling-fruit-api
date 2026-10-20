@@ -13,9 +13,9 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
 
 # Layout
 
-- `index.js`: Define routes and generic handlers. Start server.
-- `helpers.js`: Define helper functions.
-- `db/`
+- `src/index.js`: Define routes and generic handlers. Start server.
+- `src/helpers.js`: Define helper functions.
+- `src/db/`
   - `index.js`: Define database connection. Load `pg-promise` with repos:
   - `repos/`
     - `index.js`: Compile all classes:

@@ -1,5 +1,6 @@
 const sql = require('../sql').types
 const _ = require('../../helpers')
+const geo = require('../../geo')
 
 class Types {
   constructor(db, pgp) {
@@ -81,7 +82,7 @@ class Types {
   count({bounds, muni = 'true', zoom = null}) {
     if (zoom) {
       zoom = parseInt(zoom)
-      if (zoom > _.MAX_GRID_ZOOM) {
+      if (zoom > geo.MAX_GRID_ZOOM) {
         zoom = null
       }
     }
@@ -90,14 +91,14 @@ class Types {
     if (zoom === null) {
       filters = [
         "NOT hidden",
-        _.bounds_to_sql(_.parse_bounds(bounds)),
+        geo.bounds_to_sql(geo.parse_bounds(bounds)),
         _.muni_to_sql(muni)
       ]
       values = {where: filters.filter(Boolean).join(' AND ')}
       return this.db.any(sql.count, values)
     }
     filters = [
-      _.bounds_to_sql(_.parse_bounds(bounds), { mercator: true }),
+      geo.bounds_to_sql(geo.parse_bounds(bounds), { mercator: true }),
       _.muni_to_sql(muni)
     ]
     values = {where: filters.filter(Boolean).join(' AND '), zoom: zoom}

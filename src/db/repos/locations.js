@@ -1,6 +1,7 @@
 const sql = require('../sql').locations
 const { parse } = require('dotenv')
 const _ = require('../../helpers')
+const geo = require('../../geo')
 const Changes = require('./changes')
 const Types = require('./types')
 
@@ -54,7 +55,7 @@ class Locations {
     } else {
       filters = [
         'NOT hidden',
-        bounds ? _.bounds_to_sql(_.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
+        bounds ? geo.bounds_to_sql(geo.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
         _.muni_to_sql(muni),
         _.types_array_to_sql(types),
         _.invasive_to_sql(invasive)
@@ -68,7 +69,7 @@ class Locations {
       in_list: ''
     }
     if (center) {
-      const point = _.parse_point(center)
+      const point = geo.parse_point(center)
       values.distance = {
         column: `,
           location <-> ST_SetSRID(
@@ -101,7 +102,7 @@ class Locations {
   count({bounds, muni = 'true', types = null, invasive = 'false'}) {
     const filters = [
       'NOT hidden',
-      _.bounds_to_sql(_.parse_bounds(bounds), { geography: 'location' }),
+      geo.bounds_to_sql(geo.parse_bounds(bounds), { geography: 'location' }),
       _.muni_to_sql(muni),
       _.types_array_to_sql(types),
       _.invasive_to_sql(invasive)
