@@ -4,7 +4,7 @@
 // degrees). Callers must project with src/projection first. Outputs are grid
 // cells, geohashes, and cluster centroids in Mercator meters.
 
-const { EARTH_CIRCUMFERENCE, MAX_GRID_ZOOM } = require('../projection/constants')
+const { EARTH_CIRCUMFERENCE, MAX_GRID_ZOOM } = require('./projection/constants')
 
 const _ = {}
 
