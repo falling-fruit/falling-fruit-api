@@ -1,7 +1,7 @@
 const sql = require('../sql').types
-const _ = require('../../helpers')
 const geo = require('../../geo')
 const sqlf = require('../../sql_formatters')
+const Type = require('../../mappers/type')
 
 class Types {
   constructor(db, pgp) {
@@ -19,7 +19,7 @@ class Types {
   }
 
   locale_to_names(value) {
-    const column = _.locale_to_name(value)
+    const column = Type.locale_to_name(value)
     if (this.names.includes(column)) {
       return [column, ...this.default_names].filter(
         (value, index, array) => array.indexOf(value) === index
@@ -29,55 +29,22 @@ class Types {
   }
 
   async add(obj) {
-    let values = {
-      parent_id: null,
-      common_names: {},
-      scientific_names: [],
-      taxonomic_rank: null,
-      notes: null,
-      pending: true,
-      categories: [],
-      user_id: null,
-      ...obj
-    }
-    values = {
-      ...Object.fromEntries(this.names.map(x => [x, null])),
-      en_synonyms: null,
-      scientific_synonyms: null,
-      category_mask: null,
-      ..._.deconstruct_type(values)
-    }
-    // Determine whether default name is present
-    let has_default = this.default_names.some(name => Boolean(values[name]))
-    // Transfer non-English names to a language_name column, if it exists, or to notes
-    for (const [locale, names] of Object.entries(values.common_names)) {
-      const column = _.locale_to_name(locale)
-      if (this.names.includes(column)) {
-        values[column] = names.join(', ')
-      } else {
-        values.notes = [
-          values.notes || '', `common_names.${locale}: ${names.join(', ')}`
-        ].filter(Boolean).join('\n')
-      }
-      // Use first name as default if no default name is present
-      if (!has_default) {
-        values[this.default_names[0]] = names[0]
-        has_default = true
-      }
-    }
-    delete values.common_names
+    const values = Type.toRow(obj, {
+      nameColumns: this.names,
+      defaultNames: this.default_names
+    })
     const type = await this.db.one(sql.add, values)
-    return _.format_type(type)
+    return Type.fromRow(type)
   }
 
   async show(id) {
     const type = await this.db.one(sql.show, {id: parseInt(id)})
-    return _.format_type(type)
+    return Type.fromRow(type)
   }
 
   async list() {
     const types = await this.db.any(sql.list)
-    return types.map(_.format_type)
+    return types.map(Type.fromRow)
   }
 
   count({bounds, muni = 'true', zoom = null}) {
