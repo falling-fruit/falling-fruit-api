@@ -1,4 +1,4 @@
-const {MAX_GRID_ZOOM, wgs84_to_mercator} = require('./geo')
+const {MAX_GRID_ZOOM, wgs84_to_mercator} = require('./projection')
 
 const _ = {}
 _.wgs84_to_mercator = wgs84_to_mercator

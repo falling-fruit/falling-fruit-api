@@ -1,5 +1,5 @@
 const sql = require('../sql').types
-const geo = require('../../geo')
+const projection = require('../../projection')
 const sqlf = require('../../sql_formatters')
 const Type = require('../../mappers/type')
 const { parse_bounds } = require('../../parsers/bounds')
@@ -51,7 +51,7 @@ class Types {
   count({bounds, muni = 'true', zoom = null}) {
     if (zoom) {
       zoom = parseInt(zoom)
-      if (zoom > geo.MAX_GRID_ZOOM) {
+      if (zoom > projection.MAX_GRID_ZOOM) {
         zoom = null
       }
     }

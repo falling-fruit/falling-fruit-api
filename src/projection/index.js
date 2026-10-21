@@ -1,4 +1,11 @@
-const {EARTH_RADIUS, EARTH_CIRCUMFERENCE, MAX_LATITUDE} = require('./constants')
+// Projection: the WGS84 <-> Web Mercator boundary plus earth constants.
+// This is the single place that knows both coordinate spaces. Everything
+// downstream of `wgs84_to_mercator` (see src/clustering) works in Mercator
+// meters only.
+
+const {
+  EARTH_RADIUS, EARTH_CIRCUMFERENCE, MAX_LATITUDE, MAX_GRID_ZOOM
+} = require('./constants')
 
 const _ = {}
 
@@ -22,17 +29,9 @@ _.wgs84_to_mercator = function({x, y}, clip = false) {
   }
 }
 
-// /**
-//  * Transform point from Web Mercator to WGS84.
-//  *
-//  * @param {Point} point - Point (Web Mercator).
-//  * @returns {Point} Point (WGS84).
-//  */
-// function mercator_to_wgs84({x, y}) {
-//   return {
-//     x: x * (360 / EARTH_CIRCUMFERENCE),
-//     y: 90 - (Math.atan2(1, Math.exp(y / EARTH_RADIUS)) * 360 / Math.PI)
-//   }
-// }
+_.EARTH_RADIUS = EARTH_RADIUS
+_.EARTH_CIRCUMFERENCE = EARTH_CIRCUMFERENCE
+_.MAX_LATITUDE = MAX_LATITUDE
+_.MAX_GRID_ZOOM = MAX_GRID_ZOOM
 
 module.exports = _
