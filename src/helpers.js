@@ -45,24 +45,6 @@ _.parse_datetime = function(value) {
   return value
 }
 
-_.format_location = function(location) {
-  // TEMP: Replace no_season=true with season=[0, 11]
-  if (location.no_season) {
-    location.season_start = 0
-    location.season_stop = 11
-  }
-  delete location.no_season
-  return location
-}
-
-_.format_user = function(user) {
-  if (user.range) {
-    user.range = JSON.parse(user.range)
-  }
-  return user
-}
-
-
 _.set_equal = function(a, b) {
   return a.length === b.length && a.every(value => b.includes(value))
 }

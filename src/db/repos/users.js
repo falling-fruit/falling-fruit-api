@@ -1,6 +1,6 @@
 const sql = require('../sql').users
-const _ = require('../../helpers')
 const passwords = require('../../passwords')
+const User = require('../../mappers/user')
 
 class Users {
   constructor(db, pgp) {
@@ -9,27 +9,21 @@ class Users {
   }
 
   async add(req) {
-    const values = {
-      name: null,
-      bio: null,
-      range: null,
-      announcements_email: true,
-      ...req.body
-    }
+    const values = User.toRow(req.body)
     // Store encrypted password
     values.password = await passwords.hash_password(values.password)
     const user = await this.db.one(sql.add, values)
-    return _.format_user(user)
+    return User.fromRow(user)
   }
 
   async show(id) {
     const user = await this.db.one(sql.show, {id: id})
-    return _.format_user(user)
+    return User.fromRow(user)
   }
 
   async show_public(id) {
     const user = await this.db.one(sql.showPublic, {id: parseInt(id)})
-    return _.format_user(user)
+    return User.fromRow(user)
   }
 
   async edit(req) {
@@ -42,7 +36,7 @@ class Users {
       return this.db.one(sql.editPassword, values)
     }
     const user = await this.db.one(sql.edit, values)
-    return _.format_user(user)
+    return User.fromRow(user)
   }
 
   confirm(id) {

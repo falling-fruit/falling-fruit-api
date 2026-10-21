@@ -1,10 +1,10 @@
 const sql = require('../sql').locations
 const { parse } = require('dotenv')
-const _ = require('../../helpers')
 const geo = require('../../geo')
 const sqlf = require('../../sql_formatters')
 const Changes = require('./changes')
 const Types = require('./types')
+const Location = require('../../mappers/location')
 
 class Locations {
   constructor(db, pgp) {
@@ -15,18 +15,10 @@ class Locations {
   }
 
   async add(obj) {
-    const values = {
-      season_start: null,
-      season_stop: null,
-      access: null,
-      description: null,
-      unverified: false,
-      user_id: null,
-      ...obj
-    }
+    const values = Location.toRow(obj)
     const location = await this.db.one(sql.add, values)
     await this.changes.add({description: 'added', location: location, user_id: location.user_id})
-    return _.format_location(location)
+    return Location.fromRow(location)
   }
 
   async edit(id, obj, user) {
@@ -35,12 +27,12 @@ class Locations {
     await this.changes.add({
       description: 'edited', location: location, user_id: user ? user.id : null
     })
-    return _.format_location(location)
+    return Location.fromRow(location)
   }
 
   async show(id, user) {
     const location = await this.db.one(sql.show, {id: parseInt(id), user_id: user ? user.id : null})
-    return _.format_location(location)
+    return Location.fromRow(location)
   }
 
   async list({ids = null, bounds = null, center = null, muni = 'true', types = null, invasive = 'false', limit = '1000', offset = '0', photo = 'false', locale = null}, user) {
