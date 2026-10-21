@@ -38,31 +38,46 @@ _.types_array_to_sql = function(value) {
 }
 
 /**
- * Convert bounding box to SQL condition.
+ * Convert bounding box to a PostGIS SQL condition on a geometry/geography column.
  *
  * @param {Point[]} bounds - Bounding box (WGS84).
- * @param {boolean} mercator - Whether to use filter on `location` (WGS84 geometry)
- * or `x` and `y` (cached mercator coordinates).
+ * @param {string} geography - Name of the WGS84 geometry/geography column.
+ * @param {number} [epsg=4326] - SRID of the envelope.
  * @returns {string} SQL condition.
  */
-_.bounds_to_sql = function(
-  bounds, { geography = null, epsg = 4326, mercator = false } = {}
-) {
-  var {x, y} = {x: 'lng', y: 'lat'}
-  if (mercator) {
-    var {x, y} = {x: 'x', y: 'y'}
-    bounds = bounds.map(point => _.wgs84_to_mercator(point, clip = true))
-  }
-  if (geography) {
-    return (
-      `${geography} && ST_MakeEnvelope(` +
-      `${bounds[0].x}, ${bounds[0].y}, ${bounds[1].x}, ${bounds[1].y}, ${epsg})`
-    )
-  }
+_.bounds_to_geography_sql = function(bounds, geography, epsg = 4326) {
+  return (
+    `${geography} && ST_MakeEnvelope(` +
+    `${bounds[0].x}, ${bounds[0].y}, ${bounds[1].x}, ${bounds[1].y}, ${epsg})`
+  )
+}
+
+/**
+ * Convert bounding box to a SQL condition on `lng` and `lat` columns (WGS84).
+ *
+ * @param {Point[]} bounds - Bounding box (WGS84).
+ * @returns {string} SQL condition.
+ */
+_.bounds_to_lnglat_sql = function(bounds) {
   const operator = bounds[1].x > bounds[0].x ? 'AND' : 'OR'
   return (
-    `(${x} > ${bounds[0].x} ${operator} ${x} < ${bounds[1].x}) AND ` +
-    `(${y} > ${bounds[0].y} AND ${y} < ${bounds[1].y})`
+    `(lng > ${bounds[0].x} ${operator} lng < ${bounds[1].x}) AND ` +
+    `(lat > ${bounds[0].y} AND lat < ${bounds[1].y})`
+  )
+}
+
+/**
+ * Convert bounding box to a SQL condition on cached mercator `x` and `y` columns.
+ *
+ * @param {Point[]} bounds - Bounding box (WGS84), projected to Web Mercator here.
+ * @returns {string} SQL condition.
+ */
+_.bounds_to_mercator_sql = function(bounds) {
+  bounds = bounds.map(point => _.wgs84_to_mercator(point, true))
+  const operator = bounds[1].x > bounds[0].x ? 'AND' : 'OR'
+  return (
+    `(x > ${bounds[0].x} ${operator} x < ${bounds[1].x}) AND ` +
+    `(y > ${bounds[0].y} AND y < ${bounds[1].y})`
   )
 }
 

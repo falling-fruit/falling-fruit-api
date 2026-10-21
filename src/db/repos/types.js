@@ -60,14 +60,14 @@ class Types {
     if (zoom === null) {
       filters = [
         "NOT hidden",
-        sqlf.bounds_to_sql(parse_bounds(bounds)),
+        sqlf.bounds_to_lnglat_sql(parse_bounds(bounds)),
         sqlf.muni_to_sql(muni)
       ]
       values = {where: filters.filter(Boolean).join(' AND ')}
       return this.db.any(sql.count, values)
     }
     filters = [
-      sqlf.bounds_to_sql(parse_bounds(bounds), { mercator: true }),
+      sqlf.bounds_to_mercator_sql(parse_bounds(bounds)),
       sqlf.muni_to_sql(muni)
     ]
     values = {where: filters.filter(Boolean).join(' AND '), zoom: zoom}

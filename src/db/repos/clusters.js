@@ -22,7 +22,7 @@ class Clusters {
       return []
     }
     const filters = [
-      sqlf.bounds_to_sql(parse_bounds(bounds), { mercator: true }),
+      sqlf.bounds_to_mercator_sql(parse_bounds(bounds)),
       sqlf.zoom_to_sql(zoom),
       sqlf.muni_to_sql(muni),
       sqlf.types_to_sql(types)

@@ -49,7 +49,9 @@ class Locations {
     } else {
       filters = [
         'NOT hidden',
-        bounds ? sqlf.bounds_to_sql(parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
+        bounds ? (center
+          ? sqlf.bounds_to_geography_sql(parse_bounds(bounds), 'location')
+          : sqlf.bounds_to_lnglat_sql(parse_bounds(bounds))) : null,
         sqlf.muni_to_sql(muni),
         sqlf.types_array_to_sql(types),
         sqlf.invasive_to_sql(invasive)
@@ -96,7 +98,7 @@ class Locations {
   count({bounds, muni = 'true', types = null, invasive = 'false'}) {
     const filters = [
       'NOT hidden',
-      sqlf.bounds_to_sql(parse_bounds(bounds), { geography: 'location' }),
+      sqlf.bounds_to_geography_sql(parse_bounds(bounds), 'location'),
       sqlf.muni_to_sql(muni),
       sqlf.types_array_to_sql(types),
       sqlf.invasive_to_sql(invasive)
