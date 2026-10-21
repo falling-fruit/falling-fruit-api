@@ -1,6 +1,7 @@
 const sql = require('../sql').clusters
 const geo = require('../../geo')
 const sqlf = require('../../sql_formatters')
+const { parse_bounds } = require('../../parsers/bounds')
 
 class Clusters {
   constructor(db, pgp) {
@@ -20,7 +21,7 @@ class Clusters {
       return []
     }
     const filters = [
-      sqlf.bounds_to_sql(geo.parse_bounds(bounds), { mercator: true }),
+      sqlf.bounds_to_sql(parse_bounds(bounds), { mercator: true }),
       sqlf.zoom_to_sql(zoom),
       sqlf.muni_to_sql(muni),
       sqlf.types_to_sql(types)

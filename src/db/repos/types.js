@@ -2,6 +2,7 @@ const sql = require('../sql').types
 const geo = require('../../geo')
 const sqlf = require('../../sql_formatters')
 const Type = require('../../mappers/type')
+const { parse_bounds } = require('../../parsers/bounds')
 
 class Types {
   constructor(db, pgp) {
@@ -59,14 +60,14 @@ class Types {
     if (zoom === null) {
       filters = [
         "NOT hidden",
-        sqlf.bounds_to_sql(geo.parse_bounds(bounds)),
+        sqlf.bounds_to_sql(parse_bounds(bounds)),
         sqlf.muni_to_sql(muni)
       ]
       values = {where: filters.filter(Boolean).join(' AND ')}
       return this.db.any(sql.count, values)
     }
     filters = [
-      sqlf.bounds_to_sql(geo.parse_bounds(bounds), { mercator: true }),
+      sqlf.bounds_to_sql(parse_bounds(bounds), { mercator: true }),
       sqlf.muni_to_sql(muni)
     ]
     values = {where: filters.filter(Boolean).join(' AND '), zoom: zoom}

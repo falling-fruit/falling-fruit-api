@@ -1,4 +1,4 @@
-const _ = {}
+// Parser for a single point request parameter (WGS84 'lat,lng').
 
 /**
  * Point coordinates.
@@ -15,7 +15,7 @@ const _ = {}
  * Expects longitude in interval [-180, 180] and latitude in interval [-90, 90].
  * @returns {Point} Parsed point in WGS84 decimal degrees.
  */
-_.parse_point = function(value) {
+function parse_point(value) {
   const latlng = value.split(',').map(parseFloat)
   if (latlng.length != 2 || latlng.some(isNaN)) {
     throw Error('Coordinates not in the format {latitude},{longitude}')
@@ -31,24 +31,4 @@ _.parse_point = function(value) {
   return point
 }
 
-/**
- * Parse bounding box coordinates.
- *
- * @param {string} value - Bounds in the format 'swlat,swlng|nelat,nelng'
- * (WGS84 decimal degrees).
- * @param {boolean} [mercator=false] - Whether to limit latitude to Web Mercator
- * interval [-85.0511, 85.0511].
- * @returns {Point[]} Parsed points in WGS84 decimal degrees.
- */
- _.parse_bounds = function(value, mercator = false) {
-  const points = value.split('|').map(x => _.parse_point(x, mercator))
-  if (points.length != 2) {
-    throw Error('Bounds not in the format {lat},{lng}|{lat},{lng}')
-  }
-  if (points[0].y > points[1].y) {
-    throw Error('Bounds not in the format {swlat},{swlng}|{nelat},{nelng}')
-  }
-  return points
-}
-
-module.exports = _
+module.exports = { parse_point }

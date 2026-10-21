@@ -1,10 +1,11 @@
 const sql = require('../sql').locations
 const { parse } = require('dotenv')
-const geo = require('../../geo')
 const sqlf = require('../../sql_formatters')
 const Changes = require('./changes')
 const Types = require('./types')
 const Location = require('../../mappers/location')
+const { parse_point } = require('../../parsers/point')
+const { parse_bounds } = require('../../parsers/bounds')
 
 class Locations {
   constructor(db, pgp) {
@@ -48,7 +49,7 @@ class Locations {
     } else {
       filters = [
         'NOT hidden',
-        bounds ? sqlf.bounds_to_sql(geo.parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
+        bounds ? sqlf.bounds_to_sql(parse_bounds(bounds), { geography: center ? 'location' : null }) : null,
         sqlf.muni_to_sql(muni),
         sqlf.types_array_to_sql(types),
         sqlf.invasive_to_sql(invasive)
@@ -62,7 +63,7 @@ class Locations {
       in_list: ''
     }
     if (center) {
-      const point = geo.parse_point(center)
+      const point = parse_point(center)
       values.distance = {
         column: `,
           location <-> ST_SetSRID(
@@ -95,7 +96,7 @@ class Locations {
   count({bounds, muni = 'true', types = null, invasive = 'false'}) {
     const filters = [
       'NOT hidden',
-      sqlf.bounds_to_sql(geo.parse_bounds(bounds), { geography: 'location' }),
+      sqlf.bounds_to_sql(parse_bounds(bounds), { geography: 'location' }),
       sqlf.muni_to_sql(muni),
       sqlf.types_array_to_sql(types),
       sqlf.invasive_to_sql(invasive)

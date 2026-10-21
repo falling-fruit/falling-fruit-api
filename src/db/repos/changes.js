@@ -1,6 +1,6 @@
 const sql = require('../sql').changes
 const e = require('express')
-const _ = require('../../helpers')
+const dates = require('../../parsers/date')
 
 class Changes {
   constructor(db, pgp) {
@@ -9,8 +9,8 @@ class Changes {
   }
 
   list({earliest = null, latest = null, user_id = null, range = 'false'}) {
-    earliest = _.parse_datetime(earliest)
-    latest = _.parse_datetime(latest)
+    earliest = dates.parse_datetime(earliest)
+    latest = dates.parse_datetime(latest)
     const filters = ['NOT l.hidden']
     if (earliest) {
       filters.push(`c.created_at >= '${earliest}'::timestamptz`)
