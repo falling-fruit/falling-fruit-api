@@ -1,9 +1,12 @@
 const db = require('../db')
-const _ = require('../helpers')
 const middleware = require('../middleware')
 const makeRouter = require('./makeRouter')
 
 const { router, get, post, put, drop } = makeRouter()
+
+const set_equal = function(a, b) {
+  return a.length === b.length && a.every(value => b.includes(value))
+}
 
 // Routes: Location lists
 post(
@@ -181,7 +184,7 @@ put(
     // Decrement first in case location properties have changed
     if (
       updated.lat != old.lat || updated.lng != old.lng ||
-      updated.muni != old.muni || !_.set_equal(updated.type_ids, old.type_ids)
+      updated.muni != old.muni || !set_equal(updated.type_ids, old.type_ids)
     ) {
       await db.clusters.decrement(old)
       await db.clusters.increment(updated)

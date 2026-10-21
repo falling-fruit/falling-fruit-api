@@ -1,10 +1,28 @@
 require('dotenv').config()
-const _ = require('./helpers')
 const middleware = require('./middleware')
 const routes = require('./routes')
 const express = require('express')
 const cors = require('cors')
 const compression = require('compression')
+
+function is_object(x) {
+  return (!!x) && (x.constructor === Object)
+}
+
+function null_empty_strings(obj) {
+  if (!is_object(obj)) {
+    return obj
+  }
+  const out = {}
+  for (const [key, value] of Object.entries(obj)) {
+    if (is_object(value)) {
+      out[key] = null_empty_strings(value)
+    } else {
+      out[key] = value === "" ? null : value
+    }
+  }
+  return out
+}
 
 // Configuration
 const app = express()
@@ -32,7 +50,7 @@ app.use((req, res, next) => {
   }
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
     // Null empty strings in JSON body
-    req.body = _.null_empty_strings(req.body)
+    req.body = null_empty_strings(req.body)
   }
   return void next()
 })

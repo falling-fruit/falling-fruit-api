@@ -1,8 +1,3 @@
-// Projection: the WGS84 <-> Web Mercator boundary plus earth constants.
-// This is the single place that knows both coordinate spaces. Everything
-// downstream of `wgs84_to_mercator` (see src/clustering) works in Mercator
-// meters only.
-
 const {
   EARTH_RADIUS, EARTH_CIRCUMFERENCE, MAX_LATITUDE, MAX_GRID_ZOOM
 } = require('./constants')
