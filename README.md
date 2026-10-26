@@ -13,8 +13,20 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
 
 # Layout
 
-- `src/index.js`: Define routes and generic handlers. Start server.
-- `src/helpers.js`: Define helper functions.
+- `src/index.ts`: Load configuration and start the server.
+- `src/app.ts`: Assemble the Express app (middleware, routers).
+- `src/dependencies.ts`: Wire up db, mailer, photos, middleware, and routes.
+- `src/routes/`
+  - `index.ts`: Compile all route factories.
+  - `makeRouter.ts`: Router factory with per-route request/response validation.
+  - `openapi.ts`: Compact route spec → OpenAPI operation + validation config.
+  - `validation.ts`: Zod-backed request/response validation errors.
+  - `{resource}.ts`: Route handlers with inline OpenAPI operation specs.
+- `src/schemas/`: Zod schemas, the single source of truth for both runtime
+  validation and the generated OpenAPI spec.
+  - `registry.ts`: Shared `zod-to-openapi` registry and `allOf` helpers.
+  - `schemas.ts`, `geojson.ts`, `properties.ts`: Component schemas.
+  - `parameters.ts`, `security.ts`: Reusable parameters and security schemes.
 - `src/db/`
   - `index.js`: Define database connection. Load `pg-promise` with repos:
   - `repos/`
@@ -75,14 +87,18 @@ e2e tests require a database. `yarn test:e2e` spins one up, migrates, and runs t
 
 ## Documentation
 
-The OpenAPI spec is assembled from three sources:
+The OpenAPI spec is generated from Zod schemas, which are the single source of
+truth for both runtime validation and the documentation:
 
+- `src/schemas/`: Zod component schemas, parameters, and security schemes,
+  registered with [`@asteasolutions/zod-to-openapi`](https://github.com/asteasolutions/zod-to-openapi).
+- `src/routes/*.ts`: Each route declares its OpenAPI operation inline via a
+  compact spec alongside its handler. The same schemas drive request and
+  response validation at runtime.
 - `docs/base.yml`: Static metadata (`info`, `tags`, `servers`).
-- `docs/components/`: Shared `schemas`, `parameters`, and `securitySchemes`.
-- `@openapi` JSDoc blocks above each route in `src/routes/`: the per-path operations.
 
-`scripts/build-openapi.js` merges them (resolving component references to internal
-`#/components/...` pointers) and writes the bundled `docs/openapi.yml`.
+`scripts/build-openapi.ts` registers every schema and route operation, merges
+`base.yml`, and writes the bundled `docs/openapi.yml`.
 
 Build the spec, or build and validate it:
 
@@ -90,3 +106,15 @@ Build the spec, or build and validate it:
 yarn build     # regenerate docs/openapi.yml
 yarn validate  # build, then validate the result
 ```
+
+Type-check the TypeScript sources:
+
+```sh
+yarn typecheck
+```
+
+Request bodies and path parameters are validated against the Zod schemas on
+every request (invalid requests return `400`). Responses are validated too;
+set `STRICT_RESPONSE_VALIDATION=true` to return `500` on a mismatch (the
+default logs a warning and passes the response through). The test environment
+enables strict response validation.

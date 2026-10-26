@@ -1,8 +1,6 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { assertSatisfiesApiSpec } = require('../apiSpec')
-
 const setup = require('../e2eSetup')({ tables: ['users'] })
 
 test('signup with a new email creates a user and sends a confirmation email', async () => {
@@ -12,7 +10,6 @@ test('signup with a new email creates a user and sends a confirmation email', as
   })
 
   assert.equal(result.status, 200)
-  assertSatisfiesApiSpec(result, { method: 'POST', path: '/user' })
   assert.deepEqual(setup.postmark.subjects(), ['Confirmation instructions'])
 
   const user = await setup.db.oneOrNone(
@@ -32,7 +29,6 @@ test('signup with an existing email does not create a duplicate', async () => {
   })
 
   assert.equal(result.status, 200)
-  assertSatisfiesApiSpec(result, { method: 'POST', path: '/user' })
   assert.deepEqual(setup.postmark.subjects(), ['Registration attempt'])
 
   const count = await setup.db.one(

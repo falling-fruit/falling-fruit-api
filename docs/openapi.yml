@@ -43,6 +43,13 @@ info:
     email: info@fallingfruit.org
     url: 'https://fallingfruit.org'
     name: Falling Fruit
+servers:
+  - description: Production (Falling Fruit)
+    url: 'https://fallingfruit.org/api/0.3/'
+  - description: Development (localhost)
+    url: 'http://localhost:3300/api/0.3/'
+  - description: SwaggerHub mock server
+    url: 'https://virtserver.swaggerhub.com/ezwelty/falling-fruit-api/0.3/'
 tags:
   - name: Authentication
     description: 'User authentication, credentials, and account management.'
@@ -67,34 +74,64 @@ tags:
     description: Users can submit problem reports for admin review.
   - name: Imports
     description: Imported datasets.
-servers:
-  - description: Production (Falling Fruit)
-    url: 'https://fallingfruit.org/api/0.3/'
-  - description: Development (localhost)
-    url: 'http://localhost:3300/api/0.3/'
-  - description: SwaggerHub mock server
-    url: 'https://virtserver.swaggerhub.com/ezwelty/falling-fruit-api/0.3/'
 components:
+  securitySchemes:
+    key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: May also be passed as the query parameter `api_key`.
+    token:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: user/token
+          refreshUrl: user/token/refresh
+          scopes: {}
   schemas:
+    email:
+      type: string
+      format: email
+      pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
+      description: Email.
+      example: foo@bar.com
+    password:
+      type: string
+      minLength: 6
+      format: password
+      description: Password.
+      example: f00!bar
+    name:
+      type: string
+      nullable: true
+      minLength: 1
+      description: Display name.
+      example: Ethan
+    bio:
+      type: string
+      nullable: true
+      minLength: 1
+      description: Bio ('about you').
+      example: Mulberries are my favorite fruit.
     Point:
+      type: array
+      items:
+        type: number
+      minItems: 2
+      maxItems: 3
       description: |
         Point coordinates as longitude and latitude (in WGS84 decimal degrees), and optional elevation.
       externalDocs:
         url: 'https://tools.ietf.org/html/rfc7946#section-3.1.1'
-      type: array
-      minItems: 2
-      maxItems: 3
-      items:
-        type: number
     LinearRing:
-      description: |
-        Closed line with four or more points. The first and last MUST contain identical values, and the line MUST follow the right-hand rule with respect to the area it bounds: exterior rings are counterclockwise, and holes are clockwise.
-      externalDocs:
-        url: 'https://tools.ietf.org/html/rfc7946#section-3.1.6'
       type: array
       items:
         $ref: '#/components/schemas/Point'
       minItems: 4
+      description: |
+        Closed line with four or more points. The first and last MUST contain identical values, and the line MUST follow the right-hand rule with respect to the area it bounds: exterior rings are counterclockwise, and holes are clockwise.
+      externalDocs:
+        url: 'https://tools.ietf.org/html/rfc7946#section-3.1.6'
       example:
         - - -105.3736
           - 39.9642
@@ -107,136 +144,123 @@ components:
         - - -105.3736
           - 39.9642
     Polygon:
-      externalDocs:
-        url: 'https://geojson.org/geojson-spec.html#id4'
       type: object
-      required:
-        - type
-        - coordinates
       properties:
         type:
-          description: GeoJSON geometry type.
           type: string
           enum:
             - Polygon
+          description: GeoJSON geometry type.
         coordinates:
-          description: GeoJSON polygon coordinates (WGS84). The first linear ring represents the exterior ring. Any subsequent linear rings represent interior holes.
           type: array
           items:
             $ref: '#/components/schemas/LinearRing'
-    email:
-      description: Email.
-      type: string
-      format: email
-      example: foo@bar.com
-      pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
-    password:
-      description: Password.
-      type: string
-      format: password
-      minLength: 6
-      example: f00!bar
-    name:
-      description: Display name.
-      type: string
-      example: Ethan
-      nullable: true
-      minLength: 1
-    bio:
-      description: Bio ('about you').
-      type: string
-      example: Mulberries are my favorite fruit.
-      nullable: true
-      minLength: 1
-    IdField:
+          description: GeoJSON polygon coordinates (WGS84). The first linear ring represents the exterior ring. Any subsequent linear rings represent interior holes.
       required:
-        - id
+        - type
+        - coordinates
+      externalDocs:
+        url: 'https://geojson.org/geojson-spec.html#id4'
+    IdField:
+      type: object
       properties:
         id:
-          description: Unique identifier.
           type: integer
           minimum: 1
+          description: Unique identifier.
           example: 42
+      required:
+        - id
     LatLngFields:
+      type: object
       properties:
         lat:
-          description: Latitude in WGS84 decimal degrees.
           type: number
           minimum: -85.0511
           maximum: 85.0511
+          description: Latitude in WGS84 decimal degrees.
           example: 45.6789
         lng:
-          description: Longitude in WGS84 decimal degrees.
           type: number
           minimum: -180
           maximum: 180
+          description: Longitude in WGS84 decimal degrees.
           example: -123.45678
     DateFields:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
+          example: '2014-06-19T01:02:03.456Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: 'Date and time last updated in format YYYY-MM-DDThh:mm:ss.sssZ.'
+          example: '2014-07-20T12:34:56.789Z'
       required:
         - created_at
         - updated_at
-      properties:
-        created_at:
-          description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
-          type: string
-          format: date-time
-          example: '2014-06-19T01:02:03.456Z'
-        updated_at:
-          description: 'Date and time last updated in format YYYY-MM-DDThh:mm:ss.sssZ.'
-          type: string
-          format: date-time
-          example: '2014-07-20T12:34:56.789Z'
     Cluster:
-      title: Cluster
-      description: Number of Locations in an area.
       allOf:
         - $ref: '#/components/schemas/LatLngFields'
         - type: object
+          properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+            count:
+              type: integer
+              minimum: 1
+              description: Number of Locations. Locations with multiple Types are counted as their number of Types.
+              example: 768
           required:
             - lat
             - lng
             - count
-          properties:
-            count:
-              type: integer
-              description: Number of Locations. Locations with multiple Types are counted as their number of Types.
-              minimum: 1
-              example: 768
     TypeCount:
-      title: Type count
-      description: Number of Location Types in an area.
       type: object
-      required:
-        - id
-        - count
       properties:
         id:
           type: integer
-          description: Type ID.
           minimum: 1
+          description: Type ID.
           example: 1
         count:
           type: integer
-          description: Number of Locations with that Type ID.
           minimum: 1
+          description: Number of Locations with that Type ID.
           example: 12
+      required:
+        - id
+        - count
+      title: Type count
+      description: Number of Location Types in an area.
     BaseType:
-      title: Type (base)
-      description: Type properties that can be edited.
       type: object
       properties:
         parent_id:
-          description: Type ID of taxonomic parent.
           type: integer
           nullable: true
           minimum: 1
+          description: Type ID of taxonomic parent.
           example: 114
         pending:
-          description: Whether pending admin review. This is always true unless set to false by an admin (not implemented).
           type: boolean
-          example: true
           default: true
+          description: Whether pending admin review. This is always true unless set to false by an admin (not implemented).
+          example: true
         scientific_names:
+          type: array
+          items:
+            type: string
+            minLength: 1
           description: |
             Scientific names, starting with the preferred synonym.
             - Genus (or higher rank): Prunus
@@ -245,15 +269,15 @@ components:
             - Subspecies: Prunus domestica subsp. domestica, Prunus persica var. nucipersica, Brassica oleracea var. capitata f. rubra
             - Hybrid: Prunus x eminens, Prunus cerasus x Prunus fruticosa
             - Cultivar: Prunus persica 'George IV', Prunus domestica subsp. domestica 'Italian', Acer truncatum x platanoides 'Keithsform'
-          type: array
-          items:
-            type: string
-            minLength: 1
           example:
             - Malus pumila
             - Malus domestica
             - Malus communis
         taxonomic_rank:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 9
           description: |
             Taxonomic rank.
             - 0: Polyphyletic
@@ -266,19 +290,15 @@ components:
             - 7: Multispecies
             - 8: Species
             - 9: Subspecies
-          type: integer
-          minimum: 0
-          maximum: 9
-          nullable: true
           example: 8
         common_names:
-          description: 'Common names, starting with the preferred synonym, by language code. Use `zh-hans` for simplified Chinese characters and `zh-hant` for traditional Chinese. Any language not in the example is read and written to the notes. If no scientific name or English (`en`) common name is provided, the first common name is used as the default name.'
           type: object
           additionalProperties:
             type: array
             items:
               type: string
               minLength: 1
+          description: 'Common names, starting with the preferred synonym, by language code. Use `zh-hans` for simplified Chinese characters and `zh-hant` for traditional Chinese. Any language not in the example is read and written to the notes. If no scientific name or English (`en`) common name is provided, the first common name is used as the default name.'
           example:
             ar:
               - تفاح
@@ -321,7 +341,6 @@ components:
             zh-hant:
               - 蘋果
         categories:
-          description: Categories.
           type: array
           items:
             type: string
@@ -330,38 +349,57 @@ components:
               - freegan
               - honeybee
               - grafter
+          description: Categories.
           example:
             - forager
+      title: Type (base)
+      description: Type properties that can be edited.
     SubmitType:
-      title: Type (submit)
-      description: Type properties that can be submitted. At least one name (in `common_names.en` or `scientific_names`) is required.
       allOf:
         - $ref: '#/components/schemas/BaseType'
         - type: object
           properties:
             notes:
-              description: Submission notes.
               type: string
-              minLength: 1
               nullable: true
+              minLength: 1
+              description: Submission notes.
               example: The fruit are edible once cooked.
     Type:
-      title: Type
-      description: All Type properties.
       allOf:
         - $ref: '#/components/schemas/IdField'
         - $ref: '#/components/schemas/DateFields'
         - $ref: '#/components/schemas/BaseType'
         - type: object
-          required:
-            - parent_id
-            - pending
-            - scientific_names
-            - taxonomic_rank
-            - common_names
-            - urls
           properties:
+            parent_id:
+              type: integer
+              nullable: true
+              minimum: 1
+            pending:
+              type: boolean
+            scientific_names:
+              type: array
+              items:
+                type: string
+                minLength: 1
+            taxonomic_rank:
+              type: integer
+              nullable: true
+              minimum: 0
+              maximum: 9
+            common_names:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
             urls:
+              type: object
+              additionalProperties:
+                type: string
+                minLength: 1
               description: |
                 Links to more information, by resource code.
                 - wikipedia: English Wikipedia (https://en.wikipedia.org)
@@ -370,77 +408,107 @@ components:
                 - urban_mushrooms: Urban Mushrooms (http://urbanmushrooms.com)
                 - fruitipedia: Fruitipedia (http://www.fruitipedia.com)
                 - usda: USDA Plants Database (https://plants.usda.gov)
-              type: object
-              additionalProperties:
-                type: string
-                minLength: 1
               example:
                 wikipedia: 'https://en.wikipedia.org/wiki/Malus_domestica'
                 eat_the_weeds: 'https://www.eattheweeds.com/apples-wild-crabapples'
+          required:
+            - parent_id
+            - pending
+            - scientific_names
+            - taxonomic_rank
+            - common_names
+            - urls
     ListLocation:
-      title: Location (list)
       allOf:
         - $ref: '#/components/schemas/IdField'
         - $ref: '#/components/schemas/LatLngFields'
         - type: object
-          required:
-            - lat
-            - lng
-            - type_ids
           properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
             type_ids:
-              description: Type IDs.
               type: array
               items:
                 type: integer
                 minimum: 1
+              description: Type IDs.
               example:
                 - 97
                 - 92
             in_list:
-              description: Whether the Location is in any of the current user's lists. Only included if the user is authenticated.
               type: boolean
+              description: Whether the Location is in any of the current user's lists. Only included if the user is authenticated.
               example: true
             distance:
-              description: Distance in meters from provided centerpoint.
               type: number
               minimum: 0
+              description: Distance in meters from provided centerpoint.
               example: 47.915
             photo:
+              nullable: true
               description: 'Path to review photo thumbnail, if available.'
             type_names:
-              description: Type names.
               type: array
               items:
                 type: string
+              description: Type names.
               example:
                 - Apple
                 - Pear
-    EditLocation:
-      title: Location (edit)
-      description: Location properties that can be edited.
-      allOf:
-        - $ref: '#/components/schemas/LatLngFields'
-        - type: object
           required:
             - lat
             - lng
             - type_ids
+    EditLocation:
+      allOf:
+        - $ref: '#/components/schemas/LatLngFields'
+        - type: object
           properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
             type_ids:
-              description: Type IDs.
               type: array
               items:
                 type: integer
                 minimum: 1
+              description: Type IDs.
               example:
                 - 97
                 - 92
             unverified:
-              description: Whether suspected to be wrong in some way and requires verification.
               type: boolean
+              description: Whether suspected to be wrong in some way and requires verification.
               example: false
             access:
+              anyOf:
+                - type: number
+                  enum:
+                    - 0
+                - type: number
+                  enum:
+                    - 1
+                - type: number
+                  enum:
+                    - 2
+                - type: number
+                  enum:
+                    - 3
+                - type: number
+                  enum:
+                    - 4
+                - nullable: true
               description: |
                 Access level.
                 - 0: Location is on my property.
@@ -448,357 +516,230 @@ components:
                 - 2: Location is on public land.
                 - 3: Location is on private property but overhangs public property.
                 - 4: Location is on private property.
-              type: integer
-              enum:
-                - 0
-                - 1
-                - 2
-                - 3
-                - 4
-              nullable: true
               example: 3
             description:
-              description: Description.
               type: string
-              minLength: 1
               nullable: true
+              minLength: 1
+              description: Description.
               example: Two mulberry trees with a few low branches overhanging the sidewalk.
             season_start:
-              description: First month in season (zero-based).
               type: integer
               minimum: 0
               maximum: 11
+              description: First month in season (zero-based).
               example: 6
             season_stop:
-              description: Last month in season (zero-based).
               type: integer
               minimum: 0
               maximum: 11
+              description: Last month in season (zero-based).
               example: 8
-    AddLocation:
-      title: Location (add)
-      description: Location properties that can be added.
-      allOf:
-        - $ref: '#/components/schemas/EditLocation'
-        - type: object
-          properties:
-            review:
-              $ref: '#/components/schemas/EditReview'
-    Location:
-      title: Location
-      description: All Location properties.
-      allOf:
-        - $ref: '#/components/schemas/IdField'
-        - $ref: '#/components/schemas/EditLocation'
-        - $ref: '#/components/schemas/DateFields'
-        - type: object
           required:
             - lat
             - lng
             - type_ids
-            - author
-            - unverified
-            - access
-            - address
-            - city
-            - state
-            - country
-            - description
-            - season_start
-            - season_stop
-            - muni
-            - lists
-          properties:
-            user_id:
-              description: User ID.
-              type: integer
-              nullable: true
-              minimum: 1
-              example: 1
-            author:
-              description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
-              type: string
-              minLength: 1
-              nullable: true
-              example: Ethan
-            address:
-              description: Address. Either provided for imported locations whose coordinates had to be geocoded from the address or reverse-geocoded from coordinates.
-              type: string
-              minLength: 1
-              nullable: true
-              example: '748 10th Street, Boulder CO 80302, USA'
-            city:
-              description: City (reverse-geocoded from coordinates).
-              type: string
-              minLength: 1
-              nullable: true
-              example: Boulder
-            state:
-              description: State (reverse-geocoded from coordinates).
-              type: string
-              minLength: 1
-              nullable: true
-              example: Colorado
-            country:
-              description: County (reverse-geocoded from coordinates).
-              type: string
-              minLength: 1
-              nullable: true
-              example: United States
-            muni:
-              description: Whether imported from a municipal tree inventory.
-              type: boolean
-              nullable: false
-              example: false
-            import_id:
-              description: Import ID.
-              type: integer
-              nullable: true
-              minimum: 1
-              example: 42
-            import:
-              $ref: '#/components/schemas/Import'
-            reviews:
-              description: Location reviews.
-              type: array
-              items:
-                $ref: '#/components/schemas/Review'
-            lists:
-              description: User's lists that include the Location.
-              type: array
-              items:
-                $ref: '#/components/schemas/LocationList'
-    LocationChange:
-      title: Location change
-      allOf:
-        - $ref: '#/components/schemas/LatLngFields'
-        - type: object
-          required:
-            - lat
-            - lng
-            - created_at
-            - description
-            - location_id
-            - type_ids
-          properties:
-            created_at:
-              description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
-              type: string
-              format: date-time
-              example: '2014-06-19T01:02:03.456Z'
-              nullable: false
-            description:
-              description: |
-                Change type.
-                - `added`: Location added.
-                - `edited`: Location edited.
-                - `visited`: Location reviewed.
-              type: string
-              enum:
-                - added
-                - edited
-                - visited
-              example: added
-              nullable: false
-            location_id:
-              description: Location ID.
-              type: integer
-              nullable: false
-              minimum: 1
-              example: 114
-            type_ids:
-              description: Current location type IDs.
-              type: array
-              items:
-                type: integer
-                minimum: 1
-              example:
-                - 97
-                - 92
-            review_id:
-              description: Review ID. Only defined for `'visited'`.
-              type: integer
-              nullable: true
-              minimum: 1
-              example: 3383
-            user_id:
-              description: User ID.
-              type: integer
-              nullable: true
-              minimum: 1
-              example: 1
-            author:
-              description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
-              type: string
-              minLength: 1
-              nullable: true
-              example: Ethan
-            city:
-              description: Current location city (reverse-geocoded from coordinates).
-              type: string
-              minLength: 1
-              nullable: true
-              example: Boulder
-            state:
-              description: Current location state (reverse-geocoded from coordinates).
-              type: string
-              minLength: 1
-              nullable: true
-              example: Colorado
-            country:
-              description: Current location county (reverse-geocoded from coordinates).
-              type: string
-              minLength: 1
-              nullable: true
-              example: United States
-    EditLocationList:
-      title: Location List (edit)
-      description: Location List properties that can be edited.
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          description: Name.
-          type: string
-          minLength: 1
-          example: My favorite trees
-        description:
-          description: Description.
-          type: string
-          minLength: 1
-          nullable: true
-          example: 'My favorite trees in Boulder, Colorado.'
-    LocationList:
-      title: Location List
-      description: List of saved locations.
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/IdField'
-        - $ref: '#/components/schemas/DateFields'
-        - $ref: '#/components/schemas/EditLocationList'
-        - type: object
-          required:
-            - name
-            - user_id
-          properties:
-            user_id:
-              description: User ID.
-              type: integer
-              nullable: false
-              minimum: 1
-              example: 1
-            locations:
-              description: 'Locations in the list, in order of addition or, for legacy routes, custom arbitrary order.'
-              type: array
-              items:
-                $ref: '#/components/schemas/LocationListLocation'
-    LocationListLocation:
-      title: Location List Location
-      description: Location in a Location List.
-      allOf:
-        - $ref: '#/components/schemas/IdField'
-        - $ref: '#/components/schemas/LatLngFields'
-        - type: object
-          required:
-            - lat
-            - lng
-            - type_ids
-            - added_at
-          properties:
-            type_ids:
-              description: Type IDs.
-              type: array
-              items:
-                type: integer
-                minimum: 1
-              example:
-                - 97
-                - 92
-            added_at:
-              description: 'Date and time added to list, in format YYYY-MM-DDThh:mm:ss.sssZ.'
-              type: string
-              format: date-time
-              example: '2014-06-19T01:02:03.456Z'
-            address:
-              description: Address.
-              type: string
-              minLength: 1
-              nullable: true
-              example: '748 10th Street, Boulder CO 80302, USA'
     BaseReview:
-      title: Review (base)
       type: object
       properties:
         comment:
-          description: Comment.
           type: string
-          minLength: 1
           nullable: true
+          minLength: 1
+          description: Comment.
           example: The sidewalk is stained red with mulberries.
         observed_on:
-          description: Date visited in format YYYY-MM-DD. Cannot be in the future.
           type: string
-          format: date
           nullable: true
+          format: date
+          description: Date visited in format YYYY-MM-DD. Cannot be in the future.
           example: '2014-06-19'
         fruiting:
+          anyOf:
+            - type: number
+              enum:
+                - 0
+            - type: number
+              enum:
+                - 1
+            - type: number
+              enum:
+                - 2
+            - nullable: true
           description: Fruiting status.
-          type: integer
-          enum:
-            - 0
-            - 1
-            - 2
-          nullable: true
           example: 2
         quality_rating:
+          anyOf:
+            - type: number
+              enum:
+                - 0
+            - type: number
+              enum:
+                - 1
+            - type: number
+              enum:
+                - 2
+            - type: number
+              enum:
+                - 3
+            - type: number
+              enum:
+                - 4
+            - nullable: true
           description: Quality rating.
-          type: integer
-          enum:
-            - 0
-            - 1
-            - 2
-            - 3
-            - 4
-          nullable: true
           example: 2
         yield_rating:
+          anyOf:
+            - type: number
+              enum:
+                - 0
+            - type: number
+              enum:
+                - 1
+            - type: number
+              enum:
+                - 2
+            - type: number
+              enum:
+                - 3
+            - type: number
+              enum:
+                - 4
+            - nullable: true
           description: Yield rating.
-          type: integer
-          enum:
-            - 0
-            - 1
-            - 2
-            - 3
-            - 4
-          nullable: true
           example: 3
+      title: Review (base)
     EditReview:
-      title: Review (edit)
-      description: Review properties that can be edited.
       allOf:
         - $ref: '#/components/schemas/BaseReview'
         - type: object
           properties:
             photo_ids:
-              description: IDs of photos to link to the review. Previously linked photos are unlinked if their ids are omitted. Photos are ordered by the order of their ids.
               type: array
-              uniqueItems: true
               items:
                 type: integer
                 minimum: 1
+              description: IDs of photos to link to the review. Previously linked photos are unlinked if their ids are omitted. Photos are ordered by the order of their ids.
+              uniqueItems: true
               example:
                 - 3
                 - 1
                 - 2
+    Photo:
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/DateFields'
+        - type: object
+          properties:
+            thumb:
+              type: string
+              minLength: 1
+              format: uri
+              description: Path to thumbnail (longest dimension <= 100 px).
+              example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/thumb/open-uri20131213-3992-1szjh9k.jpg'
+            medium:
+              type: string
+              minLength: 1
+              format: uri
+              description: Path to medium size file (longest dimension <= 300 px).
+              example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
+            original:
+              type: string
+              minLength: 1
+              format: uri
+              description: Path to large size file (longest dimension <= 2048 px).
+              example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
+          required:
+            - thumb
+            - medium
+            - original
     Review:
-      title: Review
-      description: Observations of and opinions about a Location.
       allOf:
         - $ref: '#/components/schemas/IdField'
         - $ref: '#/components/schemas/BaseReview'
         - $ref: '#/components/schemas/DateFields'
         - type: object
+          properties:
+            location_id:
+              type: integer
+              minimum: 1
+              description: Location ID.
+              example: 3383
+            user_id:
+              type: integer
+              nullable: true
+              minimum: 1
+              description: User ID.
+              example: 1
+            author:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+              example: Ethan
+            comment:
+              type: string
+              nullable: true
+              minLength: 1
+            fruiting:
+              anyOf:
+                - type: number
+                  enum:
+                    - 0
+                - type: number
+                  enum:
+                    - 1
+                - type: number
+                  enum:
+                    - 2
+                - nullable: true
+            quality_rating:
+              anyOf:
+                - type: number
+                  enum:
+                    - 0
+                - type: number
+                  enum:
+                    - 1
+                - type: number
+                  enum:
+                    - 2
+                - type: number
+                  enum:
+                    - 3
+                - type: number
+                  enum:
+                    - 4
+                - nullable: true
+            yield_rating:
+              anyOf:
+                - type: number
+                  enum:
+                    - 0
+                - type: number
+                  enum:
+                    - 1
+                - type: number
+                  enum:
+                    - 2
+                - type: number
+                  enum:
+                    - 3
+                - type: number
+                  enum:
+                    - 4
+                - nullable: true
+            observed_on:
+              type: string
+              nullable: true
+              format: date
+            photos:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/Photo'
+                  - title: Photo
+                    description: Location photo.
           required:
             - location_id
             - user_id
@@ -808,153 +749,661 @@ components:
             - quality_rating
             - yield_rating
             - observed_on
-            - created_at
-            - updated_at
             - photos
-          properties:
-            location_id:
-              description: Location ID.
-              type: integer
-              minimum: 1
-              example: 3383
-            user_id:
-              description: User ID.
-              type: integer
-              nullable: true
-              minimum: 1
-              example: 1
-            author:
-              description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
-              type: string
-              nullable: true
-              example: Ethan
-              minLength: 1
-            photos:
-              type: array
-              items:
-                $ref: '#/components/schemas/Photo'
-    Photo:
-      title: Photo
-      description: Location photo.
+    Import:
       allOf:
         - $ref: '#/components/schemas/IdField'
         - $ref: '#/components/schemas/DateFields'
         - type: object
-          required:
-            - thumb
-            - medium
-            - original
           properties:
-            thumb:
-              description: Path to thumbnail (longest dimension <= 100 px).
+            name:
               type: string
               minLength: 1
-              format: uri
-              example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/thumb/open-uri20131213-3992-1szjh9k.jpg'
-            medium:
-              description: Path to medium size file (longest dimension <= 300 px).
+              description: Name.
+              example: Les arbres de Grenoble
+            url:
               type: string
-              minLength: 1
+              nullable: true
               format: uri
-              example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/medium/open-uri20131213-3992-1szjh9k.jpg'
-            original:
-              description: Path to large size file (longest dimension <= 2048 px).
+              description: Path to a description of the data.
+              example: 'http://data.metropolegrenoble.fr/ckan/dataset/les-arbres-de-grenoble'
+            comments:
               type: string
+              nullable: true
               minLength: 1
-              format: uri
-              example: 'http://s3-us-west-2.amazonaws.com/fallingfruit-production/observations/photos/000/002/745/original/open-uri20131213-3992-1szjh9k.jpg'
-    BaseUser:
-      title: User (base)
+              description: Description and import comments.
+              example: 'Tree inventory of Grenoble, France.'
+            license:
+              type: string
+              nullable: true
+              minLength: 1
+              description: License.
+              example: 'Open Data Commons Open Database License (https://opendefinition.org/licenses/odc-odbl)'
+            muni:
+              type: boolean
+              description: Whether a municipal or university tree inventory.
+              example: true
+            location_count:
+              type: integer
+              minimum: 0
+              description: Number of imported locations.
+              example: 1273
+          required:
+            - name
+            - url
+            - comments
+            - license
+            - muni
+            - location_count
+    EditLocationList:
       type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Name.
+          example: My favorite trees
+        description:
+          type: string
+          nullable: true
+          minLength: 1
+          description: Description.
+          example: 'My favorite trees in Boulder, Colorado.'
       required:
         - name
-        - bio
+      title: Location List (edit)
+      description: Location List properties that can be edited.
+    LocationListLocation:
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/LatLngFields'
+        - type: object
+          properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+            type_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+              description: Type IDs.
+              example:
+                - 97
+                - 92
+            added_at:
+              type: string
+              format: date-time
+              description: 'Date and time added to list, in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              example: '2014-06-19T01:02:03.456Z'
+            address:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Address.
+              example: '748 10th Street, Boulder CO 80302, USA'
+          required:
+            - lat
+            - lng
+            - type_ids
+            - added_at
+    LocationList:
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/DateFields'
+        - $ref: '#/components/schemas/EditLocationList'
+        - type: object
+          properties:
+            user_id:
+              type: integer
+              minimum: 1
+              description: User ID.
+              example: 1
+            name:
+              type: string
+              minLength: 1
+            locations:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/LocationListLocation'
+                  - title: Location List Location
+                    description: Location in a Location List.
+              description: 'Locations in the list, in order of addition or, for legacy routes, custom arbitrary order.'
+          required:
+            - user_id
+            - name
+    AddLocation:
+      allOf:
+        - $ref: '#/components/schemas/LatLngFields'
+        - type: object
+          properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+            type_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+              description: Type IDs.
+              example:
+                - 97
+                - 92
+            unverified:
+              type: boolean
+              description: Whether suspected to be wrong in some way and requires verification.
+              example: false
+            access:
+              anyOf:
+                - type: number
+                  enum:
+                    - 0
+                - type: number
+                  enum:
+                    - 1
+                - type: number
+                  enum:
+                    - 2
+                - type: number
+                  enum:
+                    - 3
+                - type: number
+                  enum:
+                    - 4
+                - nullable: true
+              description: |
+                Access level.
+                - 0: Location is on my property.
+                - 1: I have permission from the owner to add this Location.
+                - 2: Location is on public land.
+                - 3: Location is on private property but overhangs public property.
+                - 4: Location is on private property.
+              example: 3
+            description:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Description.
+              example: Two mulberry trees with a few low branches overhanging the sidewalk.
+            season_start:
+              type: integer
+              minimum: 0
+              maximum: 11
+              description: First month in season (zero-based).
+              example: 6
+            season_stop:
+              type: integer
+              minimum: 0
+              maximum: 11
+              description: Last month in season (zero-based).
+              example: 8
+          required:
+            - lat
+            - lng
+            - type_ids
+        - type: object
+          properties:
+            review:
+              allOf:
+                - $ref: '#/components/schemas/EditReview'
+                - title: Review (edit)
+                  description: Review properties that can be edited.
+    Location:
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/LatLngFields'
+        - type: object
+          properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+            type_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+              description: Type IDs.
+              example:
+                - 97
+                - 92
+            unverified:
+              type: boolean
+              description: Whether suspected to be wrong in some way and requires verification.
+              example: false
+            access:
+              anyOf:
+                - type: number
+                  enum:
+                    - 0
+                - type: number
+                  enum:
+                    - 1
+                - type: number
+                  enum:
+                    - 2
+                - type: number
+                  enum:
+                    - 3
+                - type: number
+                  enum:
+                    - 4
+                - nullable: true
+              description: |
+                Access level.
+                - 0: Location is on my property.
+                - 1: I have permission from the owner to add this Location.
+                - 2: Location is on public land.
+                - 3: Location is on private property but overhangs public property.
+                - 4: Location is on private property.
+              example: 3
+            description:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Description.
+              example: Two mulberry trees with a few low branches overhanging the sidewalk.
+            season_start:
+              type: integer
+              minimum: 0
+              maximum: 11
+              description: First month in season (zero-based).
+              example: 6
+            season_stop:
+              type: integer
+              minimum: 0
+              maximum: 11
+              description: Last month in season (zero-based).
+              example: 8
+          required:
+            - lat
+            - lng
+            - type_ids
+        - $ref: '#/components/schemas/DateFields'
+        - type: object
+          properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+            type_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+            unverified:
+              type: boolean
+            access:
+              anyOf:
+                - type: number
+                  enum:
+                    - 0
+                - type: number
+                  enum:
+                    - 1
+                - type: number
+                  enum:
+                    - 2
+                - type: number
+                  enum:
+                    - 3
+                - type: number
+                  enum:
+                    - 4
+                - nullable: true
+            description:
+              type: string
+              nullable: true
+              minLength: 1
+            season_start:
+              type: integer
+              minimum: 0
+              maximum: 11
+            season_stop:
+              type: integer
+              minimum: 0
+              maximum: 11
+            user_id:
+              type: integer
+              nullable: true
+              minimum: 1
+              description: User ID.
+              example: 1
+            author:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+              example: Ethan
+            address:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Address. Either provided for imported locations whose coordinates had to be geocoded from the address or reverse-geocoded from coordinates.
+              example: '748 10th Street, Boulder CO 80302, USA'
+            city:
+              type: string
+              nullable: true
+              minLength: 1
+              description: City (reverse-geocoded from coordinates).
+              example: Boulder
+            state:
+              type: string
+              nullable: true
+              minLength: 1
+              description: State (reverse-geocoded from coordinates).
+              example: Colorado
+            country:
+              type: string
+              nullable: true
+              minLength: 1
+              description: County (reverse-geocoded from coordinates).
+              example: United States
+            muni:
+              type: boolean
+              description: Whether imported from a municipal tree inventory.
+              example: false
+            import_id:
+              type: integer
+              nullable: true
+              minimum: 1
+              description: Import ID.
+              example: 42
+            import:
+              allOf:
+                - $ref: '#/components/schemas/Import'
+                - title: Import
+                  description: Imported dataset.
+            reviews:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/Review'
+                  - title: Review
+                    description: Observations of and opinions about a Location.
+              description: Location reviews.
+            lists:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/LocationList'
+                  - title: Location List
+                    description: List of saved locations.
+              description: User's lists that include the Location.
+          required:
+            - lat
+            - lng
+            - type_ids
+            - unverified
+            - access
+            - description
+            - season_start
+            - season_stop
+            - author
+            - address
+            - city
+            - state
+            - country
+            - muni
+            - lists
+    LocationChange:
+      allOf:
+        - $ref: '#/components/schemas/LatLngFields'
+        - type: object
+          properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+            created_at:
+              type: string
+              format: date-time
+              description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              example: '2014-06-19T01:02:03.456Z'
+            description:
+              type: string
+              enum:
+                - added
+                - edited
+                - visited
+              description: |
+                Change type.
+                - `added`: Location added.
+                - `edited`: Location edited.
+                - `visited`: Location reviewed.
+              example: added
+            location_id:
+              type: integer
+              minimum: 1
+              description: Location ID.
+              example: 114
+            type_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+              description: Current location type IDs.
+              example:
+                - 97
+                - 92
+            review_id:
+              type: integer
+              nullable: true
+              minimum: 1
+              description: Review ID. Only defined for `'visited'`.
+              example: 3383
+            user_id:
+              type: integer
+              nullable: true
+              minimum: 1
+              description: User ID.
+              example: 1
+            author:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Author name. Either a hardcoded `author` or the current `name` of the associated User.
+              example: Ethan
+            city:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Current location city (reverse-geocoded from coordinates).
+              example: Boulder
+            state:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Current location state (reverse-geocoded from coordinates).
+              example: Colorado
+            country:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Current location county (reverse-geocoded from coordinates).
+              example: United States
+          required:
+            - lat
+            - lng
+            - created_at
+            - description
+            - location_id
+            - type_ids
+    BaseUser:
+      type: object
       properties:
         name:
           $ref: '#/components/schemas/name'
         bio:
           $ref: '#/components/schemas/bio'
+      required:
+        - name
+        - bio
+      title: User (base)
     EditUser:
-      title: User (edit)
-      description: User properties that can be edited.
       allOf:
         - $ref: '#/components/schemas/BaseUser'
         - type: object
-          required:
-            - email
-            - range
-            - announcements_email
           properties:
             email:
               $ref: '#/components/schemas/email'
             range:
-              allOf:
-                - $ref: '#/components/schemas/Polygon'
-                - type: object
-                  description: Foraging range.
-                  nullable: true
+              anyOf:
+                - allOf:
+                    - $ref: '#/components/schemas/Polygon'
+                    - type: object
+                      properties: {}
+                      description: Foraging range.
+                - nullable: true
+              description: Foraging range.
             announcements_email:
-              description: Whether to receive the email newsletter.
               type: boolean
-              example: true
               default: true
+              description: Whether to receive the email newsletter.
+              example: true
+          required:
+            - email
+            - range
+            - announcements_email
     PublicUser:
-      title: User (public)
       allOf:
         - $ref: '#/components/schemas/IdField'
         - $ref: '#/components/schemas/DateFields'
         - $ref: '#/components/schemas/BaseUser'
         - type: object
-          required:
-            - roles
-            - confirmed_at
           properties:
             roles:
-              description: |
-                Roles.
-                - user: Regular user.
-                - admin: Administrator.
               type: array
               items:
                 type: string
                 enum:
                   - user
                   - admin
+              description: |
+                Roles.
+                - user: Regular user.
+                - admin: Administrator.
               example:
                 - user
             confirmed_at:
-              description: 'Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.'
               type: string
-              format: date-time
-              example: '2014-07-20T12:34:56.789Z'
               nullable: true
+              format: date-time
+              description: 'Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              example: '2014-07-20T12:34:56.789Z'
+          required:
+            - roles
+            - confirmed_at
     User:
-      title: User
       allOf:
-        - $ref: '#/components/schemas/PublicUser'
-        - $ref: '#/components/schemas/EditUser'
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/DateFields'
+        - $ref: '#/components/schemas/BaseUser'
+        - type: object
+          properties:
+            roles:
+              type: array
+              items:
+                type: string
+                enum:
+                  - user
+                  - admin
+              description: |
+                Roles.
+                - user: Regular user.
+                - admin: Administrator.
+              example:
+                - user
+            confirmed_at:
+              type: string
+              nullable: true
+              format: date-time
+              description: 'Date and time confirmed in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              example: '2014-07-20T12:34:56.789Z'
+          required:
+            - roles
+            - confirmed_at
+        - $ref: '#/components/schemas/BaseUser'
+        - type: object
+          properties:
+            email:
+              $ref: '#/components/schemas/email'
+            range:
+              anyOf:
+                - allOf:
+                    - $ref: '#/components/schemas/Polygon'
+                    - type: object
+                      properties: {}
+                      description: Foraging range.
+                - nullable: true
+              description: Foraging range.
+            announcements_email:
+              type: boolean
+              default: true
+              description: Whether to receive the email newsletter.
+              example: true
+          required:
+            - email
+            - range
+            - announcements_email
         - type: object
           properties:
             unconfirmed_email:
-              description: Email change pending confirmation.
-              type: string
-              format: email
-              example: noo@bar.com
-              pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
+              allOf:
+                - $ref: '#/components/schemas/email'
+                - description: Email change pending confirmation.
+                  example: noo@bar.com
     EditReport:
-      title: Report (edit)
-      description: Report properties that can be edited.
       type: object
-      required:
-        - location_id
-        - problem_code
       properties:
         location_id:
-          description: Location ID.
           type: integer
           minimum: 1
+          description: Location ID.
           example: 3383
         problem_code:
+          anyOf:
+            - type: number
+              enum:
+                - 0
+            - type: number
+              enum:
+                - 1
+            - type: number
+              enum:
+                - 2
+            - type: number
+              enum:
+                - 3
+            - type: number
+              enum:
+                - 4
+            - type: number
+              enum:
+                - 5
           description: |
             Problem code.
             - 0: Location is spam
@@ -963,36 +1412,29 @@ components:
             - 3: Inappropriate review photo
             - 4: Inappropriate review comment
             - 5: Other (explain below)
-          type: integer
-          enum:
-            - 0
-            - 1
-            - 2
-            - 3
-            - 4
-            - 5
           example: 1
         comment:
+          type: string
+          nullable: true
+          minLength: 1
           description: Comment. Required if `problem_code` is 5.
-          type: string
-          nullable: true
           example: This tree was cut down.
-          minLength: 1
         email:
-          description: 'Email to use for correspondence. If authenticated, defaults to the user''s email. Otherwise, it is required.'
-          type: string
-          format: email
-          example: foo@bar.com
-          pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
+          allOf:
+            - $ref: '#/components/schemas/email'
+            - description: 'Email to use for correspondence. If authenticated, defaults to the user''s email. Otherwise, it is required.'
         name:
-          description: 'Name to use for correspondence. If authenticated, defaults to the user''s name.'
           type: string
-          minLength: 1
           nullable: true
+          minLength: 1
+          description: 'Name to use for correspondence. If authenticated, defaults to the user''s name.'
           example: Ethan
+      required:
+        - location_id
+        - problem_code
+      title: Report (edit)
+      description: Report properties that can be edited.
     Report:
-      title: Report
-      description: Report of a problem with a Location.
       allOf:
         - $ref: '#/components/schemas/IdField'
         - $ref: '#/components/schemas/EditReport'
@@ -1000,12 +1442,32 @@ components:
         - type: object
           properties:
             reporter_id:
-              description: ID of reporting User (if authenticated).
               type: integer
-              minimum: 1
               nullable: true
+              minimum: 1
+              description: ID of reporting User (if authenticated).
               example: 321
             resolution_code:
+              anyOf:
+                - type: number
+                  enum:
+                    - 0
+                - type: number
+                  enum:
+                    - 1
+                - type: number
+                  enum:
+                    - 2
+                - type: number
+                  enum:
+                    - 3
+                - type: number
+                  enum:
+                    - 4
+                - type: number
+                  enum:
+                    - 5
+                - nullable: true
               description: |
                 Resolution code.
                 - 0: Made no changes
@@ -1014,574 +1476,214 @@ components:
                 - 3: Deleted the photo
                 - 4: Deleted the review
                 - 5: Hid the location
-              type: integer
-              enum:
-                - 0
-                - 1
-                - 2
-                - 3
-                - 4
-                - 5
-              nullable: true
               example: 2
             response:
-              description: Response comment.
               type: string
-              minLength: 1
               nullable: true
+              minLength: 1
+              description: Response comment.
               example: Thank you for alerting us!
             responder_id:
-              description: ID of responding User.
               type: integer
+              nullable: true
               minimum: 1
-              nullable: true
-    Import:
-      title: Import
-      description: Imported dataset.
-      allOf:
-        - $ref: '#/components/schemas/IdField'
-        - $ref: '#/components/schemas/DateFields'
-        - type: object
-          required:
-            - name
-            - url
-            - comments
-            - license
-            - muni
-            - location_count
-          properties:
-            name:
-              description: Name.
-              type: string
-              minLength: 1
-              nullable: false
-              example: Les arbres de Grenoble
-            url:
-              description: Path to a description of the data.
-              type: string
-              format: uri
-              nullable: true
-              example: 'http://data.metropolegrenoble.fr/ckan/dataset/les-arbres-de-grenoble'
-            comments:
-              description: Description and import comments.
-              type: string
-              minLength: 1
-              nullable: true
-              example: 'Tree inventory of Grenoble, France.'
-            license:
-              description: License.
-              type: string
-              minLength: 1
-              nullable: true
-              example: 'Open Data Commons Open Database License (https://opendefinition.org/licenses/odc-odbl)'
-            muni:
-              description: Whether a municipal or university tree inventory.
-              type: boolean
-              nullable: false
-              example: true
-            location_count:
-              description: Number of imported locations.
-              type: integer
-              minimum: 0
-              nullable: false
-              example: 1273
+              description: ID of responding User.
     Token:
-      title: Token
       type: object
+      properties:
+        access_token:
+          type: string
+          minLength: 1
+          description: Access token.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        token_type:
+          type: string
+          enum:
+            - bearer
+          description: Token type.
+          example: bearer
+        expires_in:
+          type: integer
+          minimum: 1
+          description: Seconds until the access token expires. It may expire earlier if revoked.
+          example: 900
+        refresh_token:
+          type: string
+          minLength: 1
+          description: Refresh token.
+          example: 6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
       required:
         - access_token
         - token_type
         - expires_in
         - refresh_token
-      properties:
-        access_token:
-          description: Access token.
-          type: string
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
-          minLength: 1
-        token_type:
-          description: Token type.
-          type: string
-          enum:
-            - bearer
-          example: bearer
-        expires_in:
-          description: Seconds until the access token expires. It may expire earlier if revoked.
-          type: integer
-          minimum: 1
-          example: 900
-        refresh_token:
-          description: Refresh token.
-          type: string
-          example: 6bFUlbCG3y1bl5dK6jmv5c45_2FGZchOJzZjvn5766A
-          minLength: 1
+      title: Token
   parameters:
     bounds:
-      name: bounds
-      description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-90, 90] and longitude must be in the interval [-180, 180]. `swlat` must be less than `nelat`, but `swlng` can be larger than `nelng` if the box crosses the line of 180 degrees longitude.'
-      in: query
-      explode: false
-      style: pipeDelimited
-      required: true
       schema:
         type: array
-        minItems: 2
-        maxItems: 2
         items:
           type: string
           pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
+        minItems: 2
+        maxItems: 2
+        description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-90, 90] and longitude must be in the interval [-180, 180]. `swlat` must be less than `nelat`, but `swlng` can be larger than `nelng` if the box crosses the line of 180 degrees longitude.'
         example:
           - '-5,-180'
           - '5,180'
-    zoom:
-      name: zoom
-      description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid.'
+      required: true
+      description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-90, 90] and longitude must be in the interval [-180, 180]. `swlat` must be less than `nelat`, but `swlng` can be larger than `nelng` if the box crosses the line of 180 degrees longitude.'
+      name: bounds
       in: query
+      explode: false
+      style: pipeDelimited
+    zoom:
       schema:
         type: integer
         minimum: 0
         maximum: 14
         default: 0
-    muni:
-      name: muni
-      description: Whether to include Locations imported from municipal tree inventories.
+        description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid.'
+      required: false
+      description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid.'
+      name: zoom
       in: query
+    muni:
       schema:
         type: boolean
         default: true
-    types:
-      name: types
-      description: IDs of Types to include (all by default).
+        description: Whether to include Locations imported from municipal tree inventories.
+      required: false
+      description: Whether to include Locations imported from municipal tree inventories.
+      name: muni
       in: query
-      explode: false
+    types:
       schema:
         type: array
-        uniqueItems: true
         items:
           type: integer
           minimum: 0
         default: null
-    invasive:
-      name: invasive
-      description: Whether to only return Locations with Types locally flagged as invasive species. Note that this parameter is not supported for filtering clusters.
+        description: IDs of Types to include (all by default).
+        uniqueItems: true
+      required: true
+      description: IDs of Types to include (all by default).
+      name: types
       in: query
+      explode: false
+    invasive:
       schema:
         type: boolean
         default: false
+        description: Whether to only return Locations with Types locally flagged as invasive species. Note that this parameter is not supported for filtering clusters.
+      required: false
+      description: Whether to only return Locations with Types locally flagged as invasive species. Note that this parameter is not supported for filtering clusters.
+      name: invasive
+      in: query
     location_id:
-      name: id
-      in: path
-      description: Location ID.
-      required: true
       schema:
         type: integer
         minimum: 1
+        description: Location ID.
+      required: true
+      description: Location ID.
+      name: id
+      in: path
     location_list_id:
+      schema:
+        type: integer
+        minimum: 1
+        description: Location List ID.
+      required: true
+      description: Location List ID.
       name: list_id
       in: path
-      description: Location List ID.
-      required: true
-      schema:
-        type: integer
-        minimum: 1
     type_id:
-      name: id
-      in: path
+      schema:
+        type: integer
+        minimum: 1
+        description: Type ID.
+      required: true
       description: Type ID.
-      required: true
-      schema:
-        type: integer
-        minimum: 1
+      name: id
+      in: path
     review_id:
-      name: id
-      in: path
+      schema:
+        type: integer
+        minimum: 1
+        description: Review ID.
+      required: true
       description: Review ID.
-      required: true
-      schema:
-        type: integer
-        minimum: 1
+      name: id
+      in: path
     user_id:
-      name: id
-      in: path
+      schema:
+        type: integer
+        minimum: 1
+        description: User ID.
+      required: true
       description: User ID.
-      required: true
-      schema:
-        type: integer
-        minimum: 1
-    import_id:
       name: id
       in: path
-      description: Import ID.
-      required: true
+    import_id:
       schema:
         type: integer
         minimum: 1
+        description: Import ID.
+      required: true
+      description: Import ID.
+      name: id
+      in: path
     recaptcha:
-      name: g-recaptcha-response
-      in: header
+      schema:
+        type: string
+        minLength: 1
+        description: |
+          User response token for a Google reCAPTCHA v2 (see https://developers.google.com/recaptcha/docs/verify).
+          May be passed as a header or query parameter, or in the request body.
+          Only required if user authentication (if available for the endpoint) is not provided.
+      required: false
       description: |
         User response token for a Google reCAPTCHA v2 (see https://developers.google.com/recaptcha/docs/verify).
         May be passed as a header or query parameter, or in the request body.
         Only required if user authentication (if available for the endpoint) is not provided.
-      required: false
-      schema:
-        type: string
-        minLength: 1
-        nullable: false
+      name: g-recaptcha-response
+      in: header
     offset:
-      name: offset
-      in: query
-      description: Offset from which to apply `limit`.
       schema:
         type: integer
         minimum: 0
         default: 0
-        nullable: false
-  securitySchemes:
-    key:
-      type: apiKey
-      name: x-api-key
-      in: header
-      description: May also be passed as the query parameter `api_key`.
-    token:
-      type: oauth2
-      flows:
-        password:
-          tokenUrl: user/token
-          refreshUrl: user/token/refresh
-          scopes: {}
+        description: Offset from which to apply `limit`.
+      required: false
+      description: Offset from which to apply `limit`.
+      name: offset
+      in: query
 paths:
-  '/users/{id}':
+  /clusters:
     get:
-      summary: View a user (public).
+      summary: Fetch Clusters.
       tags:
-        - Users
+        - Clusters
       security:
         - key: []
       parameters:
-        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/bounds'
+        - $ref: '#/components/parameters/zoom'
+        - $ref: '#/components/parameters/muni'
+        - $ref: '#/components/parameters/types'
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublicUser'
-  /user:
-    post:
-      summary: Register a new user.
-      description: |
-        When first created, the account is not confirmed and cannot be used.
-        An email is sent with a link that must be clicked to confirm the account.
-
-        `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
-      tags:
-        - Authentication
-      security:
-        - key: []
-      parameters:
-        - $ref: '#/components/parameters/recaptcha'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: '#/components/schemas/EditUser'
-                - type: object
-                  required:
-                    - password
-                  properties:
-                    password:
-                      $ref: '#/components/schemas/password'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    minLength: 1
-                    example: You will receive an email with instructions for how to confirm your email address in a few minutes
-    get:
-      summary: View the user (self).
-      tags:
-        - Authentication
-      security:
-        - key: []
-          token: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-    put:
-      summary: Edit the user (self).
-      description: |
-        - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed. If an account with the new email already exists, a different email is sent.
-        - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
-        - To change email or password, the existing password is required (`password_confirmation`).
-      tags:
-        - Authentication
-      security:
-        - key: []
-          token: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: '#/components/schemas/EditUser'
-              type: object
-              properties:
-                password:
-                  $ref: '#/components/schemas/password'
-                password_confirmation:
-                  description: Current password. Required for email and password change.
-                  type: string
-                  format: password
-                  minLength: 1
-                  example: foo?bar
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-    delete:
-      summary: Delete the user (self).
-      tags:
-        - Authentication
-      security:
-        - key: []
-          token: []
-      responses:
-        '204':
-          description: Success (no content)
-  /user/token:
-    post:
-      summary: Request an access token (password).
-      description: 'Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.'
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - username
-                - password
-              properties:
-                username:
-                  $ref: '#/components/schemas/email'
-                password:
-                  $ref: '#/components/schemas/password'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Token'
-  /user/token/refresh:
-    post:
-      summary: Request an access token (refresh token).
-      description: |
-        Follows the OAuth2 spec for refresh token flow, which requires form data with `grant_type: 'refresh_token'` (ignored) and `refresh_token`.
-      tags:
-        - Authentication
-      security:
-        - key: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - refresh_token
-              properties:
-                refresh_token:
-                  description: Refresh token.
-                  type: string
-                  minLength: 1
-                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
-                grant_type:
-                  description: Grant type.
-                  type: string
-                  enum:
-                    - refresh_token
-                  example: refresh_token
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Token'
-  /user/confirmation:
-    get:
-      summary: Confirm the user (from a link in an email).
-      tags:
-        - Authentication
-      parameters:
-        - name: token
-          description: Email-confirmation token.
-          in: query
-          schema:
-            type: string
-            minLength: 1
-          required: true
-          example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    minLength: 1
-                    example: Your email address has been successfully confirmed
-    post:
-      summary: Confirm the user (from a form).
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - token
-              properties:
-                token:
-                  description: Email-confirmation token.
-                  type: string
-                  minLength: 1
-                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - email
-                properties:
-                  email:
-                    $ref: '#/components/schemas/email'
-  /user/confirmation/retry:
-    post:
-      summary: Request another email-confirmation email.
-      description: Alternate email messages are sent if the email is not found or if the email is already confirmed.
-      tags:
-        - Authentication
-      security:
-        - key: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-              properties:
-                email:
-                  $ref: '#/components/schemas/email'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    minLength: 1
-                    example: You will receive an email with instructions for how to confirm your email address in a few minutes
-  /user/password:
-    put:
-      summary: Set a new password.
-      tags:
-        - Authentication
-      security:
-        - key: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - token
-                - password
-              properties:
-                token:
-                  description: Password-reset token.
-                  type: string
-                  minLength: 1
-                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
-                password:
-                  $ref: '#/components/schemas/password'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  email:
-                    $ref: '#/components/schemas/email'
-  /user/password/reset:
-    post:
-      summary: Request a password-reset email.
-      description: An alternate email message is sent if the email is not found.
-      tags:
-        - Authentication
-      security:
-        - key: []
-      parameters:
-        - $ref: '#/components/parameters/recaptcha'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-              properties:
-                email:
-                  $ref: '#/components/schemas/email'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    minLength: 1
-                    example: You will receive an email with instructions on how to reset your password in a few minutes
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/Cluster'
+                    - title: Cluster
+                      description: Number of Locations in an area.
   /types:
     get:
       summary: Fetch Types.
@@ -1597,7 +1699,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Type'
+                  allOf:
+                    - $ref: '#/components/schemas/Type'
+                    - title: Type
+                      description: All Type properties.
     post:
       summary: Submit new Type.
       description: 'Only an admin can submit a type with `pending: false`.'
@@ -1614,7 +1719,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SubmitType'
+              allOf:
+                - $ref: '#/components/schemas/SubmitType'
+                - title: Type (submit)
+                  description: Type properties that can be submitted. At least one name (in `common_names.en` or `scientific_names`) is required.
       responses:
         '200':
           description: Success
@@ -1623,7 +1731,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Type'
+                  allOf:
+                    - $ref: '#/components/schemas/Type'
+                    - title: Type
+                      description: All Type properties.
   /types/counts:
     get:
       summary: Count Types.
@@ -1634,14 +1745,17 @@ paths:
       parameters:
         - $ref: '#/components/parameters/bounds'
         - $ref: '#/components/parameters/muni'
-        - name: zoom
-          description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid. If provided, only counts the Types of Locations whose Cluster centerpoints at this zoom level fall within `bounds` (faster). Otherwise, a full count is performed using Location coordinates.'
-          in: query
-          schema:
+        - schema:
             type: integer
+            nullable: true
             minimum: 0
             maximum: 14
             default: null
+            description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid. If provided, only counts the Types of Locations whose Cluster centerpoints at this zoom level fall within `bounds` (faster). Otherwise, a full count is performed using Location coordinates.'
+          required: false
+          description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid. If provided, only counts the Types of Locations whose Cluster centerpoints at this zoom level fall within `bounds` (faster). Otherwise, a full count is performed using Location coordinates.'
+          name: zoom
+          in: query
       responses:
         '200':
           description: Success
@@ -1666,114 +1780,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Type'
-  '/reviews/{id}':
-    get:
-      summary: Fetch a Review.
-      tags:
-        - Reviews
-      security:
-        - key: []
-      parameters:
-        - $ref: '#/components/parameters/review_id'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Review'
-    put:
-      tags:
-        - Reviews
-      summary: Edit a Review (author only).
-      description: 'If `fruiting` is provided, `observed_on` is required.'
-      security:
-        - key: []
-          token: []
-      parameters:
-        - $ref: '#/components/parameters/review_id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditReview'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Review'
-    delete:
-      summary: Delete a Review.
-      description: Restricted to the same user that created the review.
-      tags:
-        - Reviews
-      security:
-        - key: []
-          token: []
-      parameters:
-        - $ref: '#/components/parameters/review_id'
-      responses:
-        '204':
-          description: Success (no content)
-  /reports:
-    post:
-      tags:
-        - Reports
-      summary: Create a Report.
-      security:
-        - key: []
-        - key: []
-          token: []
-      parameters:
-        - $ref: '#/components/parameters/recaptcha'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditReport'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Report'
-  /photos:
-    post:
-      tags:
-        - Photos
-      summary: Upload a photo.
-      security:
-        - key: []
-        - key: []
-          token: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - file
-              properties:
-                file:
-                  description: 'File to upload (jpeg, png, webp, gif, or svg). Images are converted to jpeg and resized as needed to a maximum dimension of 2048 pixels.'
-                  type: string
-                  minLength: 1
-                  format: binary
-                  nullable: false
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Photo'
+                allOf:
+                  - $ref: '#/components/schemas/Type'
+                  - title: Type
+                    description: All Type properties.
   /locations/lists:
     post:
       summary: Create a new Location List.
@@ -1794,7 +1804,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LocationList'
+                allOf:
+                  - $ref: '#/components/schemas/LocationList'
+                  - title: Location List
+                    description: List of saved locations.
     get:
       summary: Fetch User's Location Lists.
       tags:
@@ -1803,19 +1816,22 @@ paths:
         - key: []
           token: []
       parameters:
-        - name: embed
-          description: |
-            Additional information to include.
-            - locations: List locations.
-          in: query
-          explode: false
-          schema:
+        - schema:
             type: array
             items:
               type: string
               enum:
                 - locations
-            default: null
+            description: |
+              Additional information to include.
+              - locations: List locations.
+          required: true
+          description: |
+            Additional information to include.
+            - locations: List locations.
+          name: embed
+          in: query
+          explode: false
       responses:
         '200':
           description: Success
@@ -1824,7 +1840,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LocationList'
+                  allOf:
+                    - $ref: '#/components/schemas/LocationList'
+                    - title: Location List
+                      description: List of saved locations.
   '/locations/lists/{list_id}':
     get:
       summary: Get a Location List.
@@ -1835,26 +1854,32 @@ paths:
           token: []
       parameters:
         - $ref: '#/components/parameters/location_list_id'
-        - name: embed
-          description: |
-            Additional information to include.
-            - locations: List locations.
-          in: query
-          explode: false
-          schema:
+        - schema:
             type: array
             items:
               type: string
               enum:
                 - locations
-            default: null
+            description: |
+              Additional information to include.
+              - locations: List locations.
+          required: true
+          description: |
+            Additional information to include.
+            - locations: List locations.
+          name: embed
+          in: query
+          explode: false
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LocationList'
+                allOf:
+                  - $ref: '#/components/schemas/LocationList'
+                  - title: Location List
+                    description: List of saved locations.
     put:
       summary: Edit a Location List.
       tags:
@@ -1876,7 +1901,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LocationList'
+                allOf:
+                  - $ref: '#/components/schemas/LocationList'
+                  - title: Location List
+                    description: List of saved locations.
     delete:
       summary: Delete a Location List.
       tags:
@@ -1926,76 +1954,90 @@ paths:
         - key: []
           token: []
       parameters:
-        - name: ids
-          in: query
-          description: 'Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored and locations are returned whether or not they are hidden.'
-          explode: false
-          schema:
+        - schema:
             type: array
-            uniqueItems: true
             items:
               type: integer
               minimum: 0
             default: null
-        - name: bounds
+            description: 'Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored and locations are returned whether or not they are hidden.'
+            uniqueItems: true
+          required: true
+          description: 'Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored and locations are returned whether or not they are hidden.'
+          name: ids
           in: query
-          description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.'
           explode: false
-          style: pipeDelimited
-          schema:
+        - schema:
             type: array
-            minItems: 2
-            maxItems: 2
             items:
               type: string
               pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
+            minItems: 2
+            maxItems: 2
+            description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.'
             example:
               - '-5,-180'
               - '5,180'
-        - name: center
+          required: true
+          description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.'
+          name: bounds
           in: query
-          description: 'Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].'
           explode: false
-          schema:
+          style: pipeDelimited
+        - schema:
             type: array
-            minItems: 2
-            maxItems: 2
             items:
               type: number
               minimum: -180
               maximum: 180
+            minItems: 2
+            maxItems: 2
+            description: 'Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].'
             example:
               - 1.359
               - 103.807
+          required: true
+          description: 'Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].'
+          name: center
+          in: query
+          explode: false
         - $ref: '#/components/parameters/muni'
         - $ref: '#/components/parameters/types'
         - $ref: '#/components/parameters/invasive'
-        - name: limit
-          in: query
-          description: Maximum number of Locations to return.
-          schema:
+        - schema:
             type: integer
             minimum: 0
             default: 1000
+            description: Maximum number of Locations to return.
+          required: false
+          description: Maximum number of Locations to return.
+          name: limit
+          in: query
         - $ref: '#/components/parameters/offset'
-        - name: photo
-          in: query
+        - schema:
+            type: boolean
+            default: false
+            description: 'Whether to include the path to a review photo thumbnail, if available.'
+          required: false
           description: 'Whether to include the path to a review photo thumbnail, if available.'
-          schema:
+          name: photo
+          in: query
+        - schema:
             type: boolean
             default: false
-        - name: count
-          in: query
+            description: Whether to include the total number of locations matching the query in the `x-total-count` header.
+          required: false
           description: Whether to include the total number of locations matching the query in the `x-total-count` header.
-          schema:
-            type: boolean
-            default: false
-        - name: locale
+          name: count
           in: query
-          description: 'Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`. Ignored if `center` is provided.'
-          schema:
+        - schema:
             type: string
+            description: 'Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`. Ignored if `center` is provided.'
             deprecated: true
+          required: true
+          description: 'Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`. Ignored if `center` is provided.'
+          name: locale
+          in: query
       responses:
         '200':
           description: Success
@@ -2009,12 +2051,14 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ListLocation'
+                  allOf:
+                    - $ref: '#/components/schemas/ListLocation'
+                    - title: Location (list)
     post:
-      tags:
-        - Locations
       summary: Create a Location.
       description: 'A `review` can be included, in which case the result includes the `reviews` property.'
+      tags:
+        - Locations
       security:
         - key: []
         - key: []
@@ -2026,14 +2070,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AddLocation'
+              allOf:
+                - $ref: '#/components/schemas/AddLocation'
+                - title: Location (add)
+                  description: Location properties that can be added.
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Location'
+                allOf:
+                  - $ref: '#/components/schemas/Location'
+                  - title: Location
+                    description: All Location properties.
   /locations/count:
     get:
       summary: Count Locations.
@@ -2068,43 +2118,50 @@ paths:
         - key: []
           token: []
       parameters:
-        - name: earliest
-          in: query
+        - schema:
+            type: string
+            format: date-time
+            default: null
+            description: Earliest UTC datetime of change (inclusive).
+          required: true
           description: Earliest UTC datetime of change (inclusive).
-          schema:
+          name: earliest
+          in: query
+        - schema:
             type: string
             format: date-time
             default: null
-          example: '2024-11-09T00:00:00Z'
-        - name: latest
-          in: query
+            description: Latest UTC datetime of change (exclusive).
+          required: true
           description: Latest UTC datetime of change (exclusive).
-          schema:
-            type: string
-            format: date-time
-            default: null
-          example: null
-        - name: user_id
+          name: latest
           in: query
-          description: User ID of changes to return.
-          schema:
+        - schema:
             type: integer
             minimum: 1
             default: null
-        - name: range
+            description: User ID of changes to return.
+          required: true
+          description: User ID of changes to return.
+          name: user_id
           in: query
-          description: 'Whether to filter changes within the foraging range of the user with `user_id`, rather than by the user.'
-          schema:
+        - schema:
             type: boolean
             default: false
-          example: false
+            description: 'Whether to filter changes within the foraging range of the user with `user_id`, rather than by the user.'
+          required: false
+          description: 'Whether to filter changes within the foraging range of the user with `user_id`, rather than by the user.'
+          name: range
+          in: query
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LocationChange'
+                allOf:
+                  - $ref: '#/components/schemas/LocationChange'
+                  - title: Location change
   '/locations/{id}':
     get:
       summary: Fetch a Location.
@@ -2116,32 +2173,39 @@ paths:
           token: []
       parameters:
         - $ref: '#/components/parameters/location_id'
-        - name: embed
-          description: |
-            Additional information to include.
-            - reviews: Location reviews.
-            - import: Imported dataset.
-          in: query
-          explode: false
-          schema:
+        - schema:
             type: array
             items:
               type: string
               enum:
                 - reviews
                 - import
-            default: null
+            description: |
+              Additional information to include.
+              - reviews: Location reviews.
+              - import: Imported dataset.
+          required: true
+          description: |
+            Additional information to include.
+            - reviews: Location reviews.
+            - import: Imported dataset.
+          name: embed
+          in: query
+          explode: false
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Location'
+                allOf:
+                  - $ref: '#/components/schemas/Location'
+                  - title: Location
+                    description: All Location properties.
     put:
+      summary: Edit a Location.
       tags:
         - Locations
-      summary: Edit a Location.
       security:
         - key: []
         - key: []
@@ -2154,14 +2218,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditLocation'
+              allOf:
+                - $ref: '#/components/schemas/EditLocation'
+                - title: Location (edit)
+                  description: Location properties that can be edited.
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Location'
+                allOf:
+                  - $ref: '#/components/schemas/Location'
+                  - title: Location
+                    description: All Location properties.
     delete:
       summary: Delete a Location.
       description: Restricted to the same user that created the location. Deletion is only permitted if the location is not associated with any reviews other than their own and no other (non-admin) user edited the location in the meantime.
@@ -2192,7 +2262,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Review'
+                  allOf:
+                    - $ref: '#/components/schemas/Review'
+                    - title: Review
+                      description: Observations of and opinions about a Location.
     post:
       summary: Review a Location.
       description: 'If `fruiting` is provided, `observed_on` is required. One of `comment`, `fruiting`, `quality_rating`, `yield_rating`, or `photo_ids` is required.'
@@ -2210,14 +2283,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditReview'
+              allOf:
+                - $ref: '#/components/schemas/EditReview'
+                - title: Review (edit)
+                  description: Review properties that can be edited.
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Review'
+                allOf:
+                  - $ref: '#/components/schemas/Review'
+                  - title: Review
+                    description: Observations of and opinions about a Location.
         '400':
           description: Bad request
           content:
@@ -2226,9 +2305,528 @@ paths:
                 type: object
                 properties:
                   error:
-                    description: Error message
                     type: string
+                    description: Error message
                     example: observed_on is required if fruiting is provided
+                required:
+                  - error
+  '/reviews/{id}':
+    get:
+      summary: Fetch a Review.
+      tags:
+        - Reviews
+      security:
+        - key: []
+      parameters:
+        - $ref: '#/components/parameters/review_id'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Review'
+                  - title: Review
+                    description: Observations of and opinions about a Location.
+    put:
+      summary: Edit a Review (author only).
+      description: 'If `fruiting` is provided, `observed_on` is required.'
+      tags:
+        - Reviews
+      security:
+        - key: []
+          token: []
+      parameters:
+        - $ref: '#/components/parameters/review_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/EditReview'
+                - title: Review (edit)
+                  description: Review properties that can be edited.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Review'
+                  - title: Review
+                    description: Observations of and opinions about a Location.
+    delete:
+      summary: Delete a Review.
+      description: Restricted to the same user that created the review.
+      tags:
+        - Reviews
+      security:
+        - key: []
+          token: []
+      parameters:
+        - $ref: '#/components/parameters/review_id'
+      responses:
+        '204':
+          description: Success (no content)
+  /photos:
+    post:
+      summary: Upload a photo.
+      tags:
+        - Photos
+      security:
+        - key: []
+        - key: []
+          token: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  minLength: 1
+                  format: binary
+                  description: 'File to upload (jpeg, png, webp, gif, or svg). Images are converted to jpeg and resized as needed to a maximum dimension of 2048 pixels.'
+              required:
+                - file
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Photo'
+                  - title: Photo
+                    description: Location photo.
+  '/users/{id}':
+    get:
+      summary: View a user (public).
+      tags:
+        - Users
+      security:
+        - key: []
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PublicUser'
+                  - title: User (public)
+  /user:
+    post:
+      summary: Register a new user.
+      description: |
+
+        When first created, the account is not confirmed and cannot be used.
+        An email is sent with a link that must be clicked to confirm the account.
+
+        `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
+      tags:
+        - Authentication
+      security:
+        - key: []
+      parameters:
+        - $ref: '#/components/parameters/recaptcha'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/BaseUser'
+                - type: object
+                  properties:
+                    email:
+                      $ref: '#/components/schemas/email'
+                    range:
+                      anyOf:
+                        - allOf:
+                            - $ref: '#/components/schemas/Polygon'
+                            - type: object
+                              properties: {}
+                              description: Foraging range.
+                        - nullable: true
+                      description: Foraging range.
+                    announcements_email:
+                      type: boolean
+                      default: true
+                      description: Whether to receive the email newsletter.
+                      example: true
+                  required:
+                    - email
+                    - range
+                    - announcements_email
+                - type: object
+                  properties:
+                    password:
+                      $ref: '#/components/schemas/password'
+                  required:
+                    - password
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    minLength: 1
+                    example: You will receive an email with instructions for how to confirm your email address in a few minutes
+                required:
+                  - message
+    get:
+      summary: View the user (self).
+      tags:
+        - Authentication
+      security:
+        - key: []
+          token: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/User'
+                  - title: User
+    put:
+      summary: Edit the user (self).
+      description: |
+
+        - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed. If an account with the new email already exists, a different email is sent.
+        - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
+        - To change email or password, the existing password is required (`password_confirmation`).
+      tags:
+        - Authentication
+      security:
+        - key: []
+          token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/BaseUser'
+                - type: object
+                  properties:
+                    email:
+                      $ref: '#/components/schemas/email'
+                    range:
+                      anyOf:
+                        - allOf:
+                            - $ref: '#/components/schemas/Polygon'
+                            - type: object
+                              properties: {}
+                              description: Foraging range.
+                        - nullable: true
+                      description: Foraging range.
+                    announcements_email:
+                      type: boolean
+                      default: true
+                      description: Whether to receive the email newsletter.
+                      example: true
+                  required:
+                    - email
+                    - range
+                    - announcements_email
+                - type: object
+                  properties:
+                    password:
+                      $ref: '#/components/schemas/password'
+                    password_confirmation:
+                      type: string
+                      minLength: 1
+                      format: password
+                      description: Current password. Required for email and password change.
+                      example: foo?bar
+                  required:
+                    - password_confirmation
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/User'
+                  - title: User
+    delete:
+      summary: Delete the user (self).
+      tags:
+        - Authentication
+      security:
+        - key: []
+          token: []
+      responses:
+        '204':
+          description: Success (no content)
+  /user/token:
+    post:
+      summary: Request an access token (password).
+      description: 'Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  $ref: '#/components/schemas/email'
+                password:
+                  $ref: '#/components/schemas/password'
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+  /user/token/refresh:
+    post:
+      summary: Request an access token (refresh token).
+      description: |
+        Follows the OAuth2 spec for refresh token flow, which requires form data with `grant_type: 'refresh_token'` (ignored) and `refresh_token`.
+      tags:
+        - Authentication
+      security:
+        - key: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  minLength: 1
+                  description: Refresh token.
+                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+                grant_type:
+                  type: string
+                  enum:
+                    - refresh_token
+                  description: Grant type.
+                  example: refresh_token
+              required:
+                - refresh_token
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+  /user/confirmation:
+    get:
+      summary: Confirm the user (from a link in an email).
+      tags:
+        - Authentication
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            description: Email-confirmation token.
+            example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+          required: true
+          description: Email-confirmation token.
+          name: token
+          in: query
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    minLength: 1
+                    example: Your email address has been successfully confirmed
+                required:
+                  - message
+    post:
+      summary: Confirm the user (from a form).
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  minLength: 1
+                  description: Email-confirmation token.
+                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+              required:
+                - token
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    $ref: '#/components/schemas/email'
+                required:
+                  - email
+  /user/confirmation/retry:
+    post:
+      summary: Request another email-confirmation email.
+      description: Alternate email messages are sent if the email is not found or if the email is already confirmed.
+      tags:
+        - Authentication
+      security:
+        - key: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  $ref: '#/components/schemas/email'
+              required:
+                - email
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    minLength: 1
+                    example: You will receive an email with instructions for how to confirm your email address in a few minutes
+                required:
+                  - message
+  /user/password:
+    put:
+      summary: Set a new password.
+      tags:
+        - Authentication
+      security:
+        - key: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  minLength: 1
+                  description: Password-reset token.
+                  example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+                password:
+                  $ref: '#/components/schemas/password'
+              required:
+                - token
+                - password
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    $ref: '#/components/schemas/email'
+                required:
+                  - email
+  /user/password/reset:
+    post:
+      summary: Request a password-reset email.
+      description: An alternate email message is sent if the email is not found.
+      tags:
+        - Authentication
+      security:
+        - key: []
+      parameters:
+        - $ref: '#/components/parameters/recaptcha'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  $ref: '#/components/schemas/email'
+              required:
+                - email
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    minLength: 1
+                    example: You will receive an email with instructions on how to reset your password in a few minutes
+                required:
+                  - message
+  /reports:
+    post:
+      summary: Create a Report.
+      tags:
+        - Reports
+      security:
+        - key: []
+        - key: []
+          token: []
+      parameters:
+        - $ref: '#/components/parameters/recaptcha'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReport'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Report'
+                  - title: Report
+                    description: Report of a problem with a Location.
   /imports:
     get:
       summary: Fetch Imports.
@@ -2244,7 +2842,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Import'
+                  allOf:
+                    - $ref: '#/components/schemas/Import'
+                    - title: Import
+                      description: Imported dataset.
   '/imports/{id}':
     get:
       summary: Fetch Import.
@@ -2260,25 +2861,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Import'
-  /clusters:
-    get:
-      summary: Fetch Clusters.
-      tags:
-        - Clusters
-      security:
-        - key: []
-      parameters:
-        - $ref: '#/components/parameters/bounds'
-        - $ref: '#/components/parameters/zoom'
-        - $ref: '#/components/parameters/muni'
-        - $ref: '#/components/parameters/types'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cluster'
+                allOf:
+                  - $ref: '#/components/schemas/Import'
+                  - title: Import
+                    description: Imported dataset.

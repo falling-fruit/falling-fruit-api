@@ -1,28 +1,29 @@
-const express = require('express')
-const cors = require('cors')
-const compression = require('compression')
+import express from 'express'
+import type { Request, Response, NextFunction } from 'express'
+import cors from 'cors'
+import compression from 'compression'
 
-function is_object(x) {
-  return (!!x) && (x.constructor === Object)
+function is_object(x: any): boolean {
+  return !!x && x.constructor === Object
 }
 
-function null_empty_strings(obj) {
+function null_empty_strings(obj: any): any {
   if (!is_object(obj)) {
     return obj
   }
-  const out = {}
+  const out: Record<string, any> = {}
   for (const [key, value] of Object.entries(obj)) {
     if (is_object(value)) {
       out[key] = null_empty_strings(value)
     } else {
-      out[key] = value === "" ? null : value
+      out[key] = value === '' ? null : value
     }
   }
   return out
 }
 
-function createApp({ middleware, routes, apiBase }) {
-  const app = express()
+function createApp({ middleware, routes, apiBase }: any) {
+  const app: any = express()
   app.use(compression())
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
@@ -30,18 +31,20 @@ function createApp({ middleware, routes, apiBase }) {
   // CORS
   // https://httptoolkit.tech/blog/cache-your-cors
   // https://www.moesif.com/blog/technical/cors/Authoritative-Guide-to-CORS-Cross-Origin-Resource-Sharing-for-REST-APIs
-  app.use(cors({
-    // Browser cache time for preflight responses (Access-Control-Max-Age)
-    maxAge: 86400, // seconds
-    // Allow us to manually add to preflights
-    preflightContinue: true
-  }))
+  app.use(
+    cors({
+      // Browser cache time for preflight responses (Access-Control-Max-Age)
+      maxAge: 86400, // seconds
+      // Allow us to manually add to preflights
+      preflightContinue: true,
+    }),
+  )
 
   // Register default handlers
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'OPTIONS') {
       // Add cache-control to preflight responses
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Cache-Control', 'public, max-age=86400')
       // Vary: origin set automatically
       return void res.end()
     }
@@ -53,13 +56,10 @@ function createApp({ middleware, routes, apiBase }) {
   })
 
   // Routes: Docs
-  app.use(
-    `${apiBase}/openapi.yml`,
-    express.static('docs/openapi.yml')
-  )
+  app.use(`${apiBase}/openapi.yml`, express.static('docs/openapi.yml'))
 
   // Pre-route middleware
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     const skip_api_key = [
       // OpenAPI OAuth2 password flow
       `${apiBase}/user/token`,
@@ -74,11 +74,11 @@ function createApp({ middleware, routes, apiBase }) {
     return middleware.check_api_key(req, res, next)
   })
 
-  for (const router of Object.values(routes)) {
+  for (const router of Object.values(routes) as any[]) {
     app.use(apiBase, router)
   }
 
   return app
 }
 
-module.exports = createApp
+export = createApp
