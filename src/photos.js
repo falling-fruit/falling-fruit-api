@@ -1,7 +1,5 @@
-require('dotenv').config()
 const fs = require('fs')
 const path = require('path')
-const aws = require('aws-sdk')
 const sharp = require('sharp')
 
 function createPhotos({s3}) {
@@ -109,37 +107,5 @@ function createPhotos({s3}) {
   return photos
 }
 
-const logging_s3 = {
-  upload({Key}) {
-    return {
-      promise() {
-        const base = (process.env.API_ORIGIN || '').replace(/\/+$/, '')
-        const location = `${base}/uploads/${Key.split(path.sep).join('/')}`
-        console.log(`[s3 disabled] upload Key: ${Key} -> ${location}`)
-        return Promise.resolve({Location: location})
-      }
-    }
-  },
-  copyObject({CopySource, Key}) {
-    return {
-      promise() {
-        console.log(`[s3 disabled] copyObject ${CopySource} -> ${Key}`)
-        return Promise.resolve({})
-      }
-    }
-  }
-}
+module.exports = createPhotos
 
-const default_s3 = process.env.S3_DISABLED
-  ? logging_s3
-  : new aws.S3({
-      region: process.env.S3_REGION,
-      accessKeyId: process.env.S3_ACCESS_KEY_ID,
-      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-      apiVersion: '2006-03-01'
-    })
-
-const photos = createPhotos({s3: default_s3})
-photos.createPhotos = createPhotos
-
-module.exports = photos

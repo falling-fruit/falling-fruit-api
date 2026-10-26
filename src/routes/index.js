@@ -1,13 +1,17 @@
-module.exports = {
-  clusters: require('./clusters'),
-  types: require('./types'),
-  locations: require('./locations'),
-  tiles: require('./tiles'),
-  reviews: require('./reviews'),
-  photos: require('./photos'),
-  users: require('./users'),
-  user: require('./user'),
-  postmark: require('./postmark'),
-  reports: require('./reports'),
-  imports: require('./imports')
+function makeRoutes(services) {
+  return {
+    clusters: require('./clusters')(services),
+    types: require('./types')(services),
+    locations: require('./locations')(services),
+    tiles: require('./tiles')(services),
+    reviews: require('./reviews')(services),
+    photos: require('./photos')(services),
+    users: require('./users')(services),
+    user: require('./user')(services),
+    postmark: require('./postmark')(services),
+    reports: require('./reports')(services),
+    imports: require('./imports')(services)
+  }
 }
+
+module.exports = makeRoutes

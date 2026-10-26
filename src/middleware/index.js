@@ -1,9 +1,17 @@
-const middleware = {}
+const makeCheckApiKey = require('./check_api_key')
+const makeAuthenticate = require('./authenticate')
+const authenticate_postmark = require('./authenticate_postmark')
+const recaptcha = require('./recaptcha')
+const test_review = require('./test_review')
 
-middleware.check_api_key = require('./check_api_key')
-middleware.authenticate = require('./authenticate')
-middleware.authenticate_postmark = require('./authenticate_postmark')
-middleware.recaptcha = require('./recaptcha')
-middleware.test_review = require('./test_review')
+function makeMiddleware({db, tokenizer}) {
+  return {
+    check_api_key: makeCheckApiKey({db}),
+    authenticate: makeAuthenticate({tokenizer}),
+    authenticate_postmark,
+    recaptcha,
+    test_review
+  }
+}
 
-module.exports = middleware
+module.exports = makeMiddleware

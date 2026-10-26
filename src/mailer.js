@@ -1,6 +1,3 @@
-require('dotenv').config()
-const postmark = require('postmark')
-
 function createMailer({client}) {
   const mailer = {}
 
@@ -131,21 +128,5 @@ mailer.send_password_reset_not_found = function(user) {
   return mailer
 }
 
-const logging_client = {
-  sendEmail({To, Subject, Tag, HtmlBody}) {
-    console.log(
-      `[email disabled] To: ${To} | Subject: ${Subject} | Tag: ${Tag}\n` +
-      HtmlBody
-    )
-    return Promise.resolve()
-  }
-}
+module.exports = createMailer
 
-const default_client = process.env.POSTMARK_DISABLED
-  ? logging_client
-  : new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
-
-const mailer = createMailer({client: default_client})
-mailer.createMailer = createMailer
-
-module.exports = mailer

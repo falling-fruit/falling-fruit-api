@@ -1,8 +1,7 @@
-const db = require('../db')
-const middleware = require('../middleware')
 const makeRouter = require('./makeRouter')
 
-const { router, get, post, put, drop } = makeRouter()
+module.exports = function({ db, middleware }) {
+  const { router, get, post, put, drop } = makeRouter()
 
 get(
   '/:id',
@@ -44,4 +43,5 @@ drop(
   }
 )
 
-module.exports = router
+  return router
+}

@@ -1,13 +1,10 @@
-const db = require('../db')
 const passwords = require('../passwords')
-const mailer = require('../mailer')
-const middleware = require('../middleware')
 const multer = require('multer')
 const uploads = multer({ dest: 'uploads' })
-const tokenizer = new (require('../tokens'))()
 const makeRouter = require('./makeRouter')
 
-const { router, get, post, put, drop } = makeRouter()
+module.exports = function({ mailer, db, middleware, tokenizer }) {
+  const { router, get, post, put, drop } = makeRouter()
 
 // Routes: Users (private)
 post(
@@ -312,4 +309,5 @@ post(
   }
 )
 
-module.exports = router
+  return router
+}

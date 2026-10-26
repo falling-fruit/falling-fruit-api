@@ -1,5 +1,5 @@
 const express = require('express')
-const pgp = require('pg-promise')
+const { queryResultErrorCode } = require('pg-promise').errors
 
 function makeRouter() {
   const router = express.Router({ mergeParams: true })
@@ -15,7 +15,7 @@ function makeRouter() {
         }
       } catch (err) {
         console.log('[caught]', err || err.message)
-        if (method === 'get' && err.code === pgp.errors.queryResultErrorCode.noData) {
+        if (method === 'get' && err.code === queryResultErrorCode.noData) {
           return void res.status(404).json({
             error: 'Not found'
           })

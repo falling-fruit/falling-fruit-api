@@ -1,9 +1,67 @@
 require('dotenv').config()
-const middleware = require('./middleware')
-const routes = require('./routes')
+const path = require('path')
+const postmark = require('postmark')
+const aws = require('aws-sdk')
+const makeDb = require('./db')
+const Tokenizer = require('./tokens')
+const makeMiddleware = require('./middleware')
+const createMailer = require('./mailer')
+const createPhotos = require('./photos')
+const makeRoutes = require('./routes')
 const express = require('express')
 const cors = require('cors')
 const compression = require('compression')
+
+const logging_postmark_client = {
+  sendEmail({To, Subject, Tag, HtmlBody}) {
+    console.log(
+      `[email disabled] To: ${To} | Subject: ${Subject} | Tag: ${Tag}\n` +
+      HtmlBody
+    )
+    return Promise.resolve()
+  }
+}
+
+const logging_s3 = {
+  upload({Key}) {
+    return {
+      promise() {
+        const base = (process.env.API_ORIGIN || '').replace(/\/+$/, '')
+        const location = `${base}/uploads/${Key.split(path.sep).join('/')}`
+        console.log(`[s3 disabled] upload Key: ${Key} -> ${location}`)
+        return Promise.resolve({Location: location})
+      }
+    }
+  },
+  copyObject({CopySource, Key}) {
+    return {
+      promise() {
+        console.log(`[s3 disabled] copyObject ${CopySource} -> ${Key}`)
+        return Promise.resolve({})
+      }
+    }
+  }
+}
+
+const postmark_client = process.env.POSTMARK_DISABLED
+  ? logging_postmark_client
+  : new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
+
+const s3_client = process.env.S3_DISABLED
+  ? logging_s3
+  : new aws.S3({
+      region: process.env.S3_REGION,
+      accessKeyId: process.env.S3_ACCESS_KEY_ID,
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+      apiVersion: '2006-03-01'
+    })
+
+const db = makeDb(process.env.DB, true)
+const tokenizer = new Tokenizer()
+const middleware = makeMiddleware({ db, tokenizer })
+const mailer = createMailer({ client: postmark_client })
+const photos = createPhotos({ s3: s3_client })
+const routes = makeRoutes({ db, tokenizer, middleware, mailer, photos })
 
 function is_object(x) {
   return (!!x) && (x.constructor === Object)

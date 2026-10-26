@@ -1,11 +1,9 @@
-const db = require('../db')
-const photos = require('../photos')
-const middleware = require('../middleware')
 const multer = require('multer')
 const uploads = multer({ dest: 'uploads' })
 const makeRouter = require('./makeRouter')
 
-const { router, get, post, put, drop } = makeRouter()
+module.exports = function({ db, middleware, photos }) {
+  const { router, get, post, put, drop } = makeRouter()
 
 post(
   '/',
@@ -18,4 +16,5 @@ post(
   }
 )
 
-module.exports = router
+  return router
+}

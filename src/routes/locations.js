@@ -1,8 +1,7 @@
-const db = require('../db')
-const middleware = require('../middleware')
 const makeRouter = require('./makeRouter')
 
-const { router, get, post, put, drop } = makeRouter()
+module.exports = function({ db, middleware }) {
+  const { router, get, post, put, drop } = makeRouter()
 
 const set_equal = function(a, b) {
   return a.length === b.length && a.every(value => b.includes(value))
@@ -257,4 +256,5 @@ post(
   }
 )
 
-module.exports = router
+  return router
+}
