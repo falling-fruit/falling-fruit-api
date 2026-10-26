@@ -63,6 +63,16 @@ yarn start
 
 Visit http://localhost:3300.
 
+## Testing
+
+Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner, split by file naming convention:
+
+- `yarn test`: run everything (unit and e2e).
+- `yarn test:unit`: run unit tests only (`test/**/*.test.js`).
+- `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.js`).
+
+e2e tests require a database. Use `yarn e2e` to spin one up, migrate, and run them.
+
 ## Documentation
 
 Validate and build the OpenAPI documentation:

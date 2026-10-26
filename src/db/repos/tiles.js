@@ -1,5 +1,4 @@
 const sql = require('../sql').tiles
-const _ = require('../../helpers')
 
 class Tiles {
   constructor(db, pgp) {

@@ -1,6 +1,5 @@
 const sql = require('../sql').reviews
 const Changes = require('./changes')
-const _ = require('../../helpers')
 
 class Reviews {
   constructor(db, pgp) {

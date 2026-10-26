@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgis/postgis:14-3.4
+        env:
+          POSTGRES_USER: fallingfruit
+          POSTGRES_PASSWORD: fallingfruit
+          POSTGRES_DB: fallingfruit_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fallingfruit -d fallingfruit_db"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+
+    env:
+      DATABASE_URL: postgres://fallingfruit:fallingfruit@localhost:5432/fallingfruit_db?sslmode=disable
+      DB: postgres://fallingfruit:fallingfruit@localhost:5432/fallingfruit_db?sslmode=disable
+      DBMATE_MIGRATIONS_DIR: ./migrations
+      DBMATE_NO_DUMP_SCHEMA: "1"
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create PostGIS extensions
+        env:
+          PGPASSWORD: fallingfruit
+        run: |
+          psql -h localhost -U fallingfruit -d fallingfruit_db \
+            -c "CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;" \
+            -c "CREATE EXTENSION IF NOT EXISTS intarray WITH SCHEMA public;"
+
+      - name: Install dbmate
+        run: |
+          sudo curl -fsSL \
+            -o /usr/local/bin/dbmate \
+            https://github.com/amacneil/dbmate/releases/download/v2.36.0/dbmate-linux-amd64
+          sudo chmod +x /usr/local/bin/dbmate
+
+      - name: Apply migrations
+        run: dbmate up
+
+      - name: Run tests
+        run: yarn test
