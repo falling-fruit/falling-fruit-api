@@ -61,11 +61,6 @@ app.use(
   express.static('docs/openapi.yml')
 )
 
-// Routes: Locally stored photos (only when S3 is disabled for local dev)
-if (process.env.S3_DISABLED) {
-  app.use('/uploads', express.static('uploads'))
-}
-
 // Pre-route middleware
 app.use((req, res, next) => {
   const skip_api_key = [
