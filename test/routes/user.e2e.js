@@ -1,15 +1,18 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
+const { assertSatisfiesApiSpec } = require('../apiSpec')
+
 const setup = require('../e2eSetup')({ tables: ['users'] })
 
 test('signup with a new email creates a user and sends a confirmation email', async () => {
-  const { status } = await setup.request('/user', {
+  const result = await setup.request('/user', {
     method: 'POST',
     body: { email: 'New.User@example.com', password: 'supersecret' }
   })
 
-  assert.equal(status, 200)
+  assert.equal(result.status, 200)
+  assertSatisfiesApiSpec(result, { method: 'POST', path: '/user' })
   assert.deepEqual(setup.postmark.subjects(), ['Confirmation instructions'])
 
   const user = await setup.db.oneOrNone(
@@ -23,12 +26,13 @@ test('signup with a new email creates a user and sends a confirmation email', as
 test('signup with an existing email does not create a duplicate', async () => {
   await setup.db.users.add({ body: { email: 'taken@example.com', password: 'supersecret' } })
 
-  const { status } = await setup.request('/user', {
+  const result = await setup.request('/user', {
     method: 'POST',
     body: { email: 'Taken@example.com', password: 'anotherpass' }
   })
 
-  assert.equal(status, 200)
+  assert.equal(result.status, 200)
+  assertSatisfiesApiSpec(result, { method: 'POST', path: '/user' })
   assert.deepEqual(setup.postmark.subjects(), ['Registration attempt'])
 
   const count = await setup.db.one(
