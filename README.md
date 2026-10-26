@@ -71,7 +71,7 @@ Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner,
 - `yarn test:unit`: run unit tests only (`test/**/*.test.js`).
 - `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.js`).
 
-e2e tests require a database. Use `yarn e2e` to spin one up, migrate, and run them.
+e2e tests require a database. `yarn test:e2e` spins one up, migrates, and runs them.
 
 ## Documentation
 

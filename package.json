@@ -18,13 +18,12 @@
   "license": "GPL-3.0",
   "scripts": {
     "start": "node src/index.js",
-    "test": "node --test 'test/**/*.test.js' 'test/**/*.e2e.js'",
+    "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "node --test 'test/**/*.test.js'",
-    "test:e2e": "node --test 'test/**/*.e2e.js'",
+    "test:e2e": "yarn db:up && yarn db:migrate && node --test 'test/**/*.e2e.js'",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down -v",
     "db:migrate": "dbmate --env-file .env.test up",
-    "e2e": "yarn db:up && yarn db:migrate && yarn test:e2e",
     "validate": "npx swagger-cli validate docs/index.yml",
     "build": "npx swagger-cli bundle --type=yaml docs/index.yml > docs/openapi.yml"
   },
