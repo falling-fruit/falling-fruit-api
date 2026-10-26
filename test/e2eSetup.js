@@ -5,6 +5,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env.test') })
 
 const makeDb = require('../src/db')
 const createDependencies = require('../src/dependencies')
+const { createDependenciesForClients } = createDependencies
 const createApp = require('../src/app')
 
 const JWT_SECRET = process.env.JWT_SECRET || 'test-secret'
@@ -62,13 +63,18 @@ class E2ESetup {
   }
 
   async start() {
-    const { middleware, routes } = createDependencies({
-      db: this.db,
-      jwtSecret: JWT_SECRET,
-      postmarkClient: this.postmark,
-      s3Client: this.s3,
-      recaptcha: null
-    })
+    const { middleware, routes } = createDependenciesForClients(
+      {
+        local: true,
+        jwtSecret: JWT_SECRET,
+      },
+      {
+        db: this.db,
+        postmarkClient: this.postmark,
+        s3Client: this.s3,
+        recaptcha: null,
+      },
+    )
     const app = createApp({ middleware, routes, apiBase: API_BASE })
     await this.reset()
     this.server = await new Promise((resolve) => {

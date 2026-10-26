@@ -9,6 +9,7 @@ const createMailer = require('./mailer')
 const createPhotos = require('./photos')
 const makeMiddleware = require('./middleware')
 import makeRoutes from './routes'
+import type { Config } from './config'
 
 function createLoggingPostmarkClient() {
   return {
@@ -45,40 +46,50 @@ function createLoggingS3({ apiOrigin }: any) {
   }
 }
 
-function createDependencies(config: any) {
-  const postmark_client =
-    config.postmarkClient ||
-    (config.local
-      ? createLoggingPostmarkClient()
-      : new postmark.ServerClient(config.postmarkApiToken))
+function createDependencies(config: Config) {
+  const db = makeDb(config.dbUrl, true)
 
-  const s3_client =
-    config.s3Client ||
-    (config.local
-      ? createLoggingS3({ apiOrigin: config.apiOrigin })
-      : new aws.S3({
-          region: config.s3Region,
-          accessKeyId: config.s3AccessKeyId,
-          secretAccessKey: config.s3SecretAccessKey,
-          apiVersion: '2006-03-01',
-        }))
+  let postmarkClient
+  let s3Client
+  let recaptcha
+  if (config.local) {
+    postmarkClient = createLoggingPostmarkClient()
+    s3Client = createLoggingS3({ apiOrigin: config.apiOrigin })
+    recaptcha = null
+  } else {
+    postmarkClient = new postmark.ServerClient(config.postmarkApiToken)
+    s3Client = new aws.S3({
+      region: config.s3Region,
+      accessKeyId: config.s3AccessKeyId,
+      secretAccessKey: config.s3SecretAccessKey,
+      apiVersion: '2006-03-01',
+    })
+    recaptcha = new RecaptchaV2(
+      config.recaptchaSiteKey,
+      config.recaptchaSecretKey,
+    )
+  }
 
-  const recaptcha =
-    'recaptcha' in config
-      ? config.recaptcha
-      : config.local
-        ? null
-        : new RecaptchaV2(config.recaptchaSiteKey, config.recaptchaSecretKey)
+  return createDependenciesForClients(config, {
+    db,
+    postmarkClient,
+    s3Client,
+    recaptcha,
+  })
+}
 
-  const db = config.db || makeDb(config.dbUrl, true)
+function createDependenciesForClients(
+  config: Config,
+  { db: any, postmarkClient:any, s3Client:any, recaptcha:any }
+) {
   const tokenizer = new Tokenizer(config.jwtSecret)
-  const mailer = createMailer({ client: postmark_client })
-  const photos = createPhotos({ s3: s3_client })
+  const mailer = createMailer({ client: postmarkClient })
+  const photos = createPhotos({ s3: s3Client })
   const middleware = makeMiddleware({
     db,
     tokenizer,
     recaptcha,
-    postmarkSecret: config.postmarkSecret,
+    postmarkSecret: config.local ? undefined : config.postmarkSecret,
   })
   const routes = makeRoutes({
     db,
@@ -86,11 +97,15 @@ function createDependencies(config: any) {
     middleware,
     mailer,
     photos,
-    postmarkServerId: config.postmarkServerId,
-    postmarkBroadcastStream: config.postmarkBroadcastStream,
+    postmarkServerId: config.local ? undefined : config.postmarkServerId,
+    postmarkBroadcastStream: config.local
+      ? undefined
+      : config.postmarkBroadcastStream,
   })
 
   return { db, tokenizer, mailer, photos, middleware, routes }
 }
+
+createDependencies.createDependenciesForClients = createDependenciesForClients
 
 export = createDependencies
