@@ -6,10 +6,15 @@ const local = process.env.NODE_ENV === 'development'
 
 const PRODUCTION_VARS = [
   'POSTMARK_API_TOKEN',
+  'POSTMARK_SECRET',
+  'POSTMARK_SERVER_ID',
+  'POSTMARK_BROADCAST_STREAM',
   'S3_REGION',
   'S3_ACCESS_KEY_ID',
   'S3_SECRET_ACCESS_KEY',
   'S3_BUCKET',
+  'RECAPTCHA_SITE_KEY',
+  'RECAPTCHA_SECRET_KEY',
 ]
 
 const setVars = PRODUCTION_VARS.filter((name) => !!process.env[name])
@@ -34,9 +39,14 @@ const config = {
   jwtSecret: process.env.JWT_SECRET,
   apiOrigin: process.env.API_ORIGIN,
   postmarkApiToken: process.env.POSTMARK_API_TOKEN,
+  postmarkSecret: process.env.POSTMARK_SECRET,
+  postmarkServerId: parseInt(process.env.POSTMARK_SERVER_ID),
+  postmarkBroadcastStream: process.env.POSTMARK_BROADCAST_STREAM,
   s3Region: process.env.S3_REGION,
   s3AccessKeyId: process.env.S3_ACCESS_KEY_ID,
   s3SecretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY,
+  recaptchaSecretKey: process.env.RECAPTCHA_SECRET_KEY,
 }
 
 const { middleware, routes } = createDependencies(config)

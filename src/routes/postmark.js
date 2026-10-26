@@ -1,6 +1,6 @@
 const makeRouter = require('./makeRouter')
 
-module.exports = function({ db, middleware }) {
+module.exports = function({ db, middleware, postmarkServerId, postmarkBroadcastStream }) {
   const { router, get, post, put, drop } = makeRouter()
 
 // Mailing list subscription (via Postmark)
@@ -11,8 +11,8 @@ post(
   middleware.authenticate_postmark,
   async (req) => {
     if (
-      req.body.ServerID !== parseInt(process.env.POSTMARK_SERVER_ID) ||
-      req.body.MessageStream !== process.env.POSTMARK_BROADCAST_STREAM ||
+      req.body.ServerID !== postmarkServerId ||
+      req.body.MessageStream !== postmarkBroadcastStream ||
       req.body.RecordType !== 'SubscriptionChange' ||
       typeof req.body.SuppressSending !== 'boolean'
     ) {

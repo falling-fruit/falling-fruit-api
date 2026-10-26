@@ -1,5 +1,3 @@
-process.env.RECAPTCHA_DISABLED = 'true'
-
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const express = require('express')
@@ -30,7 +28,8 @@ function startApp(postmarkClient) {
     db,
     jwtSecret: process.env.JWT_SECRET,
     postmarkClient,
-    s3Client: {}
+    s3Client: {},
+    recaptcha: null
   })
   const app = express()
   app.use(express.json())

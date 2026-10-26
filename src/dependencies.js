@@ -1,6 +1,7 @@
 const path = require('path')
 const postmark = require('postmark')
 const aws = require('aws-sdk')
+const RecaptchaV2 = require('express-recaptcha').RecaptchaV2
 const makeDb = require('./db')
 const Tokenizer = require('./tokens')
 const createMailer = require('./mailer')
@@ -57,12 +58,29 @@ function createDependencies(config) {
         apiVersion: '2006-03-01'
       }))
 
+  const recaptcha = 'recaptcha' in config
+    ? config.recaptcha
+    : (config.local ? null : new RecaptchaV2(config.recaptchaSiteKey, config.recaptchaSecretKey))
+
   const db = config.db || makeDb(config.dbUrl, true)
   const tokenizer = new Tokenizer(config.jwtSecret)
   const mailer = createMailer({ client: postmark_client })
   const photos = createPhotos({ s3: s3_client })
-  const middleware = makeMiddleware({ db, tokenizer })
-  const routes = makeRoutes({ db, tokenizer, middleware, mailer, photos })
+  const middleware = makeMiddleware({
+    db,
+    tokenizer,
+    recaptcha,
+    postmarkSecret: config.postmarkSecret
+  })
+  const routes = makeRoutes({
+    db,
+    tokenizer,
+    middleware,
+    mailer,
+    photos,
+    postmarkServerId: config.postmarkServerId,
+    postmarkBroadcastStream: config.postmarkBroadcastStream
+  })
 
   return { db, tokenizer, mailer, photos, middleware, routes }
 }
