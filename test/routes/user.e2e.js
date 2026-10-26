@@ -5,44 +5,37 @@ const assert = require('node:assert/strict')
 const express = require('express')
 
 const { E2ESetup } = require('../e2eSetup')
-const Tokenizer = require('../../src/tokens')
-const makeMiddleware = require('../../src/middleware')
+const createDependencies = require('../../src/dependencies')
 
 const setup = new E2ESetup()
 const { db } = setup
 
-class FakeMailer {
+class FakePostmarkClient {
   constructor() {
     this.calls = []
   }
 
-  record(name) {
-    return (...args) => {
-      this.calls.push({ name, args })
-      return Promise.resolve()
-    }
+  sendEmail(email) {
+    this.calls.push(email)
+    return Promise.resolve()
   }
 
-  send_email_confirmation = this.record('send_email_confirmation')
-  send_email_confirmation_exists = this.record('send_email_confirmation_exists')
-  send_email_confirmation_not_found = this.record('send_email_confirmation_not_found')
-  send_email_confirmation_confirmed = this.record('send_email_confirmation_confirmed')
-  send_password_reset = this.record('send_password_reset')
-  send_password_reset_not_found = this.record('send_password_reset_not_found')
-
-  names() {
-    return this.calls.map((call) => call.name)
+  subjects() {
+    return this.calls.map((email) => email.Subject)
   }
 }
 
-function startApp(mailer) {
-  const tokenizer = new Tokenizer()
-  const middleware = makeMiddleware({ db, tokenizer })
-  const router = require('../../src/routes/user')({ mailer, db, tokenizer, middleware })
+function startApp(postmarkClient) {
+  const { routes } = createDependencies({
+    db,
+    jwtSecret: process.env.JWT_SECRET,
+    postmarkClient,
+    s3Client: {}
+  })
   const app = express()
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
-  app.use('/user', router)
+  app.use('/user', routes.user)
   return new Promise((resolve) => {
     const server = app.listen(0, () => {
       const { port } = server.address()
@@ -63,8 +56,8 @@ async function signup(url, body) {
 setup.register(() => setup.reset('users'))
 
 test('signup with a new email creates a user and sends a confirmation email', async () => {
-  const mailer = new FakeMailer()
-  const { server, url } = await startApp(mailer)
+  const client = new FakePostmarkClient()
+  const { server, url } = await startApp(client)
   try {
     const { status } = await signup(url, {
       email: 'New.User@example.com',
@@ -72,7 +65,7 @@ test('signup with a new email creates a user and sends a confirmation email', as
     })
 
     assert.equal(status, 200)
-    assert.deepEqual(mailer.names(), ['send_email_confirmation'])
+    assert.deepEqual(client.subjects(), ['Confirmation instructions'])
 
     const user = await db.oneOrNone(
       'SELECT email FROM users WHERE email = ${email}',
@@ -86,8 +79,8 @@ test('signup with a new email creates a user and sends a confirmation email', as
 })
 
 test('signup with an existing email does not create a duplicate', async () => {
-  const mailer = new FakeMailer()
-  const { server, url } = await startApp(mailer)
+  const client = new FakePostmarkClient()
+  const { server, url } = await startApp(client)
   try {
     await db.users.add({ body: { email: 'taken@example.com', password: 'supersecret' } })
 
@@ -97,7 +90,7 @@ test('signup with an existing email does not create a duplicate', async () => {
     })
 
     assert.equal(status, 200)
-    assert.deepEqual(mailer.names(), ['send_email_confirmation_exists'])
+    assert.deepEqual(client.subjects(), ['Registration attempt'])
 
     const count = await db.one(
       'SELECT COUNT(*)::int AS n FROM users WHERE email = ${email}',

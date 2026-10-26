@@ -1,18 +1,18 @@
-require('dotenv').config()
 const jwt = require('jsonwebtoken')
 
 class Tokenizer {
-  constructor(algorithm = 'HS256') {
+  constructor(secret, algorithm = 'HS256') {
+    this.secret = secret
     this.algorithm = algorithm
   }
 
-  sign(data, options = {}, secret = process.env.JWT_SECRET) {
+  sign(data, options = {}, secret = this.secret) {
     return jwt.sign(
       data, secret, {algorithm: this.algorithm, ...options}
     )
   }
 
-  verify(token, options = {}, secret = process.env.JWT_SECRET) {
+  verify(token, options = {}, secret = this.secret) {
     return jwt.verify(
       token, secret, {algorithm: this.algorithm, ...options}
     )
@@ -87,7 +87,7 @@ class Tokenizer {
   }
 
   sign_password_reset(user, password_hash) {
-    const secret = `${password_hash}${process.env.JWT_SECRET}`
+    const secret = `${password_hash}${this.secret}`
     return this.sign(
       {id: user.id}, {expiresIn: '12h', noTimestamp: true}, secret
     )
@@ -104,7 +104,7 @@ class Tokenizer {
   }
 
   verify_password_reset(token, password_hash, res) {
-    const secret = `${password_hash}${process.env.JWT_SECRET}`
+    const secret = `${password_hash}${this.secret}`
     try {
       const data = this.verify(token, {}, secret)
       return {id: data.id}
