@@ -1,29 +1,20 @@
 require('dotenv').config()
 const postmark = require('postmark')
-const postmark_client = process.env.POSTMARK_DISABLED
-  ? null
-  : new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
 
-const mailer = {}
+function createMailer({client}) {
+  const mailer = {}
 
-function send_email({to, subject, body, tag = null}) {
-  if (process.env.POSTMARK_DISABLED) {
-    console.log(
-      `[email disabled] To: ${to} | Subject: ${subject} | Tag: ${tag}\n` +
-      body.replace(/\s{2,}/g, '')
-    )
-    return Promise.resolve()
+  function send_email({to, subject, body, tag = null}) {
+    return client.sendEmail({
+      From: 'info@fallingfruit.org',
+      To: to,
+      Subject: subject,
+      HtmlBody: body.replace(/\s{2,}/g, ''),
+      MessageStream: 'outbound',
+      Tag: tag
+    })
   }
-  return postmark_client.sendEmail({
-    From: 'info@fallingfruit.org',
-    To: to,
-    Subject: subject,
-    HtmlBody: body.replace(/\s{2,}/g, ''),
-    MessageStream: 'outbound',
-    Tag: tag
-  })
-}
-mailer.send_email_confirmation = function(user, token) {
+  mailer.send_email_confirmation = function(user, token) {
   const email = {
     to: user.email,
     // Phrase: devise.mailer.confirmation_instructions.subject
@@ -136,5 +127,25 @@ mailer.send_password_reset_not_found = function(user) {
   }
   return send_email(email)
 }
+
+  return mailer
+}
+
+const logging_client = {
+  sendEmail({To, Subject, Tag, HtmlBody}) {
+    console.log(
+      `[email disabled] To: ${To} | Subject: ${Subject} | Tag: ${Tag}\n` +
+      HtmlBody
+    )
+    return Promise.resolve()
+  }
+}
+
+const default_client = process.env.POSTMARK_DISABLED
+  ? logging_client
+  : new postmark.ServerClient(process.env.POSTMARK_API_TOKEN)
+
+const mailer = createMailer({client: default_client})
+mailer.createMailer = createMailer
 
 module.exports = mailer
