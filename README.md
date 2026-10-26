@@ -75,8 +75,18 @@ e2e tests require a database. `yarn test:e2e` spins one up, migrates, and runs t
 
 ## Documentation
 
-Validate and build the OpenAPI documentation:
+The OpenAPI spec is assembled from three sources:
+
+- `docs/base.yml`: Static metadata (`info`, `tags`, `servers`).
+- `docs/components/`: Shared `schemas`, `parameters`, and `securitySchemes`.
+- `@openapi` JSDoc blocks above each route in `src/routes/`: the per-path operations.
+
+`scripts/build-openapi.js` merges them (resolving component references to internal
+`#/components/...` pointers) and writes the bundled `docs/openapi.yml`.
+
+Build the spec, or build and validate it:
 
 ```sh
-yarn validate && yarn build
+yarn build     # regenerate docs/openapi.yml
+yarn validate  # build, then validate the result
 ```

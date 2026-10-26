@@ -74,8 +74,8 @@ function createApp({ middleware, routes, apiBase }) {
     return middleware.check_api_key(req, res, next)
   })
 
-  for (const [segment, router] of Object.entries(routes)) {
-    app.use(`${apiBase}/${segment}`, router)
+  for (const router of Object.values(routes)) {
+    app.use(apiBase, router)
   }
 
   return app

@@ -7,7 +7,7 @@ module.exports = function({ db, middleware, postmarkServerId, postmarkBroadcastS
 // https://postmarkapp.com/developer/webhooks/subscription-change-webhook
 
 post(
-  '/subscription',
+  '/postmark/subscription',
   middleware.authenticate_postmark,
   async (req) => {
     if (

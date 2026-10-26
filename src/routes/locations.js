@@ -8,8 +8,32 @@ const set_equal = function(a, b) {
 }
 
 // Routes: Location lists
+/**
+ * @openapi
+ * /locations/lists:
+ *   post:
+ *     summary: Create a new Location List.
+ *     tags:
+ *       - Location lists
+ *     security:
+ *       - key: []
+ *         token: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EditLocationList'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LocationList'
+ */
 post(
-  '/lists',
+  '/locations/lists',
   middleware.authenticate('user'),
   async (req, res) => {
     // Require name
@@ -19,8 +43,41 @@ post(
     return await db.locationLists.addList(req.body, req.user)
   }
 )
+/**
+ * @openapi
+ * /locations/lists:
+ *   get:
+ *     summary: Fetch User's Location Lists.
+ *     tags:
+ *       - Location lists
+ *     security:
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - name: embed
+ *         description: |
+ *           Additional information to include.
+ *           - locations: List locations.
+ *         in: query
+ *         explode: false
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum: [locations]
+ *           default: null
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/LocationList'
+ */
 get(
-  '/lists',
+  '/locations/lists',
   middleware.authenticate('user'),
   async (req) => {
     if (req.query.embed === 'locations') {
@@ -29,8 +86,40 @@ get(
     return await db.locationLists.listUserLists(req.user.id)
   }
 )
+/**
+ * @openapi
+ * /locations/lists/{list_id}:
+ *   get:
+ *     summary: Get a Location List.
+ *     tags:
+ *       - Location lists
+ *     security:
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_list_id'
+ *       - name: embed
+ *         description: |
+ *           Additional information to include.
+ *           - locations: List locations.
+ *         in: query
+ *         explode: false
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum: [locations]
+ *           default: null
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LocationList'
+ */
 get(
-  '/lists/:id',
+  '/locations/lists/:id',
   middleware.authenticate('user'),
   async (req) => {
     if (req.query.embed === 'locations') {
@@ -39,8 +128,34 @@ get(
     return await db.locationLists.listUserLists(req.user.id)
   }
 )
+/**
+ * @openapi
+ * /locations/lists/{list_id}:
+ *   put:
+ *     summary: Edit a Location List.
+ *     tags:
+ *       - Location lists
+ *     security:
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_list_id'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EditLocationList'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LocationList'
+ */
 put(
-  '/lists/:id',
+  '/locations/lists/:id',
   middleware.authenticate('user'),
   async (req, res) => {
     // Restrict to linked user
@@ -55,8 +170,24 @@ put(
     return await db.locationLists.editList(req.params.id, req.body)
   }
 )
+/**
+ * @openapi
+ * /locations/lists/{list_id}:
+ *   delete:
+ *     summary: Delete a Location List.
+ *     tags:
+ *       - Location lists
+ *     security:
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_list_id'
+ *     responses:
+ *       '200':
+ *         description: Success
+ */
 drop(
-  '/lists/:id',
+  '/locations/lists/:id',
   middleware.authenticate('user'),
   async (req, res) => {
     // Restrict to linked user
@@ -68,8 +199,25 @@ drop(
     return void res.status(204).send()
   }
 )
+/**
+ * @openapi
+ * /locations/{id}/lists/{list_id}:
+ *   post:
+ *     summary: Add a Location to a Location List.
+ *     tags:
+ *       - Location lists
+ *     security:
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_id'
+ *       - $ref: '#/components/parameters/location_list_id'
+ *     responses:
+ *       '204':
+ *         description: Success
+ */
 post(
-  '/:id/lists/:list_id',
+  '/locations/:id/lists/:list_id',
   middleware.authenticate('user'),
   async (req, res) => {
     // Restrict to linked user
@@ -81,8 +229,25 @@ post(
     return void res.status(204).send()
   }
 )
+/**
+ * @openapi
+ * /locations/{id}/lists/{list_id}:
+ *   delete:
+ *     summary: Remove a Location from a Location List.
+ *     tags:
+ *       - Location lists
+ *     security:
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_id'
+ *       - $ref: '#/components/parameters/location_list_id'
+ *     responses:
+ *       '204':
+ *         description: Success
+ */
 drop(
-  '/:id/lists/:list_id',
+  '/locations/:id/lists/:list_id',
   middleware.authenticate('user'),
   async (req, res) => {
     // Restrict to linked user
@@ -96,8 +261,102 @@ drop(
 )
 
 // Routes: Locations
+/**
+ * @openapi
+ * /locations:
+ *   get:
+ *     summary: Fetch Location summaries.
+ *     tags:
+ *       - Locations
+ *     security:
+ *       - key: []
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - name: ids
+ *         in: query
+ *         description: Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored and locations are returned whether or not they are hidden.
+ *         explode: false
+ *         schema:
+ *           type: array
+ *           uniqueItems: true
+ *           items:
+ *             type: integer
+ *             minimum: 0
+ *           default: null
+ *       - name: bounds
+ *         in: query
+ *         description: The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.
+ *         explode: false
+ *         style: pipeDelimited
+ *         schema:
+ *           type: array
+ *           minItems: 2
+ *           maxItems: 2
+ *           items:
+ *             type: string
+ *             pattern: '^(-?\d+\.?(\d+)?),(-?\d+\.?(\d+)?)$'
+ *           example: ['-5,-180', '5,180']
+ *       - name: center
+ *         in: query
+ *         description: Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].
+ *         explode: false
+ *         schema:
+ *           type: array
+ *           minItems: 2
+ *           maxItems: 2
+ *           items:
+ *             type: number
+ *             minimum: -180
+ *             maximum: 180
+ *           example: [1.359, 103.807]
+ *       - $ref: '#/components/parameters/muni'
+ *       - $ref: '#/components/parameters/types'
+ *       - $ref: '#/components/parameters/invasive'
+ *       - name: limit
+ *         in: query
+ *         description: Maximum number of Locations to return.
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *           default: 1000
+ *       - $ref: '#/components/parameters/offset'
+ *       - name: photo
+ *         in: query
+ *         description: Whether to include the path to a review photo thumbnail, if available.
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *       - name: count
+ *         in: query
+ *         description: Whether to include the total number of locations matching the query in the `x-total-count` header.
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *       - name: locale
+ *         in: query
+ *         description: Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`. Ignored if `center` is provided.
+ *         schema:
+ *           type: string
+ *           deprecated: true
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         headers:
+ *           x-total-count:
+ *             schema:
+ *               type: integer
+ *             description: |-
+ *               Total number of locations meeting the query conditions (if `count=true`).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ListLocation'
+ */
 get(
-  '/',
+  '/locations',
   middleware.authenticate(),
   async (req, res) => {
     const locations = await db.locations.list(req.query, req.user)
@@ -112,8 +371,36 @@ get(
     return locations
   }
 )
+/**
+ * @openapi
+ * /locations:
+ *   post:
+ *     tags:
+ *       - Locations
+ *     summary: Create a Location.
+ *     description: A `review` can be included, in which case the result includes the `reviews` property.
+ *     security:
+ *       - key: []
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/recaptcha'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AddLocation'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Location'
+ */
 post(
-  '/',
+  '/locations',
   middleware.authenticate(),
   middleware.recaptcha,
   middleware.test_review('review'),
@@ -137,12 +424,89 @@ post(
     return location
   }
 )
+/**
+ * @openapi
+ * /locations/count:
+ *   get:
+ *     summary: Count Locations.
+ *     tags:
+ *       - Locations
+ *     security:
+ *       - key: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/bounds'
+ *       - $ref: '#/components/parameters/muni'
+ *       - $ref: '#/components/parameters/types'
+ *       - $ref: '#/components/parameters/invasive'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: number
+ *               example: 25
+ */
 get(
-  '/count',
+  '/locations/count',
   req => db.locations.count(req.query)
 )
+/**
+ * @openapi
+ * /locations/changes:
+ *   get:
+ *     summary: Fetch Location changes (activity).
+ *     description: |
+ *       A change event is recorded when a location is added (`'added'`), a location is edited (`'edited'`), or a location is reviewed (`'visited'`). Results are sorted in reverse chronological order (most recent first).
+ *
+ *       Filtering by user `range` is restricted to the user.
+ *     tags:
+ *       - Locations
+ *     security:
+ *       - key: []
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - name: earliest
+ *         in: query
+ *         description: Earliest UTC datetime of change (inclusive).
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *           default: null
+ *         example: '2024-11-09T00:00:00Z'
+ *       - name: latest
+ *         in: query
+ *         description: Latest UTC datetime of change (exclusive).
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *           default: null
+ *         example: null
+ *       - name: user_id
+ *         in: query
+ *         description: User ID of changes to return.
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: null
+ *       - name: range
+ *         in: query
+ *         description: Whether to filter changes within the foraging range of the user with `user_id`, rather than by the user.
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         example: false
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LocationChange'
+ */
 get(
-  '/changes',
+  '/locations/changes',
   middleware.authenticate(),
   async (req, res) => {
     if (req.query.user_id && (!req.user || req.user.id != parseInt(req.query.user_id))) {
@@ -155,8 +519,42 @@ get(
     return db.changes.list(req.query)
   }
 )
+/**
+ * @openapi
+ * /locations/{id}:
+ *   get:
+ *     summary: Fetch a Location.
+ *     tags:
+ *       - Locations
+ *     security:
+ *       - key: []
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_id'
+ *       - name: embed
+ *         description: |
+ *           Additional information to include.
+ *           - reviews: Location reviews.
+ *           - import: Imported dataset.
+ *         in: query
+ *         explode: false
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum: [reviews, import]
+ *           default: null
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Location'
+ */
 get(
-  '/:id',
+  '/locations/:id',
   middleware.authenticate(),
   async req => {
     const location = await db.locations.show(req.params.id, req.user)
@@ -173,8 +571,36 @@ get(
     return location
   }
 )
+/**
+ * @openapi
+ * /locations/{id}:
+ *   put:
+ *     tags:
+ *       - Locations
+ *     summary: Edit a Location.
+ *     security:
+ *       - key: []
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_id'
+ *       - $ref: '#/components/parameters/recaptcha'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EditLocation'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Location'
+ */
 put(
-  '/:id',
+  '/locations/:id',
   middleware.authenticate(),
   middleware.recaptcha,
   async req => {
@@ -191,8 +617,25 @@ put(
     return updated
   }
 )
+/**
+ * @openapi
+ * /locations/{id}:
+ *   delete:
+ *     summary: Delete a Location.
+ *     description: Restricted to the same user that created the location. Deletion is only permitted if the location is not associated with any reviews other than their own and no other (non-admin) user edited the location in the meantime.
+ *     tags:
+ *       - Locations
+ *     security:
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_id'
+ *     responses:
+ *       '204':
+ *         description: Success (no content)
+ */
 drop(
-  '/:id',
+  '/locations/:id',
   middleware.authenticate('user'),
   async (req, res) => {
     const original = await db.locations.show(req.params.id)
@@ -235,12 +678,73 @@ drop(
 )
 
 // Routes: Reviews
+/**
+ * @openapi
+ * /locations/{id}/reviews:
+ *   get:
+ *     summary: Fetch a Location's Reviews.
+ *     tags:
+ *       - Reviews
+ *     security:
+ *       - key: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_id'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Review'
+ */
 get(
-  '/:id/reviews',
+  '/locations/:id/reviews',
   req => db.reviews.list(req.params.id)
 )
+/**
+ * @openapi
+ * /locations/{id}/reviews:
+ *   post:
+ *     summary: Review a Location.
+ *     description: If `fruiting` is provided, `observed_on` is required. One of `comment`, `fruiting`, `quality_rating`, `yield_rating`, or `photo_ids` is required.
+ *     tags:
+ *       - Reviews
+ *     security:
+ *       - key: []
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/location_id'
+ *       - $ref: '#/components/parameters/recaptcha'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EditReview'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Review'
+ *       '400':
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   description: Error message
+ *                   type: string
+ *                   example: observed_on is required if fruiting is provided
+ */
 post(
-  '/:id/reviews',
+  '/locations/:id/reviews',
   middleware.authenticate(),
   middleware.recaptcha,
   middleware.test_review(),

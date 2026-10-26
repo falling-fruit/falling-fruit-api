@@ -24,8 +24,8 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down -v",
     "db:migrate": "dbmate --env-file .env.test up",
-    "validate": "npx swagger-cli validate docs/index.yml",
-    "build": "npx swagger-cli bundle --type=yaml docs/index.yml > docs/openapi.yml"
+    "build": "node scripts/build-openapi.js",
+    "validate": "yarn build && npx swagger-cli validate docs/openapi.yml"
   },
   "dependencies": {
     "@apidevtools/swagger-cli": "^4.0.4",
@@ -46,6 +46,7 @@
     "pg-monitor": "2.0.0",
     "pg-promise": "^11.5.5",
     "postmark": "^2.7.8",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "swagger-jsdoc": "^6.2.8"
   }
 }

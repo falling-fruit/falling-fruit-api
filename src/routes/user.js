@@ -7,8 +7,50 @@ module.exports = function({ mailer, db, middleware, tokenizer }) {
   const { router, get, post, put, drop } = makeRouter()
 
 // Routes: Users (private)
+/**
+ * @openapi
+ * /user:
+ *   post:
+ *     summary: Register a new user.
+ *     description: |
+ *       When first created, the account is not confirmed and cannot be used.
+ *       An email is sent with a link that must be clicked to confirm the account.
+ *
+ *       `email` cannot match (case-insensitive) the email of an existing user. If it does, an alternate email message is sent.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - key: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/recaptcha'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             allOf:
+ *               - $ref: '#/components/schemas/EditUser'
+ *               - type: object
+ *                 required:
+ *                   - password
+ *                 properties:
+ *                   password:
+ *                     $ref: '#/components/schemas/password'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   minLength: 1
+ *                   example: You will receive an email with instructions for how to confirm your email address in a few minutes
+ */
 post(
-  '/',
+  '/user',
   middleware.recaptcha,
   async (req) => {
     // Email uniqueness is case-insensitive
@@ -28,13 +70,70 @@ post(
     return {message: 'You will receive an email with instructions for how to confirm your email address in a few minutes'}
   }
 )
+/**
+ * @openapi
+ * /user:
+ *   get:
+ *     summary: View the user (self).
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - key: []
+ *         token: []
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ */
 get(
-  '/',
+  '/user',
   middleware.authenticate('user'),
   (req) => db.users.show(req.user.id)
 )
+/**
+ * @openapi
+ * /user:
+ *   put:
+ *     summary: Edit the user (self).
+ *     description: |
+ *       - If a new email is provided, it is staged as unconfirmed (`unconfirmed_email`) and a confirmation email is sent to the new email. The previous email is replaced only once the new email is confirmed. If an account with the new email already exists, a different email is sent.
+ *       - If a password is provided, it takes immediate effect. If it does not match the previous password, all refresh tokens not corresponding to the current access token are revoked.
+ *       - To change email or password, the existing password is required (`password_confirmation`).
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - key: []
+ *         token: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             allOf:
+ *               - $ref: '#/components/schemas/EditUser'
+ *             type: object
+ *             properties:
+ *               password:
+ *                 $ref: '#/components/schemas/password'
+ *               password_confirmation:
+ *                 description: Current password. Required for email and password change.
+ *                 type: string
+ *                 format: password
+ *                 minLength: 1
+ *                 example: foo?bar
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ */
 put(
-  '/',
+  '/user',
   middleware.authenticate('user'),
   async (req, res) => {
     const user = await db.one(
@@ -85,8 +184,38 @@ put(
     return db.users.edit(req)
   }
 )
+/**
+ * @openapi
+ * /user/token:
+ *   post:
+ *     summary: Request an access token (password).
+ *     description: Follows the OAuth2 spec for password flow, which requires form data with `username` and `password`.
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 $ref: '#/components/schemas/email'
+ *               password:
+ *                 $ref: '#/components/schemas/password'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Token'
+ */
 post(
-  '/token',
+  '/user/token',
   uploads.none(),
   async (req, res) => {
     let user
@@ -118,8 +247,46 @@ post(
     return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
   }
 )
+/**
+ * @openapi
+ * /user/token/refresh:
+ *   post:
+ *     summary: Request an access token (refresh token).
+ *     description: |
+ *       Follows the OAuth2 spec for refresh token flow, which requires form data with `grant_type: 'refresh_token'` (ignored) and `refresh_token`.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - key: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refresh_token
+ *             properties:
+ *               refresh_token:
+ *                 description: Refresh token.
+ *                 type: string
+ *                 minLength: 1
+ *                 example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+ *               grant_type:
+ *                 description: Grant type.
+ *                 type: string
+ *                 enum: [refresh_token]
+ *                 example: refresh_token
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Token'
+ */
 post(
-  '/token/refresh',
+  '/user/token/refresh',
   uploads.none(),
   async (req, res) => {
     // req.body.grant_type=refresh_token
@@ -148,8 +315,22 @@ post(
     return void res.status(200).set({'cache-control': 'no-store'}).json(tokens)
   }
 )
+/**
+ * @openapi
+ * /user:
+ *   delete:
+ *     summary: Delete the user (self).
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - key: []
+ *         token: []
+ *     responses:
+ *       '204':
+ *         description: Success (no content)
+ */
 drop(
-  '/',
+  '/user',
   middleware.authenticate('user'),
   async (req, res) => {
     // // Check password
@@ -166,8 +347,37 @@ drop(
 )
 
 // Routes: User email
+/**
+ * @openapi
+ * /user/confirmation:
+ *   get:
+ *     summary: Confirm the user (from a link in an email).
+ *     tags:
+ *       - Authentication
+ *     parameters:
+ *       - name: token
+ *         description: Email-confirmation token.
+ *         in: query
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *         required: true
+ *         example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   minLength: 1
+ *                   example: Your email address has been successfully confirmed
+ */
 get(
-  '/confirmation',
+  '/user/confirmation',
   async (req, res) => {
     const token = req.query.token
     const data = tokenizer.verify_email_confirmation(token, res)
@@ -203,8 +413,42 @@ get(
     return {message: 'Your email address has been successfully confirmed'}
   }
 )
+/**
+ * @openapi
+ * /user/confirmation:
+ *   post:
+ *     summary: Confirm the user (from a form).
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 description: Email-confirmation token.
+ *                 type: string
+ *                 minLength: 1
+ *                 example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - email
+ *               properties:
+ *                 email:
+ *                   $ref: '#/components/schemas/email'
+ */
 post(
-  '/confirmation',
+  '/user/confirmation',
   async (req, res) => {
     const token = req.body.token
     const data = tokenizer.verify_email_confirmation(token, res)
@@ -240,8 +484,42 @@ post(
     return {email: user.email}
   }
 )
+/**
+ * @openapi
+ * /user/confirmation/retry:
+ *   post:
+ *     summary: Request another email-confirmation email.
+ *     description: Alternate email messages are sent if the email is not found or if the email is already confirmed.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - key: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 $ref: '#/components/schemas/email'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   minLength: 1
+ *                   example: You will receive an email with instructions for how to confirm your email address in a few minutes
+ */
 post(
-  '/confirmation/retry',
+  '/user/confirmation/retry',
   middleware.recaptcha,
   async (req) => {
     const email = req.body.email.toLowerCase()
@@ -265,8 +543,45 @@ post(
 )
 
 // Routes: User password
+/**
+ * @openapi
+ * /user/password:
+ *   put:
+ *     summary: Set a new password.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - key: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *             properties:
+ *               token:
+ *                 description: Password-reset token.
+ *                 type: string
+ *                 minLength: 1
+ *                 example: 3c57bce037934965569aabfcccc861a6230768f03078ad455d1f65afb0cfbaee
+ *               password:
+ *                 $ref: '#/components/schemas/password'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 email:
+ *                   $ref: '#/components/schemas/email'
+ */
 put(
-  '/password',
+  '/user/password',
   async (req, res) => {
     const token = req.body.token
     let data = tokenizer.decode_password_reset(token, res)
@@ -289,8 +604,44 @@ put(
     return {email: user.email}
   }
 )
+/**
+ * @openapi
+ * /user/password/reset:
+ *   post:
+ *     summary: Request a password-reset email.
+ *     description: An alternate email message is sent if the email is not found.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - key: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/recaptcha'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 $ref: '#/components/schemas/email'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   minLength: 1
+ *                   example: You will receive an email with instructions on how to reset your password in a few minutes
+ */
 post(
-  '/password/reset',
+  '/user/password/reset',
   middleware.recaptcha,
   async (req) => {
     const email = req.body.email.toLowerCase()

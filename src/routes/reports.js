@@ -3,8 +3,35 @@ const makeRouter = require('./makeRouter')
 module.exports = function({ db, middleware }) {
   const { router, get, post, put, drop } = makeRouter()
 
+/**
+ * @openapi
+ * /reports:
+ *   post:
+ *     tags:
+ *       - Reports
+ *     summary: Create a Report.
+ *     security:
+ *       - key: []
+ *       - key: []
+ *         token: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/recaptcha'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EditReport'
+ *     responses:
+ *       '200':
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Report'
+ */
 post(
-  '/',
+  '/reports',
   middleware.authenticate(),
   middleware.recaptcha,
   async (req) => {
