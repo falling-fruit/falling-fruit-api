@@ -1,5 +1,6 @@
 import makeRouter from './makeRouter'
 import { z } from '../schemas/registry'
+import createPhotos = require('../photos')
 import {
   Location,
   ListLocation,
@@ -33,7 +34,7 @@ const embedLocationsParam = z
     description: 'Additional information to include.\n- locations: List locations.\n',
   })
 
-export = function ({ db, middleware }: any) {
+export = function ({ db, middleware, photos: photosService }: any) {
   const { router, get, post, put, drop } = makeRouter()
 
   // Routes: Location lists
@@ -350,6 +351,12 @@ export = function ({ db, middleware }: any) {
           user_id,
         })
         await db.photos.link(req.body.review.photo_ids, review.id)
+        await createPhotos.sync_legacy_first_photo(
+          db.photos,
+          photosService,
+          req.body.review.photo_ids,
+          review.id,
+        )
         review.photos = photos
         location.reviews = [review]
       }
@@ -611,6 +618,12 @@ export = function ({ db, middleware }: any) {
         user_id: req.user ? req.user.id : null,
       })
       await db.photos.link(req.body.photo_ids, review.id)
+      await createPhotos.sync_legacy_first_photo(
+        db.photos,
+        photosService,
+        req.body.photo_ids,
+        review.id,
+      )
       review.photos = photos
       return review
     },

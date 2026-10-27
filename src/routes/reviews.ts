@@ -2,8 +2,9 @@ import makeRouter from './makeRouter'
 import { z } from '../schemas/registry'
 import { Review, EditReview } from '../schemas/schemas'
 import { reviewIdParam } from '../schemas/parameters'
+import createPhotos = require('../photos')
 
-export = function ({ db, middleware }: any) {
+export = function ({ db, middleware, photos: photosService }: any) {
   const { router, get, put, drop } = makeRouter()
 
   get(
@@ -55,6 +56,12 @@ export = function ({ db, middleware }: any) {
       )
       const review = await db.reviews.edit(req.params.id, req.body)
       await db.photos.link(req.body.photo_ids, review.id)
+      await createPhotos.sync_legacy_first_photo(
+        db.photos,
+        photosService,
+        req.body.photo_ids,
+        review.id,
+      )
       review.photos = photos
       return review
     },

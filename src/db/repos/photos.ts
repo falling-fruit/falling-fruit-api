@@ -1,10 +1,8 @@
 import sqlModule = require('../sql')
-import photosModule = require('../../photos')
 import type { Protocol, Pgp } from '../types'
 import type { Photo } from '../../schemas/schemas'
 
 const sql = sqlModule.photos
-const photos = photosModule as any
 
 type PhotoRow = {
   id: number
@@ -65,29 +63,27 @@ class Photos {
     return photos
   }
 
+  get_urls(id: number): Promise<Record<string, string>> {
+    return this.db.one(
+      'SELECT thumb, medium, original FROM photos WHERE id = ${id}',
+      { id },
+    )
+  }
+
+  // NOTE: For backwards compatibility only
+  set_photo_file_name(
+    review_id: number,
+    photo_file_name: string | null,
+  ): Promise<null> {
+    return this.db.none(
+      'UPDATE observations SET photo_file_name = ${photo_file_name} WHERE id = ${id}',
+      { id: review_id, photo_file_name },
+    )
+  }
+
   async link(photo_ids: number[], review_id: number) {
     if (photo_ids && photo_ids.length) {
       await this.db.none(sql.link, { id: review_id, ids: photo_ids })
-      // NOTE: For backwards compatibility only
-      // Copy first photo
-      const urls = await this.db.one(
-        'SELECT thumb, medium, original FROM photos WHERE id = ${id}',
-        { id: photo_ids[0] },
-      )
-      if (photos.is_new_photo_url(urls['original'])) {
-        await photos.copy_photo_to_old_urls(urls, review_id)
-        await this.db.none(
-          "UPDATE observations SET photo_file_name = 'first.jpg' WHERE id = ${id}",
-          { id: review_id },
-        )
-      }
-    } else {
-      // NOTE: For backwards compatibility only
-      // Clear first photo
-      await this.db.none(
-        'UPDATE observations SET photo_file_name = NULL WHERE id = ${id}',
-        { id: review_id },
-      )
     }
     // Unlink photos with ids NOT in photo_ids
     await this.db.none(sql.unlink, { id: review_id, ids: photo_ids })

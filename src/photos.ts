@@ -2,10 +2,8 @@ import fs from 'fs'
 import path from 'path'
 import sharp from 'sharp'
 
-/** A request object exposing a `promise()` accessor (aws-sdk style). */
 type Promisable<T> = { promise(): Promise<T> }
 
-/** Minimal S3 client contract used here (aws-sdk S3 or a local stub). */
 type S3Client = {
   upload(params: {
     ACL: string
@@ -22,22 +20,58 @@ type S3Client = {
   }): Promisable<unknown>
 }
 
-/** S3 keys for each generated photo size. */
 type PhotoKeys = {
   thumb: string
   medium: string
   original: string
 }
 
-function createPhotos({ s3 }: { s3: S3Client }) {
-  const photos: {
-    is_new_photo_url: (url: string) => boolean
-    copy_photo_to_old_urls: (
-      urls: Record<string, string>,
-      observation_id: number,
-    ) => Promise<unknown[]>
-    resize_and_upload_photo: (input: string) => Promise<Record<string, string>>
-  } = {} as any
+type Photos = {
+  copy_photo_to_old_urls: (
+    urls: Record<string, string>,
+    observation_id: number,
+  ) => Promise<unknown[]>
+  resize_and_upload_photo: (input: string) => Promise<Record<string, string>>
+}
+
+const S3_URL_REGEX =
+  /^https?:\/\/(?<bucket>[^\.]+)\.s3\.(?<region>[^\.]+)\.amazonaws\.com\/(?<key>.*)$/
+
+function is_new_photo_url(url: string): boolean {
+  const match = S3_URL_REGEX.exec(url)
+  if (match == null) {
+    return false
+  }
+  return match.groups!.key.startsWith('photos/')
+}
+
+type PhotosDb = {
+  get_urls: (id: number) => Promise<Record<string, string>>
+  set_photo_file_name: (
+    review_id: number,
+    photo_file_name: string | null,
+  ) => Promise<void>
+}
+
+async function sync_legacy_first_photo(
+  db: PhotosDb,
+  photos: Photos,
+  photo_ids: number[],
+  review_id: number,
+): Promise<void> {
+  if (photo_ids && photo_ids.length) {
+    const urls = await db.get_urls(photo_ids[0])
+    if (is_new_photo_url(urls['original'])) {
+      await photos.copy_photo_to_old_urls(urls, review_id)
+      await db.set_photo_file_name(review_id, 'first.jpg')
+    }
+  } else {
+    await db.set_photo_file_name(review_id, null)
+  }
+}
+
+function createPhotos({ s3 }: { s3: S3Client }): Photos {
+  const photos: Photos = {} as any
 
   async function resize_photo(
     input: string,
@@ -106,24 +140,11 @@ function createPhotos({ s3 }: { s3: S3Client }) {
   }
 
   function parse_s3_url(url: string): Record<string, string> {
-    const regex =
-      /^https?:\/\/(?<bucket>[^\.]+)\.s3\.(?<region>[^\.]+)\.amazonaws\.com\/(?<key>.*)$/
-    const match = regex.exec(url)
+    const match = S3_URL_REGEX.exec(url)
     if (match == null) {
       throw Error(`S3 URL not formatted as expected: ${url}`)
     }
     return match.groups as Record<string, string>
-  }
-
-  photos.is_new_photo_url = function (url) {
-    const match =
-      /^https?:\/\/(?<bucket>[^\.]+)\.s3\.(?<region>[^\.]+)\.amazonaws\.com\/(?<key>.*)$/.exec(
-        url,
-      )
-    if (match == null) {
-      return false
-    }
-    return match.groups!.key.startsWith('photos/')
   }
 
   photos.copy_photo_to_old_urls = function (urls, observation_id) {
@@ -169,5 +190,8 @@ function createPhotos({ s3 }: { s3: S3Client }) {
 
   return photos
 }
+
+createPhotos.is_new_photo_url = is_new_photo_url
+createPhotos.sync_legacy_first_photo = sync_legacy_first_photo
 
 export = createPhotos
