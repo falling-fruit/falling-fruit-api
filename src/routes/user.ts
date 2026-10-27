@@ -5,7 +5,7 @@ import { User, EditUser, Token } from '../schemas/schemas'
 import { emailProp, passwordProp } from '../schemas/properties'
 import { recaptchaParam } from '../schemas/parameters'
 
-const passwords = require('../passwords')
+import passwords = require('../passwords')
 const uploads = multer({ dest: 'uploads' })
 
 const messageResponse = (example: string) =>

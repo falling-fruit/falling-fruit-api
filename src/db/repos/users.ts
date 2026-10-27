@@ -24,7 +24,7 @@ class Users {
   async add(req: AddRequest): Promise<ApiUser> {
     const values = User.toRow(req.body)
     // Store encrypted password
-    values.password = await passwords.hash_password(values.password)
+    values.password = await passwords.hash_password(req.body.password)
     const user = await this.db.one(sql.add, values)
     return User.fromRow(user)
   }

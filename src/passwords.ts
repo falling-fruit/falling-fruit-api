@@ -1,7 +1,9 @@
-const bcrypt = require('bcrypt')
-const crypto = require('crypto')
+import bcrypt = require('bcrypt')
 
-const passwords = {}
+const passwords = {} as {
+  compare_password: (password: string, hash: string) => Promise<boolean>
+  hash_password: (password: string) => Promise<string>
+}
 
 // /**
 //  * Hash text using SHA256.
@@ -22,17 +24,16 @@ const passwords = {}
  * bcrypt truncates the input to 72 bytes, so the first 72 bytes of a password
  * would pass. To prevent this, we could prehash the password with sha256.
  * See https://security.stackexchange.com/q/6623.
- *
- * @param {*} password
- * @param {*} hash
- * @returns
  */
-passwords.compare_password = function(password, hash) {
+passwords.compare_password = function (
+  password: string,
+  hash: string,
+): Promise<boolean> {
   return bcrypt.compare(password, hash)
 }
 
-passwords.hash_password = function(password) {
+passwords.hash_password = function (password: string): Promise<string> {
   return bcrypt.hash(password, 10)
 }
 
-module.exports = passwords
+export = passwords
