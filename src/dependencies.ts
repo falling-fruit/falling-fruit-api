@@ -7,7 +7,7 @@ import makeDb = require('./db')
 import Tokenizer = require('./tokens')
 import createMailer = require('./mailer')
 import createPhotos = require('./photos')
-const makeMiddleware = require('./middleware')
+import makeMiddleware = require('./middleware')
 import makeRoutes from './routes'
 import type { Config } from './config'
 import type { Db } from './db/types'
