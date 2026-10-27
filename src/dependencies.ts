@@ -3,13 +3,14 @@ import postmark from 'postmark'
 import aws from 'aws-sdk'
 import { RecaptchaV2 } from 'express-recaptcha'
 
-const makeDb = require('./db')
+import makeDb = require('./db')
 const Tokenizer = require('./tokens')
 const createMailer = require('./mailer')
 const createPhotos = require('./photos')
 const makeMiddleware = require('./middleware')
 import makeRoutes from './routes'
 import type { Config } from './config'
+import type { Db } from './db/types'
 
 function createLoggingPostmarkClient() {
   return {
@@ -85,7 +86,7 @@ function createDependenciesForClients(
     postmarkClient,
     s3Client,
     recaptcha,
-  }: { db: any; postmarkClient: any; s3Client: any; recaptcha: any },
+  }: { db: Db; postmarkClient: any; s3Client: any; recaptcha: any },
 ) {
   const tokenizer = new Tokenizer(config.jwtSecret)
   const mailer = createMailer({ client: postmarkClient })

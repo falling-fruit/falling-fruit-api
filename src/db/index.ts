@@ -1,0 +1,40 @@
+import promise from 'bluebird'
+import { types } from 'pg'
+import monitor = require('pg-monitor')
+import repos = require('./repos')
+import pgPromise from 'pg-promise'
+import type { IInitOptions } from 'pg-promise'
+import type { Db, DbRepos, Pgp } from './types'
+
+function makeDb(
+  connectionString: string | undefined,
+  attachMonitor = false,
+): Db {
+  const options: IInitOptions<DbRepos> = {
+    promiseLib: promise,
+    extend: (obj, _dc) => {
+      obj.clusters = new repos.Clusters(obj, pgp)
+      obj.types = new repos.Types(obj, pgp)
+      obj.locations = new repos.Locations(obj, pgp)
+      obj.locationLists = new repos.LocationLists(obj, pgp)
+      obj.reviews = new repos.Reviews(obj, pgp)
+      obj.users = new repos.Users(obj, pgp)
+      obj.reports = new repos.Reports(obj, pgp)
+      obj.imports = new repos.Imports(obj, pgp)
+      obj.photos = new repos.Photos(obj, pgp)
+      obj.changes = new repos.Changes(obj, pgp)
+      obj.tiles = new repos.Tiles(obj, pgp)
+    },
+  }
+  if (attachMonitor) {
+    monitor.attach(options)
+  }
+  const pgp: Pgp = pgPromise(options)
+  // Return BIGINT or BIGSERIAL as JSON integers (https://stackoverflow.com/a/39176670)
+  pgp.pg.types.setTypeParser(types.builtins.INT8, parseInt)
+  // Return DATE without timestamp (YYYY-MM-DD)
+  pgp.pg.types.setTypeParser(types.builtins.DATE, String)
+  return pgp(connectionString as string)
+}
+
+export = makeDb
