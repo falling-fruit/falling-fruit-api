@@ -1,5 +1,12 @@
 import sqlModule = require('../sql')
-import sqlf = require('../../sql_formatters')
+import {
+  ids_to_sql,
+  bounds_to_geography_sql,
+  bounds_to_lnglat_sql,
+  muni_to_sql,
+  types_array_to_sql,
+  invasive_to_sql,
+} from '../../sql_formatters'
 import Changes = require('./changes')
 import Types = require('./types')
 import Location = require('../../mappers/location')
@@ -102,18 +109,18 @@ class Locations {
     }
     let filters
     if (ids) {
-      filters = [sqlf.ids_to_sql(ids)]
+      filters = [ids_to_sql(ids)]
     } else {
       filters = [
         'NOT hidden',
         bounds
           ? center
-            ? sqlf.bounds_to_geography_sql(parse_bounds(bounds), 'location')
-            : sqlf.bounds_to_lnglat_sql(parse_bounds(bounds))
+            ? bounds_to_geography_sql(parse_bounds(bounds), 'location')
+            : bounds_to_lnglat_sql(parse_bounds(bounds))
           : null,
-        sqlf.muni_to_sql(muni),
-        sqlf.types_array_to_sql(types),
-        sqlf.invasive_to_sql(invasive),
+        muni_to_sql(muni),
+        types_array_to_sql(types),
+        invasive_to_sql(invasive),
       ]
     }
     const values: {
@@ -174,10 +181,10 @@ class Locations {
   }) {
     const filters = [
       'NOT hidden',
-      sqlf.bounds_to_geography_sql(parse_bounds(bounds), 'location'),
-      sqlf.muni_to_sql(muni),
-      sqlf.types_array_to_sql(types),
-      sqlf.invasive_to_sql(invasive),
+      bounds_to_geography_sql(parse_bounds(bounds), 'location'),
+      muni_to_sql(muni),
+      types_array_to_sql(types),
+      invasive_to_sql(invasive),
     ]
     const values = { where: filters.filter(Boolean).join(' AND ') }
     return this.db.one(sql.count, values)

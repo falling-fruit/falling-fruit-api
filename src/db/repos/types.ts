@@ -1,6 +1,10 @@
 import sqlModule = require('../sql')
 import { MAX_GRID_ZOOM } from '../../projection'
-import sqlf = require('../../sql_formatters')
+import {
+  bounds_to_lnglat_sql,
+  bounds_to_mercator_sql,
+  muni_to_sql,
+} from '../../sql_formatters'
 import Type = require('../../mappers/type')
 import { parse_bounds } from '../../parsers/bounds'
 import type { Protocol, Pgp } from '../types'
@@ -79,15 +83,15 @@ class Types {
     if (parsedZoom === null) {
       filters = [
         'NOT hidden',
-        sqlf.bounds_to_lnglat_sql(parse_bounds(bounds)),
-        sqlf.muni_to_sql(muni),
+        bounds_to_lnglat_sql(parse_bounds(bounds)),
+        muni_to_sql(muni),
       ]
       values = { where: filters.filter(Boolean).join(' AND ') }
       return this.db.any(sql.count, values)
     }
     filters = [
-      sqlf.bounds_to_mercator_sql(parse_bounds(bounds)),
-      sqlf.muni_to_sql(muni),
+      bounds_to_mercator_sql(parse_bounds(bounds)),
+      muni_to_sql(muni),
     ]
     values = { where: filters.filter(Boolean).join(' AND '), zoom: parsedZoom }
     return this.db.any(sql.countClusters, values)

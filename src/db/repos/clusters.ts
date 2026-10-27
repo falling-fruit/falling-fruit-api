@@ -7,7 +7,12 @@ import {
   move_cluster,
   geohash_to_zoom,
 } from '../../clustering'
-import sqlf = require('../../sql_formatters')
+import {
+  bounds_to_mercator_sql,
+  zoom_to_sql,
+  muni_to_sql,
+  types_to_sql,
+} from '../../sql_formatters'
 import { parse_bounds } from '../../parsers/bounds'
 import type pgPromise from 'pg-promise'
 import type { Protocol, Pgp } from '../types'
@@ -60,10 +65,10 @@ class Clusters {
       return []
     }
     const filters = [
-      sqlf.bounds_to_mercator_sql(parse_bounds(bounds)),
-      sqlf.zoom_to_sql(zoom),
-      sqlf.muni_to_sql(muni),
-      sqlf.types_to_sql(types),
+      bounds_to_mercator_sql(parse_bounds(bounds)),
+      zoom_to_sql(zoom),
+      muni_to_sql(muni),
+      types_to_sql(types),
     ]
     const values = { where: filters.filter(Boolean).join(' AND ') }
     return this.db.any(sql.list, values)

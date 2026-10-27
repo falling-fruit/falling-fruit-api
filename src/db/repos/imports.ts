@@ -1,5 +1,5 @@
 import sqlModule = require('../sql')
-import sqlf = require('../../sql_formatters')
+import { bounds_to_lnglat_sql, muni_to_sql } from '../../sql_formatters'
 import { parse_bounds } from '../../parsers/bounds'
 import type { Protocol, Pgp } from '../types'
 import type { Import } from '../../schemas/schemas'
@@ -26,8 +26,8 @@ class Imports {
   count({ bounds, muni = 'true' }: { bounds: string; muni?: string }) {
     const filters = [
       'NOT hidden',
-      sqlf.bounds_to_lnglat_sql(parse_bounds(bounds)),
-      sqlf.muni_to_sql(muni),
+      bounds_to_lnglat_sql(parse_bounds(bounds)),
+      muni_to_sql(muni),
     ]
     const values = { where: filters.filter(Boolean).join(' AND ') }
     return this.db.any(sql.count, values)
