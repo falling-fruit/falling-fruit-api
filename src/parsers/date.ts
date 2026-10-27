@@ -1,15 +1,13 @@
 // Parsers for date / datetime request parameters. Each validates the input
 // format and throws on malformed values, returning a normalized value or null.
 
-const _ = {}
-
 /**
  * Parse date.
  *
- * @param {string} value – Date in the format 'yyyy-mm-dd'.
- * @returns {string} Date in the format 'yyyy-mm-dd' or null.
+ * @param value – Date in the format 'yyyy-mm-dd'.
+ * @returns Date in the format 'yyyy-mm-dd' or null.
  */
-_.parse_date = function(value) {
+export function parse_date(value: string | null | undefined): string | null {
   if (!value) {
     return null
   }
@@ -27,11 +25,13 @@ _.parse_date = function(value) {
 /**
  * Parse datetime.
  *
- * @param {string} value – Datetime in the format 'yyyy-mm-ddTHH:MM:SSZ'
+ * @param value – Datetime in the format 'yyyy-mm-ddTHH:MM:SSZ'
  * (decimal seconds are permitted).
- * @returns {string} Datetime in the same format, or null.
+ * @returns Datetime in the same format, or null.
  */
-_.parse_datetime = function(value) {
+export function parse_datetime(
+  value: string | null | undefined,
+): string | null {
   if (!value) {
     return null
   }
@@ -45,5 +45,3 @@ _.parse_datetime = function(value) {
   }
   return value
 }
-
-module.exports = _

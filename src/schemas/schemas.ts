@@ -851,3 +851,29 @@ export const Token = register(
     })
     .openapi({ title: 'Token' }),
 )
+
+export type Cluster = z.infer<typeof Cluster>
+export type TypeCount = z.infer<typeof TypeCount>
+export type BaseType = z.infer<typeof BaseType>
+export type SubmitType = z.infer<typeof SubmitType>
+export type Type = z.infer<typeof Type>
+export type ListLocation = z.infer<typeof ListLocation>
+export type EditLocation = z.infer<typeof EditLocation>
+export type AddLocation = z.infer<typeof AddLocation>
+export type Location = z.infer<typeof Location>
+export type LocationChange = z.infer<typeof LocationChange>
+export type BaseReview = z.infer<typeof BaseReview>
+export type EditReview = z.infer<typeof EditReview>
+export type Review = z.infer<typeof Review>
+export type Photo = z.infer<typeof Photo>
+export type Import = z.infer<typeof Import>
+export type EditLocationList = z.infer<typeof EditLocationList>
+export type LocationListLocation = z.infer<typeof LocationListLocation>
+export type LocationList = z.infer<typeof LocationList>
+export type BaseUser = z.infer<typeof BaseUser>
+export type EditUser = z.infer<typeof EditUser>
+export type PublicUser = z.infer<typeof PublicUser>
+export type User = z.infer<typeof User>
+export type EditReport = z.infer<typeof EditReport>
+export type Report = z.infer<typeof Report>
+export type Token = z.infer<typeof Token>

@@ -80,7 +80,12 @@ function createDependencies(config: Config) {
 
 function createDependenciesForClients(
   config: Config,
-  { db: any, postmarkClient:any, s3Client:any, recaptcha:any }
+  {
+    db,
+    postmarkClient,
+    s3Client,
+    recaptcha,
+  }: { db: any; postmarkClient: any; s3Client: any; recaptcha: any },
 ) {
   const tokenizer = new Tokenizer(config.jwtSecret)
   const mailer = createMailer({ client: postmarkClient })

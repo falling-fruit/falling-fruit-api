@@ -3,25 +3,30 @@
 /**
  * Point coordinates.
  *
- * @typedef {object} Point
- * @property {number} x - Easting (m) or longitude (degrees).
- * @property {number} y - Northing (m) or latitude (degrees).
+ * The API's GeoJSON `Point` schema represents coordinates as an array, so there
+ * is no Zod schema for this internal `{ x, y }` representation.
  */
+export type Point = {
+  /** Easting (m) or longitude (degrees). */
+  x: number
+  /** Northing (m) or latitude (degrees). */
+  y: number
+}
 
 /**
  * Parse point coordinates.
  *
- * @param {string} value - Coordinates in the format 'lat,lng' (WGS84 decimal degrees).
+ * @param value - Coordinates in the format 'lat,lng' (WGS84 decimal degrees).
  * Expects longitude in interval [-180, 180] and latitude in interval [-90, 90].
- * @returns {Point} Parsed point in WGS84 decimal degrees.
+ * @returns Parsed point in WGS84 decimal degrees.
  */
-function parse_point(value) {
+export function parse_point(value: string): Point {
   const latlng = value.split(',').map(parseFloat)
   if (latlng.length != 2 || latlng.some(isNaN)) {
     throw Error('Coordinates not in the format {latitude},{longitude}')
   }
-  const point = {x: latlng[1], y: latlng[0]}
-  const max = {x: 180, y: 90}
+  const point = { x: latlng[1], y: latlng[0] }
+  const max = { x: 180, y: 90 }
   if (Math.abs(point.x) > max.x) {
     throw Error(`Longitude not in the interval [-${max.x}, ${max.x}]`)
   }
@@ -30,5 +35,3 @@ function parse_point(value) {
   }
   return point
 }
-
-module.exports = { parse_point }

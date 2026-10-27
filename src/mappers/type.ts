@@ -1,24 +1,49 @@
-const _ = {}
+import type { SubmitType, Type } from '../schemas/schemas'
 
-const TYPE_CATEGORIES = ['forager', 'freegan', 'honeybee', 'grafter']
+type TypeCategory = 'forager' | 'freegan' | 'honeybee' | 'grafter'
 
-// ---- bitfield helpers 
+const TYPE_CATEGORIES: TypeCategory[] = [
+  'forager',
+  'freegan',
+  'honeybee',
+  'grafter',
+]
 
-function mask_bits(selected, all) {
-  return all.reduce((acc, curr, i) => acc | (selected.includes(curr) ? 1 << i : 0), 0)
+// Flat database row: a dynamic set of columns (e.g. `en_name`, `scientific_name`,
+// `*_url`, `category_mask`) that does not map one-to-one onto the API schema.
+type TypeRow = Record<string, any>
+
+type ToRowOptions = {
+  nameColumns: string[]
+  defaultNames: string[]
 }
 
-function unmask_bits(mask, all) {
+// ---- bitfield helpers
+
+function mask_bits<T>(selected: T[], all: T[]): number {
+  return all.reduce(
+    (acc, curr, i) => acc | (selected.includes(curr) ? 1 << i : 0),
+    0,
+  )
+}
+
+function unmask_bits<T>(mask: number, all: T[]): T[] {
   return all.filter((_, i) => mask & (1 << i))
 }
+
+const _: {
+  locale_to_name: (locale: string) => string
+  fromRow: (type: TypeRow) => Partial<Type>
+  toRow: (obj: Partial<SubmitType>, options: ToRowOptions) => TypeRow
+} = {} as any
 
 /**
  * Resolve a locale (e.g. 'zh-TW') to its flat column name (e.g. 'zh_tw_name').
  *
- * @param {string} locale
- * @returns {string} Column name.
+ * @param locale
+ * @returns Column name.
  */
-_.locale_to_name = function(locale) {
+_.locale_to_name = function (locale) {
   const prefix = locale.toLowerCase().replace('-', '_')
   return `${prefix}_name`
 }
@@ -26,11 +51,11 @@ _.locale_to_name = function(locale) {
 /**
  * Convert a database row into the nested API object.
  *
- * @param {object} type - Raw type row.
- * @returns {object} API-shaped type.
+ * @param type - Raw type row.
+ * @returns API-shaped type.
  */
-_.fromRow = function(type) {
-  const replaced = []
+_.fromRow = function (type) {
+  const replaced: string[] = []
   // Format scientific names: [name, synonyms...]
   type.scientific_names = []
   if (type.scientific_name) {
@@ -106,16 +131,16 @@ _.fromRow = function(type) {
 /**
  * Convert an API object into a complete database row.
  *
- * @param {object} obj - API-shaped type (from a request body).
- * @param {object} options
- * @param {string[]} options.nameColumns - Existing `*_name` columns on the table.
- * @param {string[]} options.defaultNames - Columns that satisfy the "default name"
+ * @param obj - API-shaped type (from a request body).
+ * @param options
+ * @param options.nameColumns - Existing `*_name` columns on the table.
+ * @param options.defaultNames - Columns that satisfy the "default name"
  *   requirement, in priority order (e.g. ['en_name', 'scientific_name']).
- * @returns {object} Full type row, ready to insert.
+ * @returns Full type row, ready to insert.
  */
-_.toRow = function(obj, { nameColumns, defaultNames }) {
+_.toRow = function (obj, { nameColumns, defaultNames }) {
   // Deconstruct nested fields back into flat columns.
-  let values = {
+  let values: TypeRow = {
     parent_id: null,
     common_names: {},
     scientific_names: [],
@@ -124,7 +149,7 @@ _.toRow = function(obj, { nameColumns, defaultNames }) {
     pending: true,
     categories: [],
     user_id: null,
-    ...obj
+    ...obj,
   }
   // Extract English name and synonyms
   if ('en' in values.common_names) {
@@ -135,7 +160,8 @@ _.toRow = function(obj, { nameColumns, defaultNames }) {
   // Flatten scientific names
   if (values.scientific_names) {
     values.scientific_name = values.scientific_names[0]
-    values.scientific_synonyms = values.scientific_names.slice(1).join(', ') || null
+    values.scientific_synonyms =
+      values.scientific_names.slice(1).join(', ') || null
     delete values.scientific_names
   }
   // Encode categories into the bitfield
@@ -145,23 +171,28 @@ _.toRow = function(obj, { nameColumns, defaultNames }) {
   }
   // Fill in the full column skeleton.
   values = {
-    ...Object.fromEntries(nameColumns.map(x => [x, null])),
+    ...Object.fromEntries(nameColumns.map((x) => [x, null])),
     en_synonyms: null,
     scientific_synonyms: null,
     category_mask: null,
-    ...values
+    ...values,
   }
   // Determine whether default name is present
-  let has_default = defaultNames.some(name => Boolean(values[name]))
+  let has_default = defaultNames.some((name) => Boolean(values[name]))
   // Transfer remaining names to a language_name column, if it exists, or to notes
-  for (const [locale, names] of Object.entries(values.common_names)) {
+  for (const [locale, names] of Object.entries<string[]>(
+    values.common_names,
+  )) {
     const column = _.locale_to_name(locale)
     if (nameColumns.includes(column)) {
       values[column] = names.join(', ')
     } else {
       values.notes = [
-        values.notes || '', `common_names.${locale}: ${names.join(', ')}`
-      ].filter(Boolean).join('\n')
+        values.notes || '',
+        `common_names.${locale}: ${names.join(', ')}`,
+      ]
+        .filter(Boolean)
+        .join('\n')
     }
     // Use first name as default if no default name is present
     if (!has_default) {
@@ -173,4 +204,4 @@ _.toRow = function(obj, { nameColumns, defaultNames }) {
   return values
 }
 
-module.exports = _
+export = _
