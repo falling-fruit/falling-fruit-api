@@ -1,6 +1,12 @@
 import sqlModule = require('../sql')
 import { wgs84_to_mercator } from '../../projection'
-import clustering = require('../../clustering')
+import {
+  gridcell_to_geohash,
+  mercator_to_gridcell,
+  expand_geohash,
+  move_cluster,
+  geohash_to_zoom,
+} from '../../clustering'
 import sqlf = require('../../sql_formatters')
 import { parse_bounds } from '../../parsers/bounds'
 import type pgPromise from 'pg-promise'
@@ -76,11 +82,9 @@ class Clusters {
   }) {
     // Convert lng, lat to geohash
     const mercator = wgs84_to_mercator({ x: lng, y: lat })
-    const geohash = clustering.gridcell_to_geohash(
-      clustering.mercator_to_gridcell(mercator),
-    )
+    const geohash = gridcell_to_geohash(mercator_to_gridcell(mercator))
     // Expand geohash
-    const geohashes = clustering.expand_geohash(geohash)
+    const geohashes = expand_geohash(geohash)
     // Increment existing clusters
     const clusters: ClusterRow[] = await this.db.any(
       'SELECT id, x, y, count, type_id, geohash FROM clusters WHERE ${muni:raw} geohash IN (${geohashes:csv}) AND type_id IN (${type_ids:csv})',
@@ -91,12 +95,7 @@ class Clusters {
       },
     )
     clusters.forEach((c) => {
-      const center = clustering.move_cluster(
-        { cx: c.x, cy: c.y },
-        c.count,
-        mercator,
-        1,
-      )
+      const center = move_cluster({ cx: c.x, cy: c.y }, c.count, mercator, 1)
       c.x = center.x
       c.y = center.y
       c.count += 1
@@ -127,7 +126,7 @@ class Clusters {
         if (!hashes.includes(hash)) {
           missing.push({
             geohash: hash,
-            zoom: clustering.geohash_to_zoom(hash),
+            zoom: geohash_to_zoom(hash),
             type_id: type_id,
             muni: muni,
             x: mercator.x,
@@ -155,11 +154,9 @@ class Clusters {
   }) {
     // Convert lng, lat to geohash
     const mercator = wgs84_to_mercator({ x: lng, y: lat })
-    const geohash = clustering.gridcell_to_geohash(
-      clustering.mercator_to_gridcell(mercator),
-    )
+    const geohash = gridcell_to_geohash(mercator_to_gridcell(mercator))
     // Expand geohash
-    const geohashes = clustering.expand_geohash(geohash)
+    const geohashes = expand_geohash(geohash)
     // Delete singleton clusters
     await this.db.none(
       'DELETE FROM clusters WHERE ${muni:raw} geohash IN (${geohashes:csv}) AND type_id IN (${type_ids:csv}) AND count = 1',
@@ -179,12 +176,7 @@ class Clusters {
       },
     )
     clusters.forEach((c) => {
-      const center = clustering.move_cluster(
-        { cx: c.x, cy: c.y },
-        c.count,
-        mercator,
-        -1,
-      )
+      const center = move_cluster({ cx: c.x, cy: c.y }, c.count, mercator, -1)
       c.x = center.x
       c.y = center.y
       c.count -= 1
