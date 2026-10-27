@@ -1,9 +1,11 @@
-function is_date_in_future(datestamp) {
+import type { Request, Response, NextFunction } from 'express'
+
+function is_date_in_future(datestamp: string | number | Date): boolean {
   // Compare date to current date + 1 day (accounting for timezones)
   const date = new Date(datestamp)
   date.setUTCHours(0, 0, 0, 0)
   const today = new Date()
-  today.setUTCHours(0,0,0,0)
+  today.setUTCHours(0, 0, 0, 0)
   today.setDate(today.getDate() + 1)
   return date > today
 }
@@ -27,13 +29,13 @@ function is_date_in_future(datestamp) {
  * is_null({})  // true
  * is_null({a: 0})  // false
  */
-function is_null(value, zero = false) {
+function is_null(value: unknown, zero = false): boolean {
   if (Array.isArray(value)) {
     return value.length == 0
   } else if (Object.prototype.toString.call(value) === '[object Object]') {
-    return Object.keys(value).length == 0
+    return Object.keys(value as object).length == 0
   } else {
-    const nulls = ['', null, undefined]
+    const nulls: unknown[] = ['', null, undefined]
     if (zero) {
       nulls.push(0)
     }
@@ -41,31 +43,42 @@ function is_null(value, zero = false) {
   }
 }
 
-function test_review(...path) {
-  return function(req, res, next) {
-    const review = path.reduce((prev, curr) => prev && prev[curr], req.body)
+function test_review(...path: string[]) {
+  return function (req: Request, res: Response, next: NextFunction) {
+    const review = path.reduce(
+      (prev: any, curr) => prev && prev[curr],
+      req.body,
+    )
     if (!review) {
       return void next()
     }
     // Forbid observed_on date in the future (accounting for timezones)
     if (review.observed_on && is_date_in_future(review.observed_on)) {
-      return void res.status(400).json({error: 'observed_on cannot be in the future'})
+      return void res
+        .status(400)
+        .json({ error: 'observed_on cannot be in the future' })
     }
     // Require observed_on date if fruiting is not null
     if (!is_null(review.fruiting) && !review.observed_on) {
-      return void res.status(400).json(
-        {error: 'observed_on is required when fruiting is provided'}
-      )
+      return void res
+        .status(400)
+        .json({ error: 'observed_on is required when fruiting is provided' })
     }
     // Require content
-    const required = ['photo_ids', 'comment', 'fruiting', 'quality_rating', 'yield_rating']
-    if (required.every(key => is_null(review[key]))) {
-      return void res.status(400).json(
-        {error: `One of {${required.join(', ')}} is required`}
-      )
+    const required = [
+      'photo_ids',
+      'comment',
+      'fruiting',
+      'quality_rating',
+      'yield_rating',
+    ]
+    if (required.every((key) => is_null(review[key]))) {
+      return void res
+        .status(400)
+        .json({ error: `One of {${required.join(', ')}} is required` })
     }
     return void next()
   }
 }
 
-module.exports = test_review
+export = test_review

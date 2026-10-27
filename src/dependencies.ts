@@ -4,9 +4,9 @@ import aws from 'aws-sdk'
 import { RecaptchaV2 } from 'express-recaptcha'
 
 import makeDb = require('./db')
-const Tokenizer = require('./tokens')
-const createMailer = require('./mailer')
-const createPhotos = require('./photos')
+import Tokenizer = require('./tokens')
+import createMailer = require('./mailer')
+import createPhotos = require('./photos')
 const makeMiddleware = require('./middleware')
 import makeRoutes from './routes'
 import type { Config } from './config'
@@ -86,9 +86,14 @@ function createDependenciesForClients(
     postmarkClient,
     s3Client,
     recaptcha,
-  }: { db: Db; postmarkClient: any; s3Client: any; recaptcha: any },
+  }: {
+    db: Db
+    postmarkClient: any
+    s3Client: any
+    recaptcha: RecaptchaV2 | null
+  },
 ) {
-  const tokenizer = new Tokenizer(config.jwtSecret)
+  const tokenizer = new Tokenizer(config.jwtSecret ?? '')
   const mailer = createMailer({ client: postmarkClient })
   const photos = createPhotos({ s3: s3Client })
   const middleware = makeMiddleware({

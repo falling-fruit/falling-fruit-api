@@ -1,17 +1,52 @@
-function createMailer({client}) {
-  const mailer = {}
+/** Minimal email client contract (satisfied by Postmark's ServerClient). */
+type EmailClient = {
+  sendEmail(message: {
+    From: string
+    To: string
+    Subject: string
+    HtmlBody: string
+    MessageStream: string
+    Tag: string | null
+  }): unknown
+}
 
-  function send_email({to, subject, body, tag = null}) {
+/** User fields referenced when composing emails. */
+type MailUser = {
+  email: string
+  name?: string | null
+}
+
+function createMailer({ client }: { client: EmailClient }) {
+  const mailer: {
+    send_email_confirmation: (user: MailUser, token: string) => unknown
+    send_email_confirmation_exists: (user: MailUser) => unknown
+    send_email_confirmation_not_found: (user: MailUser) => unknown
+    send_email_confirmation_confirmed: (user: MailUser) => unknown
+    send_password_reset: (user: MailUser, token: string) => unknown
+    send_password_reset_not_found: (user: MailUser) => unknown
+  } = {} as any
+
+  function send_email({
+    to,
+    subject,
+    body,
+    tag = null,
+  }: {
+    to: string
+    subject: string
+    body: string
+    tag?: string | null
+  }) {
     return client.sendEmail({
       From: 'info@fallingfruit.org',
       To: to,
       Subject: subject,
       HtmlBody: body.replace(/\s{2,}/g, ''),
       MessageStream: 'outbound',
-      Tag: tag
+      Tag: tag,
     })
   }
-  mailer.send_email_confirmation = function(user, token) {
+  mailer.send_email_confirmation = function (user, token) {
   const email = {
     to: user.email,
     // Phrase: devise.mailer.confirmation_instructions.subject
@@ -32,7 +67,7 @@ function createMailer({client}) {
   return send_email(email)
 }
 
-mailer.send_email_confirmation_exists = function(user) {
+mailer.send_email_confirmation_exists = function (user) {
   const email = {
     to: user.email,
     subject: 'Registration attempt',
@@ -52,7 +87,7 @@ mailer.send_email_confirmation_exists = function(user) {
   return send_email(email)
 }
 
-mailer.send_email_confirmation_not_found = function(user) {
+mailer.send_email_confirmation_not_found = function (user) {
   const email = {
     to: user.email,
     subject: 'Email confirmation attempt',
@@ -69,7 +104,7 @@ mailer.send_email_confirmation_not_found = function(user) {
   return send_email(email)
 }
 
-mailer.send_email_confirmation_confirmed = function(user) {
+mailer.send_email_confirmation_confirmed = function (user) {
   const email = {
     to: user.email,
     subject: 'Email already confirmed',
@@ -86,7 +121,7 @@ mailer.send_email_confirmation_confirmed = function(user) {
   return send_email(email)
 }
 
-mailer.send_password_reset = function(user, token) {
+mailer.send_password_reset = function (user, token) {
   const email = {
     to: user.email,
     // Phrase: devise.mailer.reset_password_instructions.subject
@@ -108,7 +143,7 @@ mailer.send_password_reset = function(user, token) {
   return send_email(email)
 }
 
-mailer.send_password_reset_not_found = function(user) {
+mailer.send_password_reset_not_found = function (user) {
   const email = {
     to: user.email,
     subject: 'Password reset attempt',
@@ -128,5 +163,4 @@ mailer.send_password_reset_not_found = function(user) {
   return mailer
 }
 
-module.exports = createMailer
-
+export = createMailer
