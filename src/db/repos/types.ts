@@ -1,5 +1,5 @@
 import sqlModule = require('../sql')
-import projection = require('../../projection')
+import { MAX_GRID_ZOOM } from '../../projection'
 import sqlf = require('../../sql_formatters')
 import Type = require('../../mappers/type')
 import { parse_bounds } from '../../parsers/bounds'
@@ -70,7 +70,7 @@ class Types {
     let parsedZoom: number | null =
       zoom === null ? null : parseInt(String(zoom))
     if (parsedZoom) {
-      if (parsedZoom > projection.MAX_GRID_ZOOM) {
+      if (parsedZoom > MAX_GRID_ZOOM) {
         parsedZoom = null
       }
     }

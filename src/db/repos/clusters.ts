@@ -1,5 +1,5 @@
 import sqlModule = require('../sql')
-import projection = require('../../projection')
+import { wgs84_to_mercator } from '../../projection'
 import clustering = require('../../clustering')
 import sqlf = require('../../sql_formatters')
 import { parse_bounds } from '../../parsers/bounds'
@@ -75,7 +75,7 @@ class Clusters {
     muni?: boolean
   }) {
     // Convert lng, lat to geohash
-    const mercator = projection.wgs84_to_mercator({ x: lng, y: lat })
+    const mercator = wgs84_to_mercator({ x: lng, y: lat })
     const geohash = clustering.gridcell_to_geohash(
       clustering.mercator_to_gridcell(mercator),
     )
@@ -154,7 +154,7 @@ class Clusters {
     muni?: boolean
   }) {
     // Convert lng, lat to geohash
-    const mercator = projection.wgs84_to_mercator({ x: lng, y: lat })
+    const mercator = wgs84_to_mercator({ x: lng, y: lat })
     const geohash = clustering.gridcell_to_geohash(
       clustering.mercator_to_gridcell(mercator),
     )
