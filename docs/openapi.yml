@@ -2100,8 +2100,14 @@ paths:
           content:
             application/json:
               schema:
-                type: number
-                example: 25
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    minimum: 0
+                    example: 25
+                required:
+                  - count
   /locations/changes:
     get:
       summary: Fetch Location changes (activity).

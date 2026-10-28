@@ -4,10 +4,8 @@ import type { Photo } from '../../schemas/schemas'
 
 const sql = sqlModule.photos
 
-type PhotoRow = {
-  id: number
+type PhotoRow = Photo & {
   observation_id?: number | null
-  [key: string]: unknown
 }
 
 class Photos {
@@ -20,14 +18,14 @@ class Photos {
   }
 
   list(id: number | string): Promise<Photo[]> {
-    return this.db.any(sql.list, { id: parseInt(String(id)) })
+    return this.db.any<Photo>(sql.list, { id: parseInt(String(id)) })
   }
 
   add(
     urls: Record<string, unknown>,
     user_id: number | null = null,
   ): Promise<Photo> {
-    return this.db.one(sql.add, { ...urls, user_id: user_id })
+    return this.db.one<Photo>(sql.add, { ...urls, user_id: user_id })
   }
 
   async test_unlinked(
@@ -37,7 +35,7 @@ class Photos {
     if (!photo_ids || !photo_ids.length) {
       return []
     }
-    const photos: PhotoRow[] = await this.db.any(sql.listByIds, {
+    const photos = await this.db.any<PhotoRow>(sql.listByIds, {
       ids: photo_ids,
     })
     // Fail if one or more photos not found
@@ -60,11 +58,11 @@ class Photos {
     for (const photo of photos) {
       delete photo.observation_id
     }
-    return photos as unknown as Photo[]
+    return photos
   }
 
   get_urls(id: number): Promise<Record<string, string>> {
-    return this.db.one(
+    return this.db.one<Record<string, string>>(
       'SELECT thumb, medium, original FROM photos WHERE id = ${id}',
       { id },
     )

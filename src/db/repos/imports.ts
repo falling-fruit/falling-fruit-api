@@ -16,21 +16,21 @@ class Imports {
   }
 
   async show(id: number | string): Promise<Import> {
-    return await this.db.one(sql.show, { id: parseInt(String(id)) })
+    return await this.db.one<Import>(sql.show, { id: parseInt(String(id)) })
   }
 
   async list(): Promise<Import[]> {
-    return await this.db.any(sql.list)
+    return await this.db.any<Import>(sql.list)
   }
 
-  count({ bounds, muni = true }: { bounds: string[]; muni?: boolean }) {
+  count({ bounds, muni = true }: { bounds: string[]; muni?: boolean }): Promise<{ id: number; count: number }[]> {
     const filters = [
       'NOT hidden',
       bounds_to_lnglat_sql(parse_bounds(bounds)),
       muni_to_sql(muni),
     ]
     const values = { where: filters.filter(Boolean).join(' AND ') }
-    return this.db.any(sql.count, values)
+    return this.db.any<{ id: number; count: number }>(sql.count, values)
   }
 }
 

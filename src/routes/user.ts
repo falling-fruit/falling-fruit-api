@@ -9,6 +9,19 @@ import { recaptchaParam } from '../schemas/parameters'
 import passwords from '../passwords'
 const uploads = multer({ dest: 'uploads' })
 
+type ConfirmationUserRow = {
+  id: number
+  email: string
+  confirmed_at: string | null
+  unconfirmed_email: string | null
+}
+
+type PasswordResetUserRow = {
+  id: number
+  email: string
+  encrypted_password: string
+}
+
 const messageResponse = (example: string) =>
   z.object({
     message: z.string().min(1).openapi({ example }),
@@ -72,7 +85,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
     async (req) => {
       // Email uniqueness is case-insensitive
       req.body.email = req.body.email.toLowerCase()
-      const exists = await db.oneOrNone(
+      const exists = await db.oneOrNone<{ email: string; name: string | null }>(
         'SELECT email, name FROM users WHERE email=${email}',
         { email: req.body.email },
       )
@@ -137,7 +150,12 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
     },
     auth.required_role('user'),
     async (req, authUser, res) => {
-      const user = await db.one(
+      const user = await db.one<{
+        id: number
+        name: string | null
+        encrypted_password: string
+        email: string
+      }>(
         'SELECT id, name, encrypted_password, email FROM users WHERE id = ${id}',
         { id: authUser.id },
       )
@@ -160,7 +178,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
             'UPDATE users SET unconfirmed_email = ${email} WHERE id = ${id}',
             { id: authUser.id, email: req.body.email },
           )
-          const other = await db.oneOrNone(
+          const other = await db.oneOrNone<{ email: string; name: string | null }>(
             'SELECT email, name FROM users WHERE email = ${email}',
             { email: req.body.email },
           )
@@ -216,7 +234,12 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
     async (req, res) => {
       let user
       try {
-        user = await db.one(
+        user = await db.one<{
+          id: number
+          roles: string[]
+          encrypted_password: string
+          confirmed_at: string | null
+        }>(
           'SELECT id, roles, encrypted_password, confirmed_at FROM users WHERE email = ${email}',
           { email: req.body.username.toLowerCase() },
         )
@@ -292,7 +315,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
       if (!data) {
         return
       }
-      const user = await db.oneOrNone(
+      const user = await db.oneOrNone<{ id: number; roles: string[] }>(
         'SELECT id, roles FROM users WHERE id = ${id}',
         { id: data.id },
       )
@@ -303,7 +326,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
         user,
         data.exp,
       )
-      const refreshed = await db.oneOrNone(
+      const refreshed = await db.oneOrNone<{ jti: string }>(
         'UPDATE refresh_tokens SET jti = ${new}, updated_at = NOW() WHERE user_id = ${user_id} AND jti = ${old} RETURNING jti',
         { user_id: user.id, old: data.jti, new: jti },
       )
@@ -366,7 +389,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
       if (!data) {
         return
       }
-      const user = await db.oneOrNone(
+      const user = await db.oneOrNone<ConfirmationUserRow>(
         'SELECT id, email, confirmed_at, unconfirmed_email FROM users WHERE id=${id}',
         { id: data.id },
       )
@@ -430,7 +453,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
       if (!data) {
         return
       }
-      const user = await db.oneOrNone(
+      const user = await db.oneOrNone<ConfirmationUserRow>(
         'SELECT id, email, confirmed_at, unconfirmed_email FROM users WHERE id=${id}',
         { id: data.id },
       )
@@ -485,7 +508,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
     middleware.recaptcha,
     async (req) => {
       const email = req.body.email.toLowerCase()
-      const user = await db.oneOrNone(
+      const user = await db.oneOrNone<ConfirmationUserRow>(
         'SELECT id, email, unconfirmed_email, confirmed_at FROM users WHERE email = ${email} OR unconfirmed_email = ${email}',
         { email },
       )
@@ -544,7 +567,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
       if (!data) {
         return
       }
-      const user = await db.oneOrNone(
+      const user = await db.oneOrNone<PasswordResetUserRow>(
         'SELECT id, email, encrypted_password FROM users WHERE id=${id}',
         { id: data.id },
       )
@@ -592,7 +615,13 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
     middleware.recaptcha,
     async (req) => {
       const email = req.body.email.toLowerCase()
-      const user = await db.oneOrNone(
+      const user = await db.oneOrNone<{
+        id: number
+        email: string
+        name: string | null
+        confirmed_at: string | null
+        encrypted_password: string
+      }>(
         'SELECT id, email, name, confirmed_at, encrypted_password FROM users WHERE email=${email}',
         { email },
       )

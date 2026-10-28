@@ -11,7 +11,7 @@ function makeCheckApiKey({ db }: { db: Protocol }) {
     if (!key) {
       return void res.status(401).json({ error: 'API key is missing' })
     }
-    const matches = await db.any(
+    const matches = await db.any<{ id: number }>(
       'SELECT id FROM api_keys WHERE api_key=${key}',
       { key: key },
     )

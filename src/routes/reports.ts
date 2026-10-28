@@ -29,7 +29,7 @@ export default function ({ db, middleware, auth }: Services) {
       if (user) {
         report.reporter_id = user.id
         if (!report.email || !report.name) {
-          const dbUser = await db.one(
+          const dbUser = await db.one<{ name: string | null; email: string }>(
             'SELECT name, email FROM users WHERE id=${id}',
             { id: user.id },
           )

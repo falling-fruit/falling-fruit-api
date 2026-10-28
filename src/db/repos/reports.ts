@@ -20,7 +20,7 @@ class Reports {
       reporter_id: null,
       ...obj,
     }
-    return this.db.one(sql.add, values)
+    return this.db.one<Report>(sql.add, values)
   }
 }
 

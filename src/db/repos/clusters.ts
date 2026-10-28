@@ -71,7 +71,7 @@ class Clusters {
       types_to_sql(types),
     ]
     const values = { where: filters.filter(Boolean).join(' AND ') }
-    return this.db.any(sql.list, values)
+    return this.db.any<Cluster>(sql.list, values)
   }
 
   async increment({
@@ -91,7 +91,7 @@ class Clusters {
     // Expand geohash
     const geohashes = expand_geohash(geohash)
     // Increment existing clusters
-    const clusters: ClusterRow[] = await this.db.any(
+    const clusters: ClusterRow[] = await this.db.any<ClusterRow>(
       'SELECT id, x, y, count, type_id, geohash FROM clusters WHERE ${muni:raw} geohash IN (${geohashes:csv}) AND type_id IN (${type_ids:csv})',
       {
         muni: `${muni ? '' : 'NOT'} muni AND`,
@@ -172,7 +172,7 @@ class Clusters {
       },
     )
     // Decrement and move remaining clusters
-    const clusters: ClusterRow[] = await this.db.any(
+    const clusters = await this.db.any<Pick<ClusterRow, 'id' | 'x' | 'y' | 'count'>>(
       'SELECT id, x, y, count FROM clusters WHERE ${muni:raw} geohash IN (${geohashes:csv}) AND type_id IN (${type_ids:csv})',
       {
         muni: `${muni ? '' : 'NOT'} muni AND`,

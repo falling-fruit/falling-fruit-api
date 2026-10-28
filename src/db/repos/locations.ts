@@ -162,13 +162,13 @@ class Locations {
       `
     }
     if (photo) {
-      return this.db.any(sql.listphoto, values)
+      return this.db.any<ListLocation>(sql.listphoto, values)
     }
     if (!center && locale) {
       const names = this.types.locale_to_names(locale).join(', ')
-      return this.db.any(sql.listname, { ...values, names: names })
+      return this.db.any<ListLocation>(sql.listname, { ...values, names: names })
     }
-    return this.db.any(sql.list, values)
+    return this.db.any<ListLocation>(sql.list, values)
   }
 
   count({
@@ -181,7 +181,7 @@ class Locations {
     muni?: boolean
     types?: number[]
     invasive?: boolean
-  }) {
+  }): Promise<{ count: number }> {
     const filters = [
       'NOT hidden',
       bounds
@@ -192,7 +192,7 @@ class Locations {
       invasive_to_sql(invasive),
     ]
     const values = { where: filters.filter(Boolean).join(' AND ') }
-    return this.db.one(sql.count, values)
+    return this.db.one<{ count: number }>(sql.count, values)
   }
 
   delete(id: number | string) {

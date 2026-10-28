@@ -34,7 +34,10 @@ function makeDb(
   pgp.pg.types.setTypeParser(types.builtins.INT8, parseInt)
   // Return DATE without timestamp (YYYY-MM-DD)
   pgp.pg.types.setTypeParser(types.builtins.DATE, String)
-  return pgp(connectionString as string)
+  if (!connectionString) {
+    throw Error('A database connection string is required')
+  }
+  return pgp(connectionString)
 }
 
 export default makeDb

@@ -4,7 +4,7 @@ import sharp from 'sharp'
 
 type Promisable<T> = { promise(): Promise<T> }
 
-type S3Client = {
+export type S3Client = {
   upload(params: {
     ACL: string
     Bucket: string | undefined

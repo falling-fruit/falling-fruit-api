@@ -385,7 +385,9 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
       responses: {
         '200': {
           description: 'Success',
-          schema: z.number().openapi({ example: 25 }),
+          schema: z.object({
+            count: z.number().int().min(0).openapi({ example: 25 }),
+          }),
         },
       },
     },

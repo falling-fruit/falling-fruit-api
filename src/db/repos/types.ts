@@ -12,6 +12,8 @@ import type { SubmitType, Type as ApiType, TypeCount } from '../../schemas/schem
 
 const sql = sqlModule.types
 
+type TypeRow = Parameters<typeof Type.fromRow>[0]
+
 class Types {
   db: Protocol
   pgp: Pgp
@@ -22,10 +24,10 @@ class Types {
     this.db = db
     this.pgp = pgp
     this.names = []
-    db.any(
+    db.any<{ column_name: string }>(
       `SELECT column_name FROM information_schema.columns
        WHERE table_schema = 'public' AND table_name = 'types'`,
-    ).then((result: { column_name: string }[]) => {
+    ).then((result) => {
       this.names = result
         .map((row) => row.column_name)
         .filter((key) => key.endsWith('_name'))
@@ -50,17 +52,17 @@ class Types {
       nameColumns: this.names,
       defaultNames: this.default_names,
     })
-    const type = await this.db.one(sql.add, values)
+    const type = await this.db.one<TypeRow>(sql.add, values)
     return Type.fromRow(type)
   }
 
   async show(id: number | string): Promise<ApiType> {
-    const type = await this.db.one(sql.show, { id: parseInt(String(id)) })
+    const type = await this.db.one<TypeRow>(sql.show, { id: parseInt(String(id)) })
     return Type.fromRow(type)
   }
 
   async list(): Promise<ApiType[]> {
-    const types = await this.db.any(sql.list)
+    const types = await this.db.any<TypeRow>(sql.list)
     return types.map(Type.fromRow)
   }
 
@@ -88,14 +90,14 @@ class Types {
         muni_to_sql(muni),
       ]
       values = { where: filters.filter(Boolean).join(' AND ') }
-      return this.db.any(sql.count, values)
+      return this.db.any<TypeCount>(sql.count, values)
     }
     filters = [
       bounds_to_mercator_sql(parse_bounds(bounds)),
       muni_to_sql(muni),
     ]
     values = { where: filters.filter(Boolean).join(' AND '), zoom: parsedZoom }
-    return this.db.any(sql.countClusters, values)
+    return this.db.any<TypeCount>(sql.countClusters, values)
   }
 }
 

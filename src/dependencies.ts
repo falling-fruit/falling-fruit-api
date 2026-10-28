@@ -12,10 +12,12 @@ import makeMiddleware from './middleware'
 import makeRoutes from './routes'
 import type { Config } from './config'
 import type { Db } from './db/types'
+import type { EmailClient } from './mailer'
+import type { S3Client } from './photos'
 
-function createLoggingPostmarkClient() {
+function createLoggingPostmarkClient(): EmailClient {
   return {
-    sendEmail({ To, Subject, Tag, HtmlBody }: any) {
+    sendEmail({ To, Subject, Tag, HtmlBody }) {
       console.log(
         `[email disabled] To: ${To} | Subject: ${Subject} | Tag: ${Tag}\n` +
           HtmlBody,
@@ -25,9 +27,9 @@ function createLoggingPostmarkClient() {
   }
 }
 
-function createLoggingS3({ apiOrigin }: any) {
+function createLoggingS3({ apiOrigin }: { apiOrigin?: string }): S3Client {
   return {
-    upload({ Key }: any) {
+    upload({ Key }) {
       return {
         promise() {
           const base = (apiOrigin || '').replace(/\/+$/, '')
@@ -37,7 +39,7 @@ function createLoggingS3({ apiOrigin }: any) {
         },
       }
     },
-    copyObject({ CopySource, Key }: any) {
+    copyObject({ CopySource, Key }) {
       return {
         promise() {
           console.log(`[s3 disabled] copyObject ${CopySource} -> ${Key}`)
@@ -51,21 +53,25 @@ function createLoggingS3({ apiOrigin }: any) {
 function createDependencies(config: Config) {
   const db = makeDb(config.dbUrl, true)
 
-  let postmarkClient
-  let s3Client
+  let postmarkClient: EmailClient
+  let s3Client: S3Client
   let recaptcha
   if (config.local) {
     postmarkClient = createLoggingPostmarkClient()
     s3Client = createLoggingS3({ apiOrigin: config.apiOrigin })
     recaptcha = null
   } else {
-    postmarkClient = new postmark.ServerClient(config.postmarkApiToken)
+    // The SDK clients are stricter about null vs undefined than the app's
+    // minimal contracts, so they are adapted to the contracts at this boundary.
+    postmarkClient = new postmark.ServerClient(
+      config.postmarkApiToken,
+    ) as EmailClient
     s3Client = new aws.S3({
       region: config.s3Region,
       accessKeyId: config.s3AccessKeyId,
       secretAccessKey: config.s3SecretAccessKey,
       apiVersion: '2006-03-01',
-    })
+    }) as unknown as S3Client
     recaptcha = new RecaptchaV2(
       config.recaptchaSiteKey,
       config.recaptchaSecretKey,
@@ -89,8 +95,8 @@ function createDependenciesForClients(
     recaptcha,
   }: {
     db: Db
-    postmarkClient: any
-    s3Client: any
+    postmarkClient: EmailClient
+    s3Client: S3Client
     recaptcha: RecaptchaV2 | null
   },
 ) {

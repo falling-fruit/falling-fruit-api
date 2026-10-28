@@ -33,10 +33,10 @@ class Tiles {
       z: parseInt(String(z)),
       pixels: 256,
     }
-    let result = await this.db.oneOrNone(sql.get, values)
+    let result = await this.db.oneOrNone<{ mvt: unknown }>(sql.get, values)
     if (!result) {
       values.size = 40075016.68 / 2 ** values.z / values.pixels
-      result = await this.db.one(sql.show, values)
+      result = await this.db.one<{ mvt: unknown }>(sql.show, values)
     }
     return result.mvt
   }

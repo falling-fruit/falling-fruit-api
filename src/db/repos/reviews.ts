@@ -31,7 +31,7 @@ class Reviews {
       location_id: parseInt(String(id)),
     }
     // Assumes validation by middleware.test_review
-    const review = await this.db.one(sql.add, values)
+    const review = await this.db.one<Review>(sql.add, values)
     await this.changes.add({
       description: 'visited',
       review: review,
@@ -41,7 +41,7 @@ class Reviews {
   }
 
   show(id: number | string): Promise<Review> {
-    return this.db.one(sql.show, { id: parseInt(String(id)) })
+    return this.db.one<Review>(sql.show, { id: parseInt(String(id)) })
   }
 
   async edit(
@@ -49,13 +49,13 @@ class Reviews {
     obj: Partial<EditReview> & Record<string, unknown>,
   ): Promise<Review> {
     const values = { ...obj, id: parseInt(String(id)) }
-    const review = await this.db.one(sql.edit, values)
+    const review = await this.db.one<Review>(sql.edit, values)
     await this.changes.edit_review(id, review)
     return review
   }
 
   list(id: number | string): Promise<Review[]> {
-    return this.db.any(sql.list, { id: parseInt(String(id)) })
+    return this.db.any<Review>(sql.list, { id: parseInt(String(id)) })
   }
 
   delete(id: number | string) {

@@ -51,7 +51,7 @@ class Changes {
       filters.push(user_filter)
     }
     const values = { where: filters.join(' AND ') }
-    return this.db.any(sql.list, values)
+    return this.db.any<LocationChange>(sql.list, values)
   }
 
   add({
@@ -78,7 +78,7 @@ class Changes {
   }
 
   list_location_edits(id: number | string) {
-    return this.db.any(
+    return this.db.any<{ user_id: number | null }>(
       "SELECT * FROM changes WHERE location_id = ${id} and description = 'edited'",
       { id: parseInt(String(id)) },
     )

@@ -26,7 +26,7 @@ class LocationLists {
       ...obj,
       user_id: user.id,
     }
-    return this.db.one(sql.addList, values)
+    return this.db.one<LocationList>(sql.addList, values)
   }
 
   editList(
@@ -34,23 +34,23 @@ class LocationLists {
     obj: Partial<EditLocationList> & Record<string, unknown>,
   ): Promise<LocationList> {
     const values = { ...obj, id: parseInt(String(id)) }
-    return this.db.one(sql.editList, values)
+    return this.db.one<LocationList>(sql.editList, values)
   }
 
   showList(id: number | string): Promise<LocationList> {
-    return this.db.one(sql.showList, { id: parseInt(String(id)) })
+    return this.db.one<LocationList>(sql.showList, { id: parseInt(String(id)) })
   }
 
   showListWithLocations(id: number | string): Promise<LocationList> {
-    return this.db.one(sql.showListWithLocations, { id: parseInt(String(id)) })
+    return this.db.one<LocationList>(sql.showListWithLocations, { id: parseInt(String(id)) })
   }
 
   listUserLists(user_id: number | string): Promise<LocationList[]> {
-    return this.db.any(sql.listUserLists, { user_id: parseInt(String(user_id)) })
+    return this.db.any<LocationList>(sql.listUserLists, { user_id: parseInt(String(user_id)) })
   }
 
   listUserListsWithLocations(user_id: number | string): Promise<LocationList[]> {
-    return this.db.any(sql.listUserListsWithLocations, {
+    return this.db.any<LocationList>(sql.listUserListsWithLocations, {
       user_id: parseInt(String(user_id)),
     })
   }
