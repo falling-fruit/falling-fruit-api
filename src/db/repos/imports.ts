@@ -23,7 +23,7 @@ class Imports {
     return await this.db.any(sql.list)
   }
 
-  count({ bounds, muni = 'true' }: { bounds: string; muni?: string }) {
+  count({ bounds, muni = true }: { bounds: string[]; muni?: boolean }) {
     const filters = [
       'NOT hidden',
       bounds_to_lnglat_sql(parse_bounds(bounds)),

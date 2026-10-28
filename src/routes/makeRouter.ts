@@ -5,7 +5,11 @@ import {
   compileRoute,
   registerOperation,
   type RouteSpec,
+  type RequestSpec,
   type CompiledRoute,
+  type InferParams,
+  type InferQuery,
+  type InferBody,
 } from './openapi'
 import {
   validateRequestPart,
@@ -26,37 +30,67 @@ const STRICT_RESPONSE_VALIDATION =
 
 type Method = 'get' | 'post' | 'put' | 'delete'
 
-type Req = Omit<Request, 'body' | 'query' | 'params'> & {
-  body: any
-  query: any
-  params: any
+// The handler request: `params`, `query`, and `body` are inferred from the
+// route spec's Zod schemas, which are the shapes validated at runtime. Query
+// schemas coerce the raw wire strings to their logical types, so `query` is the
+// coerced output type rather than raw Express strings.
+type TypedReq<Params, Query, Body> = Omit<
+  Request,
+  'body' | 'query' | 'params'
+> & {
+  body: Body
+  query: Query
+  params: Params
   file?: any
   files?: any
 }
 
-type FinalHandler<Mode extends AuthMode> = Mode extends 'required'
+// Request typed from a route spec's request block.
+type SpecReq<Req extends RequestSpec> = TypedReq<
+  InferParams<Req>,
+  InferQuery<Req>,
+  InferBody<Req>
+>
+
+// Request for a bare string path: no schema, so parts fall back to Express
+// defaults and body to `any`.
+type RawReq = TypedReq<
+  Record<string, string>,
+  Record<string, string | undefined>,
+  any
+>
+
+type HandlerFor<Mode extends AuthMode, R> = Mode extends 'required'
   ? (
-      req: Req,
+      req: R,
       user: User,
       res: Response,
       next: NextFunction,
     ) => unknown | Promise<unknown>
   : Mode extends 'optional'
     ? (
-        req: Req,
+        req: R,
         user: User | null,
         res: Response,
         next: NextFunction,
       ) => unknown | Promise<unknown>
     : (
-        req: Req,
+        req: R,
         res: Response,
         next: NextFunction,
       ) => unknown | Promise<unknown>
 
-type RouteHandlers<Mode extends AuthMode> = [...any[], FinalHandler<Mode>]
+type SpecHandlers<Mode extends AuthMode, Req extends RequestSpec> = [
+  ...any[],
+  HandlerFor<Mode, SpecReq<Req>>,
+]
 
-type RouteArg = string | RouteSpec
+type RawHandlers<Mode extends AuthMode> = [
+  ...any[],
+  HandlerFor<Mode, RawReq>,
+]
+
+type RouteArg = string | RouteSpec<RequestSpec>
 
 function makeValidationMiddleware(compiled: CompiledRoute) {
   return (req: any, res: any, next: any) => {
@@ -68,12 +102,7 @@ function makeValidationMiddleware(compiled: CompiledRoute) {
         ) as any
       }
       if (compiled.validate.query) {
-        const validated = validateRequestPart(
-          compiled.validate.query,
-          req.query,
-        )
-        ;(req as any).validatedQuery = validated
-        Object.assign(req.query, validated as any)
+        req.query = validateRequestPart(compiled.validate.query, req.query)
       }
       if (compiled.validate.body) {
         req.body = validateRequestPart(compiled.validate.body, req.body)
@@ -102,7 +131,10 @@ function makeRouter() {
       typeof arg === 'string' ? undefined : compileRoute(arg)
 
     const preHandlers = handlers.slice(0, -1) as any[]
-    const handler = handlers[handlers.length - 1] as FinalHandler<AuthMode>
+    const handler = handlers[handlers.length - 1] as HandlerFor<
+      AuthMode,
+      any
+    >
 
     if (compiled) {
       registerOperation(method, compiled)
@@ -128,8 +160,8 @@ function makeRouter() {
           const user: User | null = req.user ?? null
           const data =
             auth.mode === 'none'
-              ? await (handler as FinalHandler<'none'>)(req, res, next)
-              : await (handler as FinalHandler<'optional'>)(
+              ? await (handler as HandlerFor<'none', any>)(req, res, next)
+              : await (handler as HandlerFor<'optional', any>)(
                   req,
                   user,
                   res,
@@ -178,36 +210,60 @@ function makeRouter() {
     )
   }
 
-  function get<Mode extends AuthMode>(
-    arg: RouteArg,
+  function get<Req extends RequestSpec, Mode extends AuthMode>(
+    spec: RouteSpec<Req>,
     auth: AuthSpec<Mode>,
-    ...handlers: RouteHandlers<Mode>
-  ) {
+    ...handlers: SpecHandlers<Mode, Req>
+  ): void
+  function get<Mode extends AuthMode>(
+    path: string,
+    auth: AuthSpec<Mode>,
+    ...handlers: RawHandlers<Mode>
+  ): void
+  function get(arg: RouteArg, auth: AuthSpec<AuthMode>, ...handlers: any[]) {
     register_route('get', arg, auth, handlers)
   }
 
-  function post<Mode extends AuthMode>(
-    arg: RouteArg,
+  function post<Req extends RequestSpec, Mode extends AuthMode>(
+    spec: RouteSpec<Req>,
     auth: AuthSpec<Mode>,
-    ...handlers: RouteHandlers<Mode>
-  ) {
+    ...handlers: SpecHandlers<Mode, Req>
+  ): void
+  function post<Mode extends AuthMode>(
+    path: string,
+    auth: AuthSpec<Mode>,
+    ...handlers: RawHandlers<Mode>
+  ): void
+  function post(arg: RouteArg, auth: AuthSpec<AuthMode>, ...handlers: any[]) {
     register_route('post', arg, auth, handlers)
   }
 
-  function put<Mode extends AuthMode>(
-    arg: RouteArg,
+  function put<Req extends RequestSpec, Mode extends AuthMode>(
+    spec: RouteSpec<Req>,
     auth: AuthSpec<Mode>,
-    ...handlers: RouteHandlers<Mode>
-  ) {
+    ...handlers: SpecHandlers<Mode, Req>
+  ): void
+  function put<Mode extends AuthMode>(
+    path: string,
+    auth: AuthSpec<Mode>,
+    ...handlers: RawHandlers<Mode>
+  ): void
+  function put(arg: RouteArg, auth: AuthSpec<AuthMode>, ...handlers: any[]) {
     register_route('put', arg, auth, handlers)
   }
 
   // delete is a reserved word
-  function drop<Mode extends AuthMode>(
-    arg: RouteArg,
+  function drop<Req extends RequestSpec, Mode extends AuthMode>(
+    spec: RouteSpec<Req>,
     auth: AuthSpec<Mode>,
-    ...handlers: RouteHandlers<Mode>
-  ) {
+    ...handlers: SpecHandlers<Mode, Req>
+  ): void
+  function drop<Mode extends AuthMode>(
+    path: string,
+    auth: AuthSpec<Mode>,
+    ...handlers: RawHandlers<Mode>
+  ): void
+  function drop(arg: RouteArg, auth: AuthSpec<AuthMode>, ...handlers: any[]) {
     register_route('delete', arg, auth, handlers)
   }
 

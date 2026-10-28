@@ -25,12 +25,12 @@ class Changes {
     earliest = null,
     latest = null,
     user_id = null,
-    range = 'false',
+    range = false,
   }: {
     earliest?: string | null
     latest?: string | null
-    user_id?: number | string | null
-    range?: string
+    user_id?: number | null
+    range?: boolean
   }): Promise<LocationChange[]> {
     earliest = dates.parse_datetime(earliest)
     latest = dates.parse_datetime(latest)
@@ -43,10 +43,10 @@ class Changes {
     }
     if (user_id) {
       let user_filter
-      if (range === 'true') {
-        user_filter = `ST_INTERSECTS(l.location, (SELECT range FROM users u2 WHERE u2.id = ${parseInt(String(user_id))}))`
+      if (range) {
+        user_filter = `ST_INTERSECTS(l.location, (SELECT range FROM users u2 WHERE u2.id = ${user_id}))`
       } else {
-        user_filter = `c.user_id = ${parseInt(String(user_id))}`
+        user_filter = `c.user_id = ${user_id}`
       }
       filters.push(user_filter)
     }

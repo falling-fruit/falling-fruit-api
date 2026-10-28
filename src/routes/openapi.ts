@@ -15,33 +15,87 @@ export interface ResponseSpec {
   headers?: Record<string, any>
 }
 
-export interface RouteSpec {
+export interface RequestSpec {
+  params?: z.ZodTypeAny
+  query?: z.ZodTypeAny
+  headers?: z.ZodTypeAny[]
+  body?: {
+    schema: z.ZodTypeAny
+    mediaType?: string
+    required?: boolean
+    description?: string
+  }
+  // Optional overrides used ONLY for runtime validation (not OpenAPI).
+  // Useful when the runtime-validated shape must differ from the documented
+  // schema. When omitted, params, query, and body are validated from their
+  // documented schemas.
+  validateParams?: z.ZodTypeAny
+  validateQuery?: z.ZodTypeAny
+  validateBody?: z.ZodTypeAny
+}
+
+export interface RouteSpec<Req extends RequestSpec = RequestSpec> {
   path: string
   summary?: string
   description?: string
   tags?: string[]
   security?: SecurityRequirement[]
   deprecated?: boolean
-  request?: {
-    params?: z.ZodTypeAny
-    query?: z.ZodTypeAny
-    headers?: z.ZodTypeAny[]
-    body?: {
-      schema: z.ZodTypeAny
-      mediaType?: string
-      required?: boolean
-      description?: string
-    }
-    // Optional overrides used ONLY for runtime validation (not OpenAPI).
-    // Useful when query params need coercion that differs from the
-    // documented schema. If omitted, params and body are validated from
-    // their documented schemas; query is not validated unless set here.
-    validateParams?: z.ZodTypeAny
-    validateQuery?: z.ZodTypeAny
-    validateBody?: z.ZodTypeAny
-  }
+  request?: Req
   responses: Record<string, ResponseSpec>
 }
+
+// ---- Handler request-part inference
+//
+// The handler sees the runtime-validated shapes, which is what each route
+// actually validates (see compileRoute): params from `validateParams ?? params`,
+// body from `validateBody ?? body.schema`, and query from
+// `validateQuery ?? query`. Query schemas coerce the raw wire strings to their
+// logical types (see schemas/query.ts), so the handler receives coerced values.
+
+type InferOutput<S> = S extends z.ZodType<infer Out> ? Out : unknown
+
+/** Zod schema that validates path params for a route, if any. */
+type ValidatedParamsSchema<Req extends RequestSpec> =
+  Req['validateParams'] extends z.ZodTypeAny
+    ? Req['validateParams']
+    : Req['params'] extends z.ZodTypeAny
+      ? Req['params']
+      : undefined
+
+/** Zod schema that validates the query string for a route, if any. */
+type ValidatedQuerySchema<Req extends RequestSpec> =
+  Req['validateQuery'] extends z.ZodTypeAny
+    ? Req['validateQuery']
+    : Req['query'] extends z.ZodTypeAny
+      ? Req['query']
+      : undefined
+
+/** Zod schema that validates the JSON body for a route, if any. */
+type ValidatedBodySchema<Req extends RequestSpec> =
+  Req['validateBody'] extends z.ZodTypeAny
+    ? Req['validateBody']
+    : Req['body'] extends { schema: z.ZodTypeAny }
+      ? Req['body']['schema']
+      : undefined
+
+export type InferParams<Req extends RequestSpec> =
+  ValidatedParamsSchema<Req> extends z.ZodTypeAny
+    ? InferOutput<ValidatedParamsSchema<Req>>
+    : Record<string, string>
+
+export type InferQuery<Req extends RequestSpec> =
+  ValidatedQuerySchema<Req> extends z.ZodTypeAny
+    ? InferOutput<ValidatedQuerySchema<Req>>
+    : Record<string, string | undefined>
+
+export type InferBody<Req extends RequestSpec> =
+  ValidatedBodySchema<Req> extends z.ZodTypeAny
+    ? InferOutput<ValidatedBodySchema<Req>>
+    : any
+
+export type SpecRequest<Spec> =
+  Spec extends RouteSpec<infer Req> ? Req : RequestSpec
 
 export interface CompiledRoute {
   path: string
@@ -130,7 +184,7 @@ export function compileRoute(spec: RouteSpec): CompiledRoute {
     path: spec.path,
     validate: {
       params: spec.request?.validateParams ?? spec.request?.params,
-      query: spec.request?.validateQuery,
+      query: spec.request?.validateQuery ?? spec.request?.query,
       body: spec.request?.validateBody ?? autoValidateBody,
     },
     responseBody: successBody,

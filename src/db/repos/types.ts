@@ -43,7 +43,9 @@ class Types {
     return this.default_names
   }
 
-  async add(obj: Partial<SubmitType>): Promise<Partial<ApiType>> {
+  async add(
+    obj: Partial<SubmitType> & Record<string, unknown>,
+  ): Promise<Partial<ApiType>> {
     const values = Type.toRow(obj, {
       nameColumns: this.names,
       defaultNames: this.default_names,
@@ -64,15 +66,14 @@ class Types {
 
   count({
     bounds,
-    muni = 'true',
-    zoom = null,
+    muni = true,
+    zoom = undefined,
   }: {
-    bounds: string
-    muni?: string
-    zoom?: number | string | null
+    bounds: string[]
+    muni?: boolean
+    zoom?: number
   }): Promise<TypeCount[]> {
-    let parsedZoom: number | null =
-      zoom === null ? null : parseInt(String(zoom))
+    let parsedZoom: number | null = zoom ?? null
     if (parsedZoom) {
       if (parsedZoom > MAX_GRID_ZOOM) {
         parsedZoom = null

@@ -52,16 +52,16 @@ class Clusters {
 
   list({
     bounds,
-    zoom = '0',
-    muni = 'true',
-    types = null,
+    zoom = 0,
+    muni = true,
+    types = undefined,
   }: {
-    bounds: string
-    zoom?: string
-    muni?: string
-    types?: string | null
+    bounds: string[]
+    zoom?: number
+    muni?: boolean
+    types?: number[]
   }): Promise<Cluster[]> | Cluster[] {
-    if (types === '') {
+    if (types && types.length === 0) {
       return []
     }
     const filters = [

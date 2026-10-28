@@ -31,7 +31,7 @@ class Photos {
   }
 
   async test_unlinked(
-    photo_ids: number[],
+    photo_ids: number[] | undefined,
     review_id: number | null = null,
   ): Promise<Photo[]> {
     if (!photo_ids || !photo_ids.length) {
@@ -81,7 +81,7 @@ class Photos {
     )
   }
 
-  async link(photo_ids: number[], review_id: number) {
+  async link(photo_ids: number[] | undefined, review_id: number) {
     if (photo_ids && photo_ids.length) {
       await this.db.none(sql.link, { id: review_id, ids: photo_ids })
     }

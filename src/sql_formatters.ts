@@ -1,43 +1,44 @@
 import { MAX_GRID_ZOOM, wgs84_to_mercator } from './projection'
 import type { Point } from './parsers/point'
 
-export function muni_to_sql(value: string | null | undefined): string | undefined {
-  if (value == 'false') {
+export function muni_to_sql(
+  value: boolean | null | undefined,
+): string | undefined {
+  if (value === false) {
     return 'NOT muni'
   }
 }
 
 export function invasive_to_sql(
-  value: string | null | undefined,
+  value: boolean | null | undefined,
 ): string | undefined {
-  if (value == 'true') {
+  if (value === true) {
     return 'invasive'
   }
 }
 
-export function ids_to_sql(value: string | null | undefined): string | undefined {
-  // '1,2,3'
-  if (value) {
-    return `id IN (${value})`
+export function ids_to_sql(
+  value: number[] | null | undefined,
+): string | undefined {
+  if (value && value.length) {
+    return `id IN (${value.join(',')})`
   }
 }
 
 export function types_to_sql(
-  value: string | null | undefined,
+  value: number[] | null | undefined,
 ): string | undefined {
-  // '1,2,3'
-  if (value) {
-    return `type_id IN (${value})`
+  if (value && value.length) {
+    return `type_id IN (${value.join(',')})`
   }
 }
 
 export function types_array_to_sql(
-  value: string | null | undefined,
+  value: number[] | null | undefined,
 ): string | undefined {
-  // '1,2,3'
-  if (value) {
+  if (value && value.length) {
     // Sorting shown to reduce db time 4x (?!). Requires intarray extension.
-    return `type_ids && sort(ARRAY[${value}])`
+    return `type_ids && sort(ARRAY[${value.join(',')}])`
   }
 }
 

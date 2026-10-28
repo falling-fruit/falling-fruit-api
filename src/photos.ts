@@ -56,7 +56,7 @@ type PhotosDb = {
 async function sync_legacy_first_photo(
   db: PhotosDb,
   photos: Photos,
-  photo_ids: number[],
+  photo_ids: number[] | undefined,
   review_id: number,
 ): Promise<void> {
   if (photo_ids && photo_ids.length) {

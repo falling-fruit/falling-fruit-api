@@ -1566,7 +1566,7 @@ components:
         default: null
         description: IDs of Types to include (all by default).
         uniqueItems: true
-      required: true
+      required: false
       description: IDs of Types to include (all by default).
       name: types
       in: query
@@ -1825,7 +1825,7 @@ paths:
             description: |
               Additional information to include.
               - locations: List locations.
-          required: true
+          required: false
           description: |
             Additional information to include.
             - locations: List locations.
@@ -1863,7 +1863,7 @@ paths:
             description: |
               Additional information to include.
               - locations: List locations.
-          required: true
+          required: false
           description: |
             Additional information to include.
             - locations: List locations.
@@ -1962,7 +1962,7 @@ paths:
             default: null
             description: 'Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored and locations are returned whether or not they are hidden.'
             uniqueItems: true
-          required: true
+          required: false
           description: 'Location IDs. If provided, other filters (`bounds`, `muni`, `types`, `invasives`) are ignored and locations are returned whether or not they are hidden.'
           name: ids
           in: query
@@ -1978,7 +1978,7 @@ paths:
             example:
               - '-5,-180'
               - '5,180'
-          required: true
+          required: false
           description: 'The southwest and northeast corners of the bounding box in WGS84 decimal degrees, in the format `swlat,swlng|nelat,nelng`. Latitude must be in the interval [-85.0511, 85.0511] and longitude must be in the interval [-180, 180]. Required if `center` is not provided.'
           name: bounds
           in: query
@@ -1996,7 +1996,7 @@ paths:
             example:
               - 1.359
               - 103.807
-          required: true
+          required: false
           description: 'Center `latitude,longitude` in WGS84 decimal degrees. If provided, Locations are returned in order of increasing distance and the distance to each Location is returned. Longitude must be in the interval [-180, 180] and latitude in the interval [-90, 90].'
           name: center
           in: query
@@ -2034,7 +2034,7 @@ paths:
             type: string
             description: 'Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`. Ignored if `center` is provided.'
             deprecated: true
-          required: true
+          required: false
           description: 'Whether (and in which language) to include a name for each Location Type, as an ISO 639-1 language code or `scientific` for the scientific (latin) name (applicable to lifeforms only). To guarantee that the name is not null, the first non-null name is provided from the requested locale, `en` (English), or `scientific`. Ignored if `center` is provided.'
           name: locale
           in: query
@@ -2123,7 +2123,7 @@ paths:
             format: date-time
             default: null
             description: Earliest UTC datetime of change (inclusive).
-          required: true
+          required: false
           description: Earliest UTC datetime of change (inclusive).
           name: earliest
           in: query
@@ -2132,7 +2132,7 @@ paths:
             format: date-time
             default: null
             description: Latest UTC datetime of change (exclusive).
-          required: true
+          required: false
           description: Latest UTC datetime of change (exclusive).
           name: latest
           in: query
@@ -2141,7 +2141,7 @@ paths:
             minimum: 1
             default: null
             description: User ID of changes to return.
-          required: true
+          required: false
           description: User ID of changes to return.
           name: user_id
           in: query
@@ -2184,7 +2184,7 @@ paths:
               Additional information to include.
               - reviews: Location reviews.
               - import: Imported dataset.
-          required: true
+          required: false
           description: |
             Additional information to include.
             - reviews: Location reviews.
@@ -2310,6 +2310,27 @@ paths:
                     example: observed_on is required if fruiting is provided
                 required:
                   - error
+  '/tiles/{z}/{x}/{y}.pbf':
+    get:
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: z
+          in: path
+        - schema:
+            type: string
+          required: true
+          name: x
+          in: path
+        - schema:
+            type: string
+          required: true
+          name: 'y'
+          in: path
+      responses:
+        '200':
+          description: Success
   '/reviews/{id}':
     get:
       summary: Fetch a Review.

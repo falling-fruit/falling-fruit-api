@@ -178,7 +178,7 @@ export = function ({ mailer, db, middleware, auth, tokenizer }: Services) {
           }
         }
         if (req.body.password === req.body.password_confirmation) {
-          req.body.password = null
+          delete req.body.password
         } else {
           await db.none(
             'DELETE FROM refresh_tokens WHERE user_id = ${id} AND jti != ${jti}',

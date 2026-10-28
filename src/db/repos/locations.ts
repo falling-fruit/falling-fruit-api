@@ -10,7 +10,6 @@ import {
 import Changes = require('./changes')
 import Types = require('./types')
 import Location = require('../../mappers/location')
-import { parse_point } from '../../parsers/point'
 import { parse_bounds } from '../../parsers/bounds'
 import type { Protocol, Pgp } from '../types'
 import type {
@@ -22,16 +21,17 @@ import type {
 const sql = sqlModule.locations
 
 type LocationListParams = {
-  ids?: string | null
-  bounds?: string | null
-  center?: string | null
-  muni?: string
-  types?: string | null
-  invasive?: string
-  limit?: string
-  offset?: string
-  photo?: string
-  locale?: string | null
+  ids?: number[]
+  bounds?: string[]
+  center?: number[]
+  muni?: boolean
+  types?: number[]
+  invasive?: boolean
+  limit?: number
+  offset?: number
+  photo?: boolean
+  count?: boolean
+  locale?: string
 }
 
 class Locations {
@@ -88,27 +88,30 @@ class Locations {
 
   async list(
     {
-      ids = null,
-      bounds = null,
-      center = null,
-      muni = 'true',
-      types = null,
-      invasive = 'false',
-      limit = '1000',
-      offset = '0',
-      photo = 'false',
-      locale = null,
+      ids = undefined,
+      bounds = undefined,
+      center = undefined,
+      muni = true,
+      types = undefined,
+      invasive = false,
+      limit = 1000,
+      offset = 0,
+      photo = false,
+      locale = undefined,
     }: LocationListParams,
     user: { id: number } | null,
   ): Promise<ListLocation[]> {
-    if (!ids && !bounds && !center) {
+    const hasIds = ids !== undefined
+    const hasBounds = bounds !== undefined
+    const hasCenter = center !== undefined
+    if (!hasIds && !hasBounds && !hasCenter) {
       throw Error('Either ids, bounds, or center are required')
     }
-    if (types === '' || ids === '') {
+    if ((types && types.length === 0) || (ids && ids.length === 0)) {
       return []
     }
     let filters
-    if (ids) {
+    if (ids && ids.length) {
       filters = [ids_to_sql(ids)]
     } else {
       filters = [
@@ -132,13 +135,13 @@ class Locations {
       names?: string
     } = {
       where: filters.filter(Boolean).join(' AND '),
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      limit: limit,
+      offset: offset,
       distance: { column: '', order: '' },
       in_list: '',
     }
     if (center) {
-      const point = parse_point(center)
+      const point = { x: center[1], y: center[0] }
       values.distance = {
         column: `,
           location <-> ST_SetSRID(
@@ -158,7 +161,7 @@ class Locations {
       ) as in_list
       `
     }
-    if (photo === 'true') {
+    if (photo) {
       return this.db.any(sql.listphoto, values)
     }
     if (!center && locale) {
@@ -169,19 +172,21 @@ class Locations {
   }
 
   count({
-    bounds,
-    muni = 'true',
-    types = null,
-    invasive = 'false',
+    bounds = undefined,
+    muni = true,
+    types = undefined,
+    invasive = false,
   }: {
-    bounds: string
-    muni?: string
-    types?: string | null
-    invasive?: string
+    bounds?: string[]
+    muni?: boolean
+    types?: number[]
+    invasive?: boolean
   }) {
     const filters = [
       'NOT hidden',
-      bounds_to_geography_sql(parse_bounds(bounds), 'location'),
+      bounds
+        ? bounds_to_geography_sql(parse_bounds(bounds), 'location')
+        : null,
       muni_to_sql(muni),
       types_array_to_sql(types),
       invasive_to_sql(invasive),

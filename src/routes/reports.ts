@@ -23,24 +23,27 @@ export = function ({ db, middleware, auth }: Services) {
     auth.optional,
     middleware.recaptcha,
     async (req, user) => {
+      const report: typeof req.body & { reporter_id?: number } = {
+        ...req.body,
+      }
       if (user) {
-        req.body.reporter_id = user.id
-        if (!req.body.email || !req.body.name) {
+        report.reporter_id = user.id
+        if (!report.email || !report.name) {
           const dbUser = await db.one(
             'SELECT name, email FROM users WHERE id=${id}',
             { id: user.id },
           )
-          req.body.email = req.body.email || dbUser.email
-          req.body.name = req.body.name || dbUser.name
+          report.email = report.email || dbUser.email
+          report.name = report.name || dbUser.name
         }
       }
-      if (!req.body.email) {
+      if (!report.email) {
         throw Error('An email is required')
       }
-      if (req.body.problem_code === 5 && !req.body.comment) {
+      if (report.problem_code === 5 && !report.comment) {
         throw Error('comment is required when problem_code = 5')
       }
-      return db.reports.add(req.body)
+      return db.reports.add(report)
     },
   )
 
