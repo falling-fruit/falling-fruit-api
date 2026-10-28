@@ -33,7 +33,7 @@ function unmask_bits<T>(mask: number, all: T[]): T[] {
 
 const _: {
   locale_to_name: (locale: string) => string
-  fromRow: (type: TypeRow) => Partial<Type>
+  fromRow: (type: TypeRow) => Type
   toRow: (
     obj: Partial<Type> & Record<string, unknown>,
     options: ToRowOptions,
@@ -128,7 +128,7 @@ _.fromRow = function (type) {
   for (const key of replaced) {
     delete type[key]
   }
-  return type
+  return type as Type
 }
 
 /**

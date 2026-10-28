@@ -34,7 +34,10 @@ export interface RequestSpec {
   validateBody?: z.ZodTypeAny
 }
 
-export interface RouteSpec<Req extends RequestSpec = RequestSpec> {
+export interface RouteSpec<
+  Req extends RequestSpec = RequestSpec,
+  Responses extends Record<string, ResponseSpec> = Record<string, ResponseSpec>,
+> {
   path: string
   summary?: string
   description?: string
@@ -42,7 +45,7 @@ export interface RouteSpec<Req extends RequestSpec = RequestSpec> {
   security?: SecurityRequirement[]
   deprecated?: boolean
   request?: Req
-  responses: Record<string, ResponseSpec>
+  responses: Responses
 }
 
 // ---- Handler request-part inference
@@ -95,7 +98,36 @@ export type InferBody<Req extends RequestSpec> =
     : any
 
 export type SpecRequest<Spec> =
-  Spec extends RouteSpec<infer Req> ? Req : RequestSpec
+  Spec extends RouteSpec<infer Req, Record<string, ResponseSpec>>
+    ? Req
+    : RequestSpec
+
+// ---- Handler response-body inference
+type SuccessCode<Code> = Code extends `2${string}` ? Code : never
+
+type SuccessResponseSchema<Responses> = {
+  [Code in keyof Responses]: SuccessCode<Code> extends never
+    ? never
+    : Responses[Code] extends { schema: infer S }
+      ? S
+      : never
+}[keyof Responses]
+
+type IsAny<T> = 0 extends 1 & T ? true : false
+
+export type InferResponseFromResponses<Responses> =
+  SuccessResponseSchema<Responses> extends infer S
+    ? IsAny<S> extends true
+      ? unknown
+      : [S] extends [z.ZodTypeAny]
+        ? InferOutput<S>
+        : unknown
+    : unknown
+
+export type InferResponse<Spec> =
+  Spec extends RouteSpec<RequestSpec, infer Responses>
+    ? InferResponseFromResponses<Responses>
+    : unknown
 
 export interface CompiledRoute {
   path: string
@@ -104,7 +136,6 @@ export interface CompiledRoute {
     query?: z.ZodTypeAny
     body?: z.ZodTypeAny
   }
-  responseBody?: z.ZodTypeAny
   openapi: Omit<RouteConfig, 'method' | 'path'>
 }
 
@@ -116,9 +147,8 @@ export function expressPathToOpenApi(path: string): string {
 
 function compileResponses(
   responses: Record<string, ResponseSpec>,
-): { openapi: RouteConfig['responses']; successBody?: z.ZodTypeAny } {
+): RouteConfig['responses'] {
   const out: RouteConfig['responses'] = {}
-  let successBody: z.ZodTypeAny | undefined
   for (const [code, spec] of Object.entries(responses)) {
     const response: ResponseConfig = { description: spec.description }
     if (spec.headers) {
@@ -128,13 +158,10 @@ function compileResponses(
       response.content = {
         [spec.mediaType ?? 'application/json']: { schema: spec.schema },
       }
-      if (code.startsWith('2') && !successBody) {
-        successBody = spec.schema
-      }
     }
     out[code] = response
   }
-  return { openapi: out, successBody }
+  return out
 }
 
 export function compileRoute(spec: RouteSpec): CompiledRoute {
@@ -160,7 +187,7 @@ export function compileRoute(spec: RouteSpec): CompiledRoute {
     }
   }
 
-  const { openapi: responses, successBody } = compileResponses(spec.responses)
+  const responses = compileResponses(spec.responses)
 
   const openapi: Omit<RouteConfig, 'method' | 'path'> = {
     ...(spec.summary !== undefined ? { summary: spec.summary } : {}),
@@ -187,7 +214,6 @@ export function compileRoute(spec: RouteSpec): CompiledRoute {
       query: spec.request?.validateQuery ?? spec.request?.query,
       body: spec.request?.validateBody ?? autoValidateBody,
     },
-    responseBody: successBody,
     openapi,
   }
 }

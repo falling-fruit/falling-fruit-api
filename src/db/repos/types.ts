@@ -45,7 +45,7 @@ class Types {
 
   async add(
     obj: Partial<SubmitType> & Record<string, unknown>,
-  ): Promise<Partial<ApiType>> {
+  ): Promise<ApiType> {
     const values = Type.toRow(obj, {
       nameColumns: this.names,
       defaultNames: this.default_names,
@@ -54,12 +54,12 @@ class Types {
     return Type.fromRow(type)
   }
 
-  async show(id: number | string): Promise<Partial<ApiType>> {
+  async show(id: number | string): Promise<ApiType> {
     const type = await this.db.one(sql.show, { id: parseInt(String(id)) })
     return Type.fromRow(type)
   }
 
-  async list(): Promise<Partial<ApiType>[]> {
+  async list(): Promise<ApiType[]> {
     const types = await this.db.any(sql.list)
     return types.map(Type.fromRow)
   }

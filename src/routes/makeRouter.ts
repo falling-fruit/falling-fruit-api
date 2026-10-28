@@ -10,12 +10,12 @@ import {
   type InferParams,
   type InferQuery,
   type InferBody,
+  type InferResponseFromResponses,
+  type ResponseSpec,
 } from './openapi'
 import {
   validateRequestPart,
-  validateResponseBody,
   RequestValidationError,
-  ResponseValidationError,
 } from './validation'
 import type makeAuth = require('../auth')
 
@@ -24,9 +24,6 @@ type AuthSpec<Mode extends AuthMode> = makeAuth.AuthSpec<Mode>
 type User = makeAuth.User
 
 const { queryResultErrorCode } = pgPromise.errors
-
-const STRICT_RESPONSE_VALIDATION =
-  process.env.STRICT_RESPONSE_VALIDATION === 'true'
 
 type Method = 'get' | 'post' | 'put' | 'delete'
 
@@ -60,34 +57,40 @@ type RawReq = TypedReq<
   any
 >
 
-type HandlerFor<Mode extends AuthMode, R> = Mode extends 'required'
+type HandlerResult<Res> = Res | void | undefined
+
+type HandlerFor<Mode extends AuthMode, R, Res> = Mode extends 'required'
   ? (
       req: R,
       user: User,
       res: Response,
       next: NextFunction,
-    ) => unknown | Promise<unknown>
+    ) => HandlerResult<Res> | Promise<HandlerResult<Res>>
   : Mode extends 'optional'
     ? (
         req: R,
         user: User | null,
         res: Response,
         next: NextFunction,
-      ) => unknown | Promise<unknown>
+      ) => HandlerResult<Res> | Promise<HandlerResult<Res>>
     : (
         req: R,
         res: Response,
         next: NextFunction,
-      ) => unknown | Promise<unknown>
+      ) => HandlerResult<Res> | Promise<HandlerResult<Res>>
 
-type SpecHandlers<Mode extends AuthMode, Req extends RequestSpec> = [
+type SpecHandlers<
+  Mode extends AuthMode,
+  Req extends RequestSpec,
+  Responses extends Record<string, ResponseSpec>,
+> = [
   ...any[],
-  HandlerFor<Mode, SpecReq<Req>>,
+  HandlerFor<Mode, SpecReq<Req>, InferResponseFromResponses<Responses>>,
 ]
 
 type RawHandlers<Mode extends AuthMode> = [
   ...any[],
-  HandlerFor<Mode, RawReq>,
+  HandlerFor<Mode, RawReq, unknown>,
 ]
 
 type RouteArg = string | RouteSpec<RequestSpec>
@@ -133,6 +136,7 @@ function makeRouter() {
     const preHandlers = handlers.slice(0, -1) as any[]
     const handler = handlers[handlers.length - 1] as HandlerFor<
       AuthMode,
+      any,
       any
     >
 
@@ -160,46 +164,22 @@ function makeRouter() {
           const user: User | null = req.user ?? null
           const data =
             auth.mode === 'none'
-              ? await (handler as HandlerFor<'none', any>)(req, res, next)
-              : await (handler as HandlerFor<'optional', any>)(
+              ? await (handler as HandlerFor<'none', any, any>)(req, res, next)
+              : await (handler as HandlerFor<'optional', any, any>)(
                   req,
                   user,
                   res,
                   next,
                 )
           if (data) {
-            let body: unknown = data
-            if (compiled?.responseBody && !res.headersSent) {
-              try {
-                body = validateResponseBody(compiled.responseBody, data)
-              } catch (err) {
-                if (
-                  STRICT_RESPONSE_VALIDATION &&
-                  err instanceof ResponseValidationError
-                ) {
-                  throw err
-                }
-                if (err instanceof ResponseValidationError) {
-                  console.warn(
-                    `[response validation] ${method.toUpperCase()} ${path}: ${err.message}`,
-                  )
-                }
-                body = data
-              }
-            }
             if (!res.headersSent) {
-              return void res.status(200).json(body)
+              return void res.status(200).json(data)
             }
           }
         } catch (err: any) {
           console.log('[caught]', err || err.message)
           if (err instanceof RequestValidationError) {
             return void res.status(400).json({ error: err.message })
-          }
-          if (err instanceof ResponseValidationError) {
-            return void res
-              .status(500)
-              .json({ error: 'Response validation failed' })
           }
           if (method === 'get' && err.code === queryResultErrorCode.noData) {
             return void res.status(404).json({ error: 'Not found' })
@@ -210,10 +190,14 @@ function makeRouter() {
     )
   }
 
-  function get<Req extends RequestSpec, Mode extends AuthMode>(
-    spec: RouteSpec<Req>,
+  function get<
+    Req extends RequestSpec,
+    Responses extends Record<string, ResponseSpec>,
+    Mode extends AuthMode,
+  >(
+    spec: RouteSpec<Req, Responses>,
     auth: AuthSpec<Mode>,
-    ...handlers: SpecHandlers<Mode, Req>
+    ...handlers: SpecHandlers<Mode, Req, Responses>
   ): void
   function get<Mode extends AuthMode>(
     path: string,
@@ -224,10 +208,14 @@ function makeRouter() {
     register_route('get', arg, auth, handlers)
   }
 
-  function post<Req extends RequestSpec, Mode extends AuthMode>(
-    spec: RouteSpec<Req>,
+  function post<
+    Req extends RequestSpec,
+    Responses extends Record<string, ResponseSpec>,
+    Mode extends AuthMode,
+  >(
+    spec: RouteSpec<Req, Responses>,
     auth: AuthSpec<Mode>,
-    ...handlers: SpecHandlers<Mode, Req>
+    ...handlers: SpecHandlers<Mode, Req, Responses>
   ): void
   function post<Mode extends AuthMode>(
     path: string,
@@ -238,10 +226,14 @@ function makeRouter() {
     register_route('post', arg, auth, handlers)
   }
 
-  function put<Req extends RequestSpec, Mode extends AuthMode>(
-    spec: RouteSpec<Req>,
+  function put<
+    Req extends RequestSpec,
+    Responses extends Record<string, ResponseSpec>,
+    Mode extends AuthMode,
+  >(
+    spec: RouteSpec<Req, Responses>,
     auth: AuthSpec<Mode>,
-    ...handlers: SpecHandlers<Mode, Req>
+    ...handlers: SpecHandlers<Mode, Req, Responses>
   ): void
   function put<Mode extends AuthMode>(
     path: string,
@@ -253,10 +245,14 @@ function makeRouter() {
   }
 
   // delete is a reserved word
-  function drop<Req extends RequestSpec, Mode extends AuthMode>(
-    spec: RouteSpec<Req>,
+  function drop<
+    Req extends RequestSpec,
+    Responses extends Record<string, ResponseSpec>,
+    Mode extends AuthMode,
+  >(
+    spec: RouteSpec<Req, Responses>,
     auth: AuthSpec<Mode>,
-    ...handlers: SpecHandlers<Mode, Req>
+    ...handlers: SpecHandlers<Mode, Req, Responses>
   ): void
   function drop<Mode extends AuthMode>(
     path: string,

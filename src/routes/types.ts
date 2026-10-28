@@ -40,7 +40,7 @@ export = function ({ db, middleware, auth }: Services) {
         body: { schema: SubmitType, required: true },
       },
       responses: {
-        '200': { description: 'Success', schema: z.array(Type) },
+        '200': { description: 'Success', schema: Type },
       },
     },
     auth.optional,

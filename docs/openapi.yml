@@ -1729,12 +1729,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  allOf:
-                    - $ref: '#/components/schemas/Type'
-                    - title: Type
-                      description: All Type properties.
+                allOf:
+                  - $ref: '#/components/schemas/Type'
+                  - title: Type
+                    description: All Type properties.
   /types/counts:
     get:
       summary: Count Types.
@@ -2159,9 +2157,11 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/LocationChange'
-                  - title: Location change
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/LocationChange'
+                    - title: Location change
   '/locations/{id}':
     get:
       summary: Fetch a Location.

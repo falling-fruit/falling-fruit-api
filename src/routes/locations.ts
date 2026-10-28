@@ -99,9 +99,9 @@ export = function ({ db, middleware, auth, photos: photosService }: Services) {
     auth.required_role('user'),
     async (req, user) => {
       if (req.query.embed?.includes('locations')) {
-        return await db.locationLists.listUserListsWithLocations(user.id)
+        return await db.locationLists.showListWithLocations(req.params.list_id)
       }
-      return await db.locationLists.listUserLists(user.id)
+      return await db.locationLists.showList(req.params.list_id)
     },
   )
 
@@ -434,7 +434,7 @@ export = function ({ db, middleware, auth, photos: photosService }: Services) {
         }),
       },
       responses: {
-        '200': { description: 'Success', schema: LocationChange },
+        '200': { description: 'Success', schema: z.array(LocationChange) },
       },
     },
     auth.optional,
