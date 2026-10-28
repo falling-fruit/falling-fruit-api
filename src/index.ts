@@ -3,7 +3,7 @@ import createDependencies from './dependencies'
 import createApp from './app'
 
 const { middleware, routes } = createDependencies(config)
-const app = createApp({ middleware, routes, apiBase: process.env.API_BASE })
+const app = createApp({ middleware, routes, apiBase: process.env.API_BASE || '' })
 
 // Start server
 app.listen(config.port, () => {

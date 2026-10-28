@@ -1,17 +1,27 @@
 import express from 'express'
-import type { Request, Response, NextFunction } from 'express'
+import type { Router, RequestHandler } from 'express'
 import cors from 'cors'
 import compression from 'compression'
+import type { Middleware } from './routes/services'
+import makeRoutes = require('./routes')
 
-function is_object(x: any): boolean {
-  return !!x && x.constructor === Object
+type Routes = ReturnType<typeof makeRoutes>
+
+type CreateAppOptions = {
+  middleware: Middleware
+  routes: Routes
+  apiBase: string
 }
 
-function null_empty_strings(obj: any): any {
+function is_object(x: unknown): x is Record<string, unknown> {
+  return !!x && (x as object).constructor === Object
+}
+
+function null_empty_strings(obj: unknown): unknown {
   if (!is_object(obj)) {
     return obj
   }
-  const out: Record<string, any> = {}
+  const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(obj)) {
     if (is_object(value)) {
       out[key] = null_empty_strings(value)
@@ -22,8 +32,8 @@ function null_empty_strings(obj: any): any {
   return out
 }
 
-function createApp({ middleware, routes, apiBase }: any) {
-  const app: any = express()
+function createApp({ middleware, routes, apiBase }: CreateAppOptions) {
+  const app = express()
   app.use(compression())
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
@@ -41,7 +51,7 @@ function createApp({ middleware, routes, apiBase }: any) {
   )
 
   // Register default handlers
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  const defaultHandler: RequestHandler = (req, res, next) => {
     if (req.method === 'OPTIONS') {
       // Add cache-control to preflight responses
       res.setHeader('Cache-Control', 'public, max-age=86400')
@@ -53,13 +63,14 @@ function createApp({ middleware, routes, apiBase }: any) {
       req.body = null_empty_strings(req.body)
     }
     return void next()
-  })
+  }
+  app.use(defaultHandler)
 
   // Routes: Docs
   app.use(`${apiBase}/openapi.yml`, express.static('docs/openapi.yml'))
 
   // Pre-route middleware
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  const preRouteHandler: RequestHandler = (req, res, next) => {
     const skip_api_key = [
       // OpenAPI OAuth2 password flow
       `${apiBase}/user/token`,
@@ -72,9 +83,10 @@ function createApp({ middleware, routes, apiBase }: any) {
       return next()
     }
     return middleware.check_api_key(req, res, next)
-  })
+  }
+  app.use(preRouteHandler)
 
-  for (const router of Object.values(routes) as any[]) {
+  for (const router of Object.values(routes) as Router[]) {
     app.use(apiBase, router)
   }
 

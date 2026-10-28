@@ -63,5 +63,8 @@
     "@types/pg": "^8.23.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.0"
+  },
+  "resolutions": {
+    "@types/express-serve-static-core": "^4.17.33"
   }
 }

@@ -1,5 +1,5 @@
 import express from 'express'
-import type { Request, Response, NextFunction } from 'express'
+import type { Request, Response, NextFunction, RequestHandler } from 'express'
 import pgPromise from 'pg-promise'
 import {
   compileRoute,
@@ -22,6 +22,7 @@ import type makeAuth = require('../auth')
 type AuthMode = makeAuth.AuthMode
 type AuthSpec<Mode extends AuthMode> = makeAuth.AuthSpec<Mode>
 type User = makeAuth.User
+type AuthRequest = makeAuth.AuthRequest
 
 const { queryResultErrorCode } = pgPromise.errors
 
@@ -95,17 +96,20 @@ type RawHandlers<Mode extends AuthMode> = [
 
 type RouteArg = string | RouteSpec<RequestSpec>
 
-function makeValidationMiddleware(compiled: CompiledRoute) {
-  return (req: any, res: any, next: any) => {
+function makeValidationMiddleware(compiled: CompiledRoute): RequestHandler {
+  return (req, res, next) => {
     try {
       if (compiled.validate.params) {
         req.params = validateRequestPart(
           compiled.validate.params,
           req.params,
-        ) as any
+        ) as typeof req.params
       }
       if (compiled.validate.query) {
-        req.query = validateRequestPart(compiled.validate.query, req.query)
+        req.query = validateRequestPart(
+          compiled.validate.query,
+          req.query,
+        ) as typeof req.query
       }
       if (compiled.validate.body) {
         req.body = validateRequestPart(compiled.validate.body, req.body)
@@ -133,7 +137,7 @@ function makeRouter() {
     const compiled: CompiledRoute | undefined =
       typeof arg === 'string' ? undefined : compileRoute(arg)
 
-    const preHandlers = handlers.slice(0, -1) as any[]
+    const preHandlers = handlers.slice(0, -1) as RequestHandler[]
     const handler = handlers[handlers.length - 1] as HandlerFor<
       AuthMode,
       any,
@@ -144,7 +148,7 @@ function makeRouter() {
       registerOperation(method, compiled)
     }
 
-    const middleware: any[] = []
+    const middleware: RequestHandler[] = []
     if (
       compiled &&
       (compiled.validate.params ||
@@ -159,7 +163,7 @@ function makeRouter() {
     ;(router[method] as any)(
       path,
       ...middleware,
-      async (req: any, res: any, next: any) => {
+      async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
           const user: User | null = req.user ?? null
           const data =
