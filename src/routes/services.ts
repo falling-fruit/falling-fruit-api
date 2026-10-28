@@ -1,5 +1,6 @@
 import type { Db } from '../db/types'
 import type Tokenizer from '../tokens'
+import type makeAuth = require('../auth')
 import makeMiddleware = require('../middleware')
 import createMailer = require('../mailer')
 import createPhotos = require('../photos')
@@ -11,6 +12,7 @@ export type Photos = ReturnType<typeof createPhotos>
 export interface Services {
   db: Db
   middleware: Middleware
+  auth: makeAuth.Auth
   tokenizer: Tokenizer
   mailer: Mailer
   photos: Photos

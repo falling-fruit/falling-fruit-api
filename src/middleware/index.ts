@@ -1,5 +1,4 @@
 import makeCheckApiKey = require('./check_api_key')
-import makeAuthenticate = require('./authenticate')
 import makeAuthenticatePostmark = require('./authenticate_postmark')
 import makeRecaptcha = require('./recaptcha')
 import test_review = require('./test_review')
@@ -16,7 +15,6 @@ type MakeMiddlewareOptions = {
 
 type Middleware = {
   check_api_key: ReturnType<typeof makeCheckApiKey>
-  authenticate: ReturnType<typeof makeAuthenticate>
   authenticate_postmark: ReturnType<typeof makeAuthenticatePostmark>
   recaptcha: ReturnType<typeof makeRecaptcha>
   test_review: typeof test_review
@@ -24,13 +22,11 @@ type Middleware = {
 
 function makeMiddleware({
   db,
-  tokenizer,
   recaptcha,
   postmarkSecret,
 }: MakeMiddlewareOptions): Middleware {
   return {
     check_api_key: makeCheckApiKey({ db }),
-    authenticate: makeAuthenticate({ tokenizer }),
     authenticate_postmark: makeAuthenticatePostmark({ postmarkSecret }),
     recaptcha: makeRecaptcha({ recaptcha }),
     test_review,

@@ -9,7 +9,7 @@ import {
   typesParam,
 } from '../schemas/parameters'
 
-export = function ({ db }: Services) {
+export = function ({ db, auth }: Services) {
   const { router, get } = makeRouter()
 
   get(
@@ -30,7 +30,8 @@ export = function ({ db }: Services) {
         '200': { description: 'Success', schema: z.array(Cluster) },
       },
     },
-    (req: any) => db.clusters.list(req.query),
+    auth.none,
+    (req) => db.clusters.list(req.query),
   )
 
   return router

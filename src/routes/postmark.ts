@@ -4,6 +4,7 @@ import type { Services } from './services'
 export = function ({
   db,
   middleware,
+  auth,
   postmarkServerId,
   postmarkBroadcastStream,
 }: Services) {
@@ -13,8 +14,9 @@ export = function ({
   // https://postmarkapp.com/developer/webhooks/subscription-change-webhook
   post(
     '/postmark/subscription',
+    auth.none,
     middleware.authenticate_postmark,
-    async (req: any) => {
+    async (req) => {
       if (
         req.body.ServerID !== postmarkServerId ||
         req.body.MessageStream !== postmarkBroadcastStream ||

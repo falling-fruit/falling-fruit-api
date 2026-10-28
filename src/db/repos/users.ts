@@ -11,7 +11,6 @@ type UserRow = Parameters<typeof User.fromRow>[0]
 type AddRequest = { body: Partial<EditUser> & { password: string } & Record<string, unknown> }
 type EditRequest = {
   body: Partial<EditUser> & { password?: string } & Record<string, unknown>
-  user: { id: number }
 }
 
 class Users {
@@ -43,10 +42,10 @@ class Users {
     return User.fromRow(user)
   }
 
-  async edit(req: EditRequest): Promise<ApiUser> {
+  async edit(req: EditRequest, authUser: { id: number }): Promise<ApiUser> {
     const values: Record<string, unknown> = {
       ...req.body,
-      id: req.user.id,
+      id: authUser.id,
     }
     if (values.password) {
       values.password = await passwords.hash_password(values.password as string)

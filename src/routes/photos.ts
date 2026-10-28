@@ -15,7 +15,7 @@ const PhotoUploadBody = z.object({
   }),
 })
 
-export = function ({ db, middleware, photos }: Services) {
+export = function ({ db, auth, photos }: Services) {
   const { router, post } = makeRouter()
 
   post(
@@ -35,12 +35,12 @@ export = function ({ db, middleware, photos }: Services) {
         '200': { description: 'Success', schema: Photo },
       },
     },
-    middleware.authenticate(),
+    auth.optional,
     // middleware.recaptcha,
     uploads.single('file'),
-    async (req: any) => {
+    async (req, user) => {
       const urls = await photos.resize_and_upload_photo(req.file.path)
-      return db.photos.add(urls, req.user ? req.user.id : null)
+      return db.photos.add(urls, user ? user.id : null)
     },
   )
 

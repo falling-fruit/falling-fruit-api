@@ -5,7 +5,7 @@ import { reviewIdParam } from '../schemas/parameters'
 import createPhotos = require('../photos')
 import type { Services } from './services'
 
-export = function ({ db, middleware, photos: photosService }: Services) {
+export = function ({ db, middleware, auth, photos: photosService }: Services) {
   const { router, get, put, drop } = makeRouter()
 
   get(
@@ -19,7 +19,8 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: Review },
       },
     },
-    async (req: any) => {
+    auth.none,
+    async (req) => {
       const review = await db.reviews.show(req.params.id)
       review.photos = await db.photos.list(req.params.id)
       return review
@@ -41,11 +42,11 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: Review },
       },
     },
-    middleware.authenticate('user'),
+    auth.required_role('user'),
     middleware.test_review(),
-    async (req: any, res: any) => {
+    async (req, user, res) => {
       const original = await db.reviews.show(req.params.id)
-      if (req.user.id != original.user_id) {
+      if (user.id != original.user_id) {
         return void res
           .status(403)
           .json({ error: 'Insufficient permissions' })
@@ -80,10 +81,10 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '204': { description: 'Success (no content)' },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
+    auth.required_role('user'),
+    async (req, user, res) => {
       const original = await db.reviews.show(req.params.id)
-      if (req.user.id != original.user_id) {
+      if (user.id != original.user_id) {
         return void res
           .status(403)
           .json({ error: 'Insufficient permissions' })

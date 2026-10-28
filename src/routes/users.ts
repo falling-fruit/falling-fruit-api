@@ -4,7 +4,7 @@ import { z } from '../schemas/registry'
 import { PublicUser } from '../schemas/schemas'
 import { userIdParam } from '../schemas/parameters'
 
-export = function ({ db }: Services) {
+export = function ({ db, auth }: Services) {
   const { router, get } = makeRouter()
 
   get(
@@ -18,7 +18,8 @@ export = function ({ db }: Services) {
         '200': { description: 'Success', schema: PublicUser },
       },
     },
-    (req: any) => db.users.show_public(req.params.id),
+    auth.none,
+    (req) => db.users.show_public(req.params.id),
   )
 
   return router

@@ -1,4 +1,5 @@
 import express from 'express'
+import type { Request, Response, NextFunction } from 'express'
 import pgPromise from 'pg-promise'
 import {
   compileRoute,
@@ -12,6 +13,11 @@ import {
   RequestValidationError,
   ResponseValidationError,
 } from './validation'
+import type makeAuth = require('../auth')
+
+type AuthMode = makeAuth.AuthMode
+type AuthSpec<Mode extends AuthMode> = makeAuth.AuthSpec<Mode>
+type User = makeAuth.User
 
 const { queryResultErrorCode } = pgPromise.errors
 
@@ -20,13 +26,35 @@ const STRICT_RESPONSE_VALIDATION =
 
 type Method = 'get' | 'post' | 'put' | 'delete'
 
-type RouteHandler = (
-  req: any,
-  res: any,
-  next: any,
-) => unknown | Promise<unknown>
+type Req = Omit<Request, 'body' | 'query' | 'params'> & {
+  body: any
+  query: any
+  params: any
+  file?: any
+  files?: any
+}
 
-type Handler = RouteHandler | RouteHandler[]
+type FinalHandler<Mode extends AuthMode> = Mode extends 'required'
+  ? (
+      req: Req,
+      user: User,
+      res: Response,
+      next: NextFunction,
+    ) => unknown | Promise<unknown>
+  : Mode extends 'optional'
+    ? (
+        req: Req,
+        user: User | null,
+        res: Response,
+        next: NextFunction,
+      ) => unknown | Promise<unknown>
+    : (
+        req: Req,
+        res: Response,
+        next: NextFunction,
+      ) => unknown | Promise<unknown>
+
+type RouteHandlers<Mode extends AuthMode> = [...any[], FinalHandler<Mode>]
 
 type RouteArg = string | RouteSpec
 
@@ -63,22 +91,33 @@ function makeValidationMiddleware(compiled: CompiledRoute) {
 function makeRouter() {
   const router = express.Router({ mergeParams: true })
 
-  function register_route(method: Method, arg: RouteArg, handlers: Handler[]) {
+  function register_route(
+    method: Method,
+    arg: RouteArg,
+    auth: AuthSpec<AuthMode>,
+    handlers: any[],
+  ) {
     const path = typeof arg === 'string' ? arg : arg.path
     const compiled: CompiledRoute | undefined =
       typeof arg === 'string' ? undefined : compileRoute(arg)
 
     const preHandlers = handlers.slice(0, -1) as any[]
-    const handler = handlers[handlers.length - 1] as RouteHandler
+    const handler = handlers[handlers.length - 1] as FinalHandler<AuthMode>
 
     if (compiled) {
       registerOperation(method, compiled)
     }
 
     const middleware: any[] = []
-    if (compiled && (compiled.validate.params || compiled.validate.query || compiled.validate.body)) {
+    if (
+      compiled &&
+      (compiled.validate.params ||
+        compiled.validate.query ||
+        compiled.validate.body)
+    ) {
       middleware.push(makeValidationMiddleware(compiled))
     }
+    middleware.push(...(auth?.handlers ?? []))
     middleware.push(...preHandlers)
 
     ;(router[method] as any)(
@@ -86,7 +125,16 @@ function makeRouter() {
       ...middleware,
       async (req: any, res: any, next: any) => {
         try {
-          const data = await handler(req, res, next)
+          const user: User | null = req.user ?? null
+          const data =
+            auth.mode === 'none'
+              ? await (handler as FinalHandler<'none'>)(req, res, next)
+              : await (handler as FinalHandler<'optional'>)(
+                  req,
+                  user,
+                  res,
+                  next,
+                )
           if (data) {
             let body: unknown = data
             if (compiled?.responseBody && !res.headersSent) {
@@ -130,21 +178,37 @@ function makeRouter() {
     )
   }
 
-  function get(arg: RouteArg, ...handlers: Handler[]) {
-    register_route('get', arg, handlers)
+  function get<Mode extends AuthMode>(
+    arg: RouteArg,
+    auth: AuthSpec<Mode>,
+    ...handlers: RouteHandlers<Mode>
+  ) {
+    register_route('get', arg, auth, handlers)
   }
 
-  function post(arg: RouteArg, ...handlers: Handler[]) {
-    register_route('post', arg, handlers)
+  function post<Mode extends AuthMode>(
+    arg: RouteArg,
+    auth: AuthSpec<Mode>,
+    ...handlers: RouteHandlers<Mode>
+  ) {
+    register_route('post', arg, auth, handlers)
   }
 
-  function put(arg: RouteArg, ...handlers: Handler[]) {
-    register_route('put', arg, handlers)
+  function put<Mode extends AuthMode>(
+    arg: RouteArg,
+    auth: AuthSpec<Mode>,
+    ...handlers: RouteHandlers<Mode>
+  ) {
+    register_route('put', arg, auth, handlers)
   }
 
   // delete is a reserved word
-  function drop(arg: RouteArg, ...handlers: Handler[]) {
-    register_route('delete', arg, handlers)
+  function drop<Mode extends AuthMode>(
+    arg: RouteArg,
+    auth: AuthSpec<Mode>,
+    ...handlers: RouteHandlers<Mode>
+  ) {
+    register_route('delete', arg, auth, handlers)
   }
 
   return { router, get, post, put, drop }

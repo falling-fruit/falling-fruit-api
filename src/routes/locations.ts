@@ -35,7 +35,7 @@ const embedLocationsParam = z
     description: 'Additional information to include.\n- locations: List locations.\n',
   })
 
-export = function ({ db, middleware, photos: photosService }: Services) {
+export = function ({ db, middleware, auth, photos: photosService }: Services) {
   const { router, get, post, put, drop } = makeRouter()
 
   // Routes: Location lists
@@ -50,12 +50,12 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: LocationList },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
+    auth.required_role('user'),
+    async (req, user, res) => {
       if (!req.body.name) {
         return void res.status(400).json({ error: 'Name is required' })
       }
-      return await db.locationLists.addList(req.body, req.user)
+      return await db.locationLists.addList(req.body, user)
     },
   )
 
@@ -70,12 +70,12 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: z.array(LocationList) },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any) => {
+    auth.required_role('user'),
+    async (req, user) => {
       if (req.query.embed === 'locations') {
-        return await db.locationLists.listUserListsWithLocations(req.user.id)
+        return await db.locationLists.listUserListsWithLocations(user.id)
       }
-      return await db.locationLists.listUserLists(req.user.id)
+      return await db.locationLists.listUserLists(user.id)
     },
   )
 
@@ -93,12 +93,12 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: LocationList },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any) => {
+    auth.required_role('user'),
+    async (req, user) => {
       if (req.query.embed === 'locations') {
-        return await db.locationLists.listUserListsWithLocations(req.user.id)
+        return await db.locationLists.listUserListsWithLocations(user.id)
       }
-      return await db.locationLists.listUserLists(req.user.id)
+      return await db.locationLists.listUserLists(user.id)
     },
   )
 
@@ -116,10 +116,10 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: LocationList },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
+    auth.required_role('user'),
+    async (req, user, res) => {
       const list = await db.locationLists.showList(req.params.id)
-      if (list.user_id != req.user.id) {
+      if (list.user_id != user.id) {
         return void res
           .status(403)
           .json({ error: 'Insufficient permissions' })
@@ -142,10 +142,10 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success' },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
+    auth.required_role('user'),
+    async (req, user, res) => {
       const list = await db.locationLists.showList(req.params.id)
-      if (list.user_id != req.user.id) {
+      if (list.user_id != user.id) {
         return void res
           .status(403)
           .json({ error: 'Insufficient permissions' })
@@ -171,10 +171,10 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '204': { description: 'Success' },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
+    auth.required_role('user'),
+    async (req, user, res) => {
       const list = await db.locationLists.showList(req.params.list_id)
-      if (list.user_id != req.user.id) {
+      if (list.user_id != user.id) {
         return void res
           .status(403)
           .json({ error: 'Insufficient permissions' })
@@ -203,10 +203,10 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '204': { description: 'Success' },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
+    auth.required_role('user'),
+    async (req, user, res) => {
       const list = await db.locationLists.showList(req.params.list_id)
-      if (list.user_id != req.user.id) {
+      if (list.user_id != user.id) {
         return void res
           .status(403)
           .json({ error: 'Insufficient permissions' })
@@ -304,9 +304,9 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         },
       },
     },
-    middleware.authenticate(),
-    async (req: any, res: any) => {
-      const locations = await db.locations.list(req.query, req.user)
+    auth.optional,
+    async (req, user, res) => {
+      const locations = await db.locations.list(req.query, user)
       if (req.query.count === 'true') {
         const limit = req.query.limit ? parseInt(req.query.limit) : 1000
         let count = locations.length
@@ -335,12 +335,12 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: Location },
       },
     },
-    middleware.authenticate(),
+    auth.optional,
     middleware.recaptcha,
     middleware.test_review('review'),
-    async (req: any) => {
+    async (req, user) => {
       // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
-      const user_id = req.user ? req.user.id : null
+      const user_id = user ? user.id : null
       const review_body = req.body.review
       const photos = review_body
         ? await db.photos.test_unlinked(review_body.photo_ids)
@@ -387,7 +387,8 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         },
       },
     },
-    (req: any) => db.locations.count(req.query),
+    auth.none,
+    (req) => db.locations.count(req.query),
   )
 
   get(
@@ -426,11 +427,11 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: LocationChange },
       },
     },
-    middleware.authenticate(),
-    async (req: any, res: any) => {
+    auth.optional,
+    async (req, user, res) => {
       if (
         req.query.user_id &&
-        (!req.user || req.user.id != parseInt(req.query.user_id))
+        (!user || user.id != parseInt(req.query.user_id))
       ) {
         if (req.query.range === 'true') {
           return void res.status(403).json({
@@ -465,9 +466,9 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: Location },
       },
     },
-    middleware.authenticate(),
-    async (req: any) => {
-      const location = await db.locations.show(req.params.id, req.user)
+    auth.optional,
+    async (req, user) => {
+      const location = await db.locations.show(req.params.id, user)
       if (req.query.embed) {
         const embedded = req.query.embed.split(',')
         if (embedded.includes('reviews')) {
@@ -497,14 +498,14 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: Location },
       },
     },
-    middleware.authenticate(),
+    auth.optional,
     middleware.recaptcha,
-    async (req: any) => {
+    async (req, user) => {
       const old = await db.locations.show(req.params.id, null)
       const updated = await db.locations.edit(
         req.params.id,
         req.body,
-        req.user,
+        user,
       )
       if (
         updated.lat != old.lat ||
@@ -532,17 +533,17 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '204': { description: 'Success (no content)' },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
+    auth.required_role('user'),
+    async (req, user, res) => {
       const original = await db.locations.show(req.params.id, null)
-      if (req.user.id != original.user_id) {
+      if (user.id != original.user_id) {
         return void res
           .status(403)
           .json({ error: 'Location was created by another user' })
       }
       const reviews = await db.reviews.list(req.params.id)
       for (const review of reviews) {
-        if (review.user_id != req.user.id) {
+        if (review.user_id != user.id) {
           return void res
             .status(403)
             .json({ error: 'Location contains reviews from other users' })
@@ -550,12 +551,12 @@ export = function ({ db, middleware, photos: photosService }: Services) {
       }
       const changes = await db.changes.list_location_edits(req.params.id)
       for (const change of changes) {
-        if (change.user_id != req.user.id) {
-          let user
+        if (change.user_id != user.id) {
+          let editor
           if (change.user_id) {
-            user = await db.users.show(change.user_id)
+            editor = await db.users.show(change.user_id)
           }
-          if (!user || !user.roles.includes('admin')) {
+          if (!editor || !editor.roles.includes('admin')) {
             return void res
               .status(403)
               .json({ error: 'Location was edited by another user' })
@@ -579,7 +580,8 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         '200': { description: 'Success', schema: z.array(Review) },
       },
     },
-    (req: any) => db.reviews.list(req.params.id),
+    auth.none,
+    (req) => db.reviews.list(req.params.id),
   )
 
   post(
@@ -608,15 +610,15 @@ export = function ({ db, middleware, photos: photosService }: Services) {
         },
       },
     },
-    middleware.authenticate(),
+    auth.optional,
     middleware.recaptcha,
     middleware.test_review(),
-    async (req: any) => {
+    async (req, user) => {
       // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
       const photos = await db.photos.test_unlinked(req.body.photo_ids)
       const review = await db.reviews.add(req.params.id, {
         ...req.body,
-        user_id: req.user ? req.user.id : null,
+        user_id: user ? user.id : null,
       })
       await db.photos.link(req.body.photo_ids, review.id)
       await createPhotos.sync_legacy_first_photo(

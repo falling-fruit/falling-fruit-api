@@ -11,7 +11,7 @@ import {
 
 const idParams = z.object({ id: z.coerce.number().int().min(1) })
 
-export = function ({ db, middleware }: Services) {
+export = function ({ db, middleware, auth }: Services) {
   const { router, get, post } = makeRouter()
 
   get(
@@ -24,6 +24,7 @@ export = function ({ db, middleware }: Services) {
         '200': { description: 'Success', schema: z.array(Type) },
       },
     },
+    auth.none,
     () => db.types.list(),
   )
 
@@ -42,18 +43,18 @@ export = function ({ db, middleware }: Services) {
         '200': { description: 'Success', schema: z.array(Type) },
       },
     },
-    middleware.authenticate(),
+    auth.optional,
     middleware.recaptcha,
-    (req: any, res: any) => {
+    (req, user, res) => {
       if (
         req.body.pending === false &&
-        (!req.user || !req.user.roles.includes('admin'))
+        (!user || !user.roles.includes('admin'))
       ) {
         return void res
           .status(403)
           .json({ error: 'Only admins can approve a type (pending: false)' })
       }
-      const user_id = req.user ? req.user.id : null
+      const user_id = user ? user.id : null
       return db.types.add({ ...req.body, user_id })
     },
   )
@@ -79,7 +80,8 @@ export = function ({ db, middleware }: Services) {
         '200': { description: 'Success', schema: z.array(TypeCount) },
       },
     },
-    (req: any) => db.types.count(req.query),
+    auth.none,
+    (req) => db.types.count(req.query),
   )
 
   get(
@@ -93,7 +95,8 @@ export = function ({ db, middleware }: Services) {
         '200': { description: 'Success', schema: Type },
       },
     },
-    (req: any) => db.types.show(req.params.id),
+    auth.none,
+    (req) => db.types.show(req.params.id),
   )
 
   return router

@@ -3,7 +3,7 @@ import type { Services } from './services'
 import { EditReport, Report } from '../schemas/schemas'
 import { recaptchaParam } from '../schemas/parameters'
 
-export = function ({ db, middleware }: Services) {
+export = function ({ db, middleware, auth }: Services) {
   const { router, post } = makeRouter()
 
   post(
@@ -20,18 +20,18 @@ export = function ({ db, middleware }: Services) {
         '200': { description: 'Success', schema: Report },
       },
     },
-    middleware.authenticate(),
+    auth.optional,
     middleware.recaptcha,
-    async (req: any) => {
-      if (req.user) {
-        req.body.reporter_id = req.user.id
+    async (req, user) => {
+      if (user) {
+        req.body.reporter_id = user.id
         if (!req.body.email || !req.body.name) {
-          const user = await db.one(
+          const dbUser = await db.one(
             'SELECT name, email FROM users WHERE id=${id}',
-            { id: req.user.id },
+            { id: user.id },
           )
-          req.body.email = req.body.email || user.email
-          req.body.name = req.body.name || user.name
+          req.body.email = req.body.email || dbUser.email
+          req.body.name = req.body.name || dbUser.name
         }
       }
       if (!req.body.email) {

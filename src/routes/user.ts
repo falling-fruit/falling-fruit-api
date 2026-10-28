@@ -35,7 +35,7 @@ const EditUserBody = z.object({
   password_confirmation: z.string().min(1).optional(),
 })
 
-export = function ({ mailer, db, middleware, tokenizer }: Services) {
+export = function ({ mailer, db, middleware, auth, tokenizer }: Services) {
   const { router, get, post, put, drop } = makeRouter()
 
   // Routes: Users (private)
@@ -67,8 +67,9 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         },
       },
     },
+    auth.none,
     middleware.recaptcha,
-    async (req: any) => {
+    async (req) => {
       // Email uniqueness is case-insensitive
       req.body.email = req.body.email.toLowerCase()
       const exists = await db.oneOrNone(
@@ -100,8 +101,8 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         '200': { description: 'Success', schema: User },
       },
     },
-    middleware.authenticate('user'),
-    (req: any) => db.users.show(req.user.id),
+    auth.required_role('user'),
+    (req, user) => db.users.show(user.id),
   )
 
   put(
@@ -134,11 +135,11 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         '200': { description: 'Success', schema: User },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
+    auth.required_role('user'),
+    async (req, authUser, res) => {
       const user = await db.one(
         'SELECT id, name, encrypted_password, email FROM users WHERE id = ${id}',
-        { id: req.user.id },
+        { id: authUser.id },
       )
       if (req.body.email != user.email || req.body.password) {
         if (!req.body.password_confirmation) {
@@ -157,7 +158,7 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         if (req.body.email != user.email) {
           await db.none(
             'UPDATE users SET unconfirmed_email = ${email} WHERE id = ${id}',
-            { id: req.user.id, email: req.body.email },
+            { id: authUser.id, email: req.body.email },
           )
           const other = await db.oneOrNone(
             'SELECT email, name FROM users WHERE email = ${email}',
@@ -181,11 +182,11 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         } else {
           await db.none(
             'DELETE FROM refresh_tokens WHERE user_id = ${id} AND jti != ${jti}',
-            { id: req.user.id, jti: req.user.jti },
+            { id: authUser.id, jti: authUser.jti },
           )
         }
       }
-      return db.users.edit(req)
+      return db.users.edit(req, authUser)
     },
   )
 
@@ -210,8 +211,9 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         '200': { description: 'Success', schema: Token },
       },
     },
+    auth.none,
     uploads.none(),
-    async (req: any, res: any) => {
+    async (req, res) => {
       let user
       try {
         user = await db.one(
@@ -282,8 +284,9 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         '200': { description: 'Success', schema: Token },
       },
     },
+    auth.none,
     uploads.none(),
-    async (req: any, res: any) => {
+    async (req, res) => {
       const token = req.body.refresh_token
       const data = tokenizer.verify_refresh(token, res)
       if (!data) {
@@ -324,9 +327,9 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         '204': { description: 'Success (no content)' },
       },
     },
-    middleware.authenticate('user'),
-    async (req: any, res: any) => {
-      await db.users.delete(req.user.id)
+    auth.required_role('user'),
+    async (req, user, res) => {
+      await db.users.delete(user.id)
       return void res.status(204).send()
     },
   )
@@ -356,7 +359,8 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         },
       },
     },
-    async (req: any, res: any) => {
+    auth.none,
+    async (req, res) => {
       const token = req.query.token
       const data = tokenizer.verify_email_confirmation(token, res)
       if (!data) {
@@ -419,7 +423,8 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         },
       },
     },
-    async (req: any, res: any) => {
+    auth.none,
+    async (req, res) => {
       const token = req.body.token
       const data = tokenizer.verify_email_confirmation(token, res)
       if (!data) {
@@ -476,8 +481,9 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         },
       },
     },
+    auth.none,
     middleware.recaptcha,
-    async (req: any) => {
+    async (req) => {
       const email = req.body.email.toLowerCase()
       const user = await db.oneOrNone(
         'SELECT id, email, unconfirmed_email, confirmed_at FROM users WHERE email = ${email} OR unconfirmed_email = ${email}',
@@ -531,7 +537,8 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         },
       },
     },
-    async (req: any, res: any) => {
+    auth.none,
+    async (req, res) => {
       const token = req.body.token
       let data = tokenizer.decode_password_reset(token, res)
       if (!data) {
@@ -581,8 +588,9 @@ export = function ({ mailer, db, middleware, tokenizer }: Services) {
         },
       },
     },
+    auth.none,
     middleware.recaptcha,
-    async (req: any) => {
+    async (req) => {
       const email = req.body.email.toLowerCase()
       const user = await db.oneOrNone(
         'SELECT id, email, name, confirmed_at, encrypted_password FROM users WHERE email=${email}',

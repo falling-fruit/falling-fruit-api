@@ -5,6 +5,7 @@ import { RecaptchaV2 } from 'express-recaptcha'
 
 import makeDb = require('./db')
 import Tokenizer = require('./tokens')
+import makeAuth = require('./auth')
 import createMailer = require('./mailer')
 import createPhotos = require('./photos')
 import makeMiddleware = require('./middleware')
@@ -94,6 +95,7 @@ function createDependenciesForClients(
   },
 ) {
   const tokenizer = new Tokenizer(config.jwtSecret ?? '')
+  const auth = makeAuth({ tokenizer })
   const mailer = createMailer({ client: postmarkClient })
   const photos = createPhotos({ s3: s3Client })
   const middleware = makeMiddleware({
@@ -106,6 +108,7 @@ function createDependenciesForClients(
     db,
     tokenizer,
     middleware,
+    auth,
     mailer,
     photos,
     postmarkServerId: config.local ? undefined : config.postmarkServerId,
@@ -114,7 +117,7 @@ function createDependenciesForClients(
       : config.postmarkBroadcastStream,
   })
 
-  return { db, tokenizer, mailer, photos, middleware, routes }
+  return { db, tokenizer, auth, mailer, photos, middleware, routes }
 }
 
 createDependencies.createDependenciesForClients = createDependenciesForClients

@@ -4,7 +4,7 @@ import { z } from '../schemas/registry'
 import { Import } from '../schemas/schemas'
 import { importIdParam } from '../schemas/parameters'
 
-export = function ({ db }: Services) {
+export = function ({ db, auth }: Services) {
   const { router, get } = makeRouter()
 
   get(
@@ -17,6 +17,7 @@ export = function ({ db }: Services) {
         '200': { description: 'Success', schema: z.array(Import) },
       },
     },
+    auth.none,
     () => db.imports.list(),
   )
 
@@ -31,7 +32,8 @@ export = function ({ db }: Services) {
         '200': { description: 'Success', schema: Import },
       },
     },
-    (req: any) => db.imports.show(req.params.id),
+    auth.none,
+    (req) => db.imports.show(req.params.id),
   )
 
   return router
