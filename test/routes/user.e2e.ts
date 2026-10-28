@@ -1,7 +1,9 @@
-const test = require('node:test')
-const assert = require('node:assert/strict')
+import test from 'node:test'
+import assert from 'node:assert/strict'
 
-const setup = require('../e2eSetup')({ tables: ['users'] })
+import setupE2E = require('../e2eSetup')
+
+const setup = setupE2E({ tables: ['users'] })
 
 test('signup with a new email creates a user and sends a confirmation email', async () => {
   const result = await setup.request('/user', {

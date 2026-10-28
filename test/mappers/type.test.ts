@@ -1,17 +1,20 @@
-const test = require('node:test')
-const assert = require('node:assert/strict')
+import test from 'node:test'
+import assert from 'node:assert/strict'
 
-const Type = require('../../src/mappers/type')
+import Type = require('../../src/mappers/type')
+import type { Type as ApiType } from '../../src/schemas/schemas'
+
+type TypeInput = Partial<ApiType> & Record<string, unknown>
 
 const nameColumns = ['en_name', 'es_name', 'fr_name', 'zh_tw_name']
 const defaultNames = ['en_name', 'scientific_name']
 
-function roundTrip(apiObj) {
+function roundTrip(apiObj: TypeInput) {
   const input = structuredClone(apiObj)
   return Type.fromRow(Type.toRow(input, { nameColumns, defaultNames }))
 }
 
-const fixtures = {
+const fixtures: Record<string, TypeInput> = {
   'full type': {
     id: 1,
     parent_id: null,

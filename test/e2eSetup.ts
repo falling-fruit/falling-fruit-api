@@ -1,23 +1,33 @@
-const path = require('path')
-const test = require('node:test')
+import path from 'path'
+import test from 'node:test'
+import type { Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
 
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env.test') })
+import dotenv from 'dotenv'
 
-const makeDb = require('../src/db')
-const createDependencies = require('../src/dependencies')
+dotenv.config({ path: path.resolve(__dirname, '..', '.env.test') })
+
+import makeDb = require('../src/db')
+import createDependencies = require('../src/dependencies')
+import createApp = require('../src/app')
+import type { Db } from '../src/db/types'
+
 const { createDependenciesForClients } = createDependencies
-const createApp = require('../src/app')
 
 const JWT_SECRET = process.env.JWT_SECRET || 'test-secret'
 const API_BASE = process.env.API_BASE || ''
 const TEST_API_KEY = 'test-api-key'
 
+type Email = { Subject: string; [key: string]: unknown }
+
 class FakePostmarkClient {
+  calls: Email[]
+
   constructor() {
     this.calls = []
   }
 
-  sendEmail(email) {
+  sendEmail(email: Email) {
     this.calls.push(email)
     return Promise.resolve()
   }
@@ -31,19 +41,24 @@ class FakePostmarkClient {
   }
 }
 
+type S3Params = { Key: string; [key: string]: unknown }
+
 class FakeS3Client {
+  uploads: S3Params[]
+
   constructor() {
     this.uploads = []
   }
 
-  upload(params) {
+  upload(params: S3Params) {
     this.uploads.push(params)
     return {
-      promise: () => Promise.resolve({ Location: `https://example.com/${params.Key}` })
+      promise: () =>
+        Promise.resolve({ Location: `https://example.com/${params.Key}` }),
     }
   }
 
-  copyObject(params) {
+  copyObject(_params: S3Params) {
     return { promise: () => Promise.resolve({}) }
   }
 
@@ -52,8 +67,28 @@ class FakeS3Client {
   }
 }
 
+type RequestOptions = {
+  method?: string
+  body?: unknown
+  headers?: Record<string, string>
+  apiKey?: string | null
+}
+
+type E2EResponse = {
+  status: number
+  body: unknown
+  response: Response
+}
+
 class E2ESetup {
-  constructor({ tables = [] } = {}) {
+  tables: string[]
+  db: Db
+  postmark: FakePostmarkClient
+  s3: FakeS3Client
+  server: Server | null
+  url: string | null
+
+  constructor({ tables = [] }: { tables?: string[] } = {}) {
     this.tables = tables
     this.db = makeDb(process.env.DB, false)
     this.postmark = new FakePostmarkClient()
@@ -77,10 +112,10 @@ class E2ESetup {
     )
     const app = createApp({ middleware, routes, apiBase: API_BASE })
     await this.reset()
-    this.server = await new Promise((resolve) => {
+    this.server = await new Promise<Server>((resolve) => {
       const server = app.listen(0, () => resolve(server))
     })
-    const { port } = this.server.address()
+    const { port } = this.server.address() as AddressInfo
     this.url = `http://localhost:${port}`
     return this
   }
@@ -96,20 +131,33 @@ class E2ESetup {
     )
   }
 
-  async request(pathname, { method = 'GET', body, headers = {}, apiKey = TEST_API_KEY } = {}) {
+  async request(
+    pathname: string,
+    {
+      method = 'GET',
+      body,
+      headers = {},
+      apiKey = TEST_API_KEY,
+    }: RequestOptions = {},
+  ): Promise<E2EResponse> {
     const url = `${this.url}${API_BASE}${pathname}`
-    const finalHeaders = { ...headers }
+    const finalHeaders: Record<string, string> = { ...headers }
     if (apiKey) {
       finalHeaders['x-api-key'] = apiKey
     }
-    let payload
+    let payload: string | undefined
     if (body !== undefined) {
-      finalHeaders['content-type'] = finalHeaders['content-type'] || 'application/json'
+      finalHeaders['content-type'] =
+        finalHeaders['content-type'] || 'application/json'
       payload = typeof body === 'string' ? body : JSON.stringify(body)
     }
-    const response = await fetch(url, { method, headers: finalHeaders, body: payload })
+    const response = await fetch(url, {
+      method,
+      headers: finalHeaders,
+      body: payload,
+    })
     const text = await response.text()
-    let parsed = text
+    let parsed: unknown = text
     try {
       parsed = text ? JSON.parse(text) : null
     } catch {
@@ -120,14 +168,17 @@ class E2ESetup {
 
   async close() {
     if (this.server) {
-      await new Promise((resolve) => this.server.close(resolve))
+      const server = this.server
+      await new Promise<void>((resolve) =>
+        server.close(() => resolve()),
+      )
       this.server = null
     }
     await this.db.$pool.end()
   }
 }
 
-function setupE2E(options = {}) {
+function setupE2E(options: { tables?: string[] } = {}) {
   const setup = new E2ESetup(options)
   test.before(() => setup.start())
   test.beforeEach(() => setup.reset())
@@ -135,4 +186,4 @@ function setupE2E(options = {}) {
   return setup
 }
 
-module.exports = setupE2E
+export = setupE2E

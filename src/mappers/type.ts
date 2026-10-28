@@ -1,4 +1,4 @@
-import type { SubmitType, Type } from '../schemas/schemas'
+import type { Type } from '../schemas/schemas'
 
 type TypeCategory = 'forager' | 'freegan' | 'honeybee' | 'grafter'
 
@@ -34,7 +34,10 @@ function unmask_bits<T>(mask: number, all: T[]): T[] {
 const _: {
   locale_to_name: (locale: string) => string
   fromRow: (type: TypeRow) => Partial<Type>
-  toRow: (obj: Partial<SubmitType>, options: ToRowOptions) => TypeRow
+  toRow: (
+    obj: Partial<Type> & Record<string, unknown>,
+    options: ToRowOptions,
+  ) => TypeRow
 } = {} as any
 
 /**

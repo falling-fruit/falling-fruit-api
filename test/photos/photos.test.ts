@@ -1,8 +1,12 @@
-const test = require('node:test')
-const assert = require('node:assert/strict')
+import test from 'node:test'
+import assert from 'node:assert/strict'
 
-const createPhotos = require('../../src/photos')
+import createPhotos = require('../../src/photos')
+
 const { is_new_photo_url, sync_legacy_first_photo } = createPhotos
+
+type PhotosDb = Parameters<typeof sync_legacy_first_photo>[0]
+type Photos = Parameters<typeof sync_legacy_first_photo>[1]
 
 test('is_new_photo_url returns true for new-style photos/ keys', () => {
   assert.equal(
@@ -26,30 +30,40 @@ test('is_new_photo_url returns false for non-S3 urls', () => {
   assert.equal(is_new_photo_url('https://example.com/photo.jpg'), false)
 })
 
-function makeDbStub(urls) {
-  const calls = { get_urls: [], set_photo_file_name: [] }
-  return {
+function makeDbStub(urls: Record<string, string>) {
+  const calls = {
+    get_urls: [] as number[],
+    set_photo_file_name: [] as [number, string | null][],
+  }
+  const db: PhotosDb & { calls: typeof calls } = {
     calls,
-    get_urls(id) {
+    get_urls(id: number) {
       calls.get_urls.push(id)
       return Promise.resolve(urls)
     },
-    set_photo_file_name(review_id, name) {
+    set_photo_file_name(review_id: number, name: string | null) {
       calls.set_photo_file_name.push([review_id, name])
       return Promise.resolve(null)
     },
   }
+  return db
 }
 
 function makePhotosStub() {
-  const calls = { copy_photo_to_old_urls: [] }
-  return {
+  const calls = {
+    copy_photo_to_old_urls: [] as [Record<string, string>, number][],
+  }
+  const photos: Photos & { calls: typeof calls } = {
     calls,
-    copy_photo_to_old_urls(urls, observation_id) {
+    copy_photo_to_old_urls(urls: Record<string, string>, observation_id: number) {
       calls.copy_photo_to_old_urls.push([urls, observation_id])
       return Promise.resolve([])
     },
+    resize_and_upload_photo(_input: string) {
+      return Promise.resolve({})
+    },
   }
+  return photos
 }
 
 test('sync_legacy_first_photo copies and sets first.jpg for a new-style first photo', async () => {

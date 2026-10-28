@@ -8,7 +8,7 @@ const sql = sqlModule.users
 
 type UserRow = Parameters<typeof User.fromRow>[0]
 
-type AddRequest = { body: EditUser & { password: string } & Record<string, unknown> }
+type AddRequest = { body: Partial<EditUser> & { password: string } & Record<string, unknown> }
 type EditRequest = {
   body: Partial<EditUser> & { password?: string } & Record<string, unknown>
   user: { id: number }

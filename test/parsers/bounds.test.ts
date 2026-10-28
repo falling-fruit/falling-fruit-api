@@ -1,7 +1,7 @@
-const test = require('node:test')
-const assert = require('node:assert/strict')
+import test from 'node:test'
+import assert from 'node:assert/strict'
 
-const { parse_bounds } = require('../../src/parsers/bounds')
+import { parse_bounds } from '../../src/parsers/bounds'
 
 test('parses a valid bounds string into two WGS84 points', () => {
   const points = parse_bounds('10,20|30,40')
