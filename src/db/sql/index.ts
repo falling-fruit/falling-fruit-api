@@ -1,4 +1,5 @@
-import pgPromise, { QueryFile } from 'pg-promise'
+import pgPromise from 'pg-promise'
+import type { QueryFile } from 'pg-promise'
 import path from 'path'
 import { fileURLToPath } from 'node:url'
 
@@ -13,7 +14,7 @@ type SqlSet = Record<string, QueryFile>
 type Sql = Record<string, SqlSet>
 
 const sql = enumSql(__dirname, { recursive: true }, (file) => {
-  return new QueryFile(file, {
+  return new pgPromise.QueryFile(file, {
     minify: true,
   })
 }) as unknown as Sql

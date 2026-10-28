@@ -1,5 +1,4 @@
 import promise from 'bluebird'
-import { types } from 'pg'
 import monitor from 'pg-monitor'
 import repos from './repos'
 import pgPromise from 'pg-promise'
@@ -31,9 +30,9 @@ function makeDb(
   }
   const pgp: Pgp = pgPromise(options)
   // Return BIGINT or BIGSERIAL as JSON integers (https://stackoverflow.com/a/39176670)
-  pgp.pg.types.setTypeParser(types.builtins.INT8, parseInt)
+  pgp.pg.types.setTypeParser(pgp.pg.types.builtins.INT8, parseInt)
   // Return DATE without timestamp (YYYY-MM-DD)
-  pgp.pg.types.setTypeParser(types.builtins.DATE, String)
+  pgp.pg.types.setTypeParser(pgp.pg.types.builtins.DATE, String)
   if (!connectionString) {
     throw Error('A database connection string is required')
   }
