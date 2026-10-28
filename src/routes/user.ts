@@ -1,5 +1,6 @@
 import multer from 'multer'
 import makeRouter from './makeRouter'
+import type { Services } from './services'
 import { z, inlineAllOf } from '../schemas/registry'
 import { User, EditUser, Token } from '../schemas/schemas'
 import { emailProp, passwordProp } from '../schemas/properties'
@@ -34,7 +35,7 @@ const EditUserBody = z.object({
   password_confirmation: z.string().min(1).optional(),
 })
 
-export = function ({ mailer, db, middleware, tokenizer }: any) {
+export = function ({ mailer, db, middleware, tokenizer }: Services) {
   const { router, get, post, put, drop } = makeRouter()
 
   // Routes: Users (private)

@@ -9,8 +9,9 @@ import user from './user'
 import postmark from './postmark'
 import reports from './reports'
 import imports from './imports'
+import type { Services } from './services'
 
-function makeRoutes(services: any) {
+function makeRoutes(services: Services) {
   return {
     clusters: clusters(services),
     types: types(services),

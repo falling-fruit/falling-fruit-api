@@ -1,11 +1,12 @@
 import makeRouter from './makeRouter'
+import type { Services } from './services'
 
 export = function ({
   db,
   middleware,
   postmarkServerId,
   postmarkBroadcastStream,
-}: any) {
+}: Services) {
   const { router, post } = makeRouter()
 
   // Mailing list subscription (via Postmark)

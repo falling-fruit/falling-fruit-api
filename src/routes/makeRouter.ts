@@ -20,11 +20,13 @@ const STRICT_RESPONSE_VALIDATION =
 
 type Method = 'get' | 'post' | 'put' | 'delete'
 
-type Handler = (
+type RouteHandler = (
   req: any,
   res: any,
   next: any,
 ) => unknown | Promise<unknown>
+
+type Handler = RouteHandler | RouteHandler[]
 
 type RouteArg = string | RouteSpec
 
@@ -67,7 +69,7 @@ function makeRouter() {
       typeof arg === 'string' ? undefined : compileRoute(arg)
 
     const preHandlers = handlers.slice(0, -1) as any[]
-    const handler = handlers[handlers.length - 1]
+    const handler = handlers[handlers.length - 1] as RouteHandler
 
     if (compiled) {
       registerOperation(method, compiled)

@@ -1,4 +1,5 @@
 import makeRouter from './makeRouter'
+import type { Services } from './services'
 import { z } from '../schemas/registry'
 import createPhotos = require('../photos')
 import {
@@ -34,7 +35,7 @@ const embedLocationsParam = z
     description: 'Additional information to include.\n- locations: List locations.\n',
   })
 
-export = function ({ db, middleware, photos: photosService }: any) {
+export = function ({ db, middleware, photos: photosService }: Services) {
   const { router, get, post, put, drop } = makeRouter()
 
   // Routes: Location lists
@@ -499,7 +500,7 @@ export = function ({ db, middleware, photos: photosService }: any) {
     middleware.authenticate(),
     middleware.recaptcha,
     async (req: any) => {
-      const old = await db.locations.show(req.params.id)
+      const old = await db.locations.show(req.params.id, null)
       const updated = await db.locations.edit(
         req.params.id,
         req.body,
@@ -533,7 +534,7 @@ export = function ({ db, middleware, photos: photosService }: any) {
     },
     middleware.authenticate('user'),
     async (req: any, res: any) => {
-      const original = await db.locations.show(req.params.id)
+      const original = await db.locations.show(req.params.id, null)
       if (req.user.id != original.user_id) {
         return void res
           .status(403)

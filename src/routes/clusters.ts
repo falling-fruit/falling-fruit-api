@@ -1,4 +1,5 @@
 import makeRouter from './makeRouter'
+import type { Services } from './services'
 import { z } from '../schemas/registry'
 import { Cluster } from '../schemas/schemas'
 import {
@@ -8,7 +9,7 @@ import {
   typesParam,
 } from '../schemas/parameters'
 
-export = function ({ db }: any) {
+export = function ({ db }: Services) {
   const { router, get } = makeRouter()
 
   get(

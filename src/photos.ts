@@ -50,7 +50,7 @@ type PhotosDb = {
   set_photo_file_name: (
     review_id: number,
     photo_file_name: string | null,
-  ) => Promise<void>
+  ) => Promise<unknown>
 }
 
 async function sync_legacy_first_photo(

@@ -49,9 +49,9 @@ class Locations {
 
   async add(
     obj: Partial<AddLocation> & Record<string, unknown>,
-  ): Promise<Partial<ApiLocation>> {
+  ): Promise<ApiLocation> {
     const values = Location.toRow(obj)
-    const location = await this.db.one(sql.add, values)
+    const location = await this.db.one<ApiLocation>(sql.add, values)
     await this.changes.add({
       description: 'added',
       location: location,
@@ -64,9 +64,9 @@ class Locations {
     id: number | string,
     obj: Record<string, unknown>,
     user: { id: number } | null,
-  ): Promise<Partial<ApiLocation>> {
+  ): Promise<ApiLocation> {
     const values = { ...obj, id: parseInt(String(id)) }
-    const location = await this.db.one(sql.edit, values)
+    const location = await this.db.one<ApiLocation>(sql.edit, values)
     await this.changes.add({
       description: 'edited',
       location: location,
@@ -78,8 +78,8 @@ class Locations {
   async show(
     id: number | string,
     user: { id: number } | null,
-  ): Promise<Partial<ApiLocation>> {
-    const location = await this.db.one(sql.show, {
+  ): Promise<ApiLocation> {
+    const location = await this.db.one<ApiLocation>(sql.show, {
       id: parseInt(String(id)),
       user_id: user ? user.id : null,
     })

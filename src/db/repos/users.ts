@@ -6,6 +6,8 @@ import type { EditUser, User as ApiUser } from '../../schemas/schemas'
 
 const sql = sqlModule.users
 
+type UserRow = Parameters<typeof User.fromRow>[0]
+
 type AddRequest = { body: EditUser & { password: string } & Record<string, unknown> }
 type EditRequest = {
   body: Partial<EditUser> & { password?: string } & Record<string, unknown>
@@ -25,17 +27,19 @@ class Users {
     const values = User.toRow(req.body)
     // Store encrypted password
     values.password = await passwords.hash_password(req.body.password)
-    const user = await this.db.one(sql.add, values)
+    const user = await this.db.one<UserRow>(sql.add, values)
     return User.fromRow(user)
   }
 
   async show(id: number | string): Promise<ApiUser> {
-    const user = await this.db.one(sql.show, { id: id })
+    const user = await this.db.one<UserRow>(sql.show, { id: id })
     return User.fromRow(user)
   }
 
   async show_public(id: number | string): Promise<ApiUser> {
-    const user = await this.db.one(sql.showPublic, { id: parseInt(String(id)) })
+    const user = await this.db.one<UserRow>(sql.showPublic, {
+      id: parseInt(String(id)),
+    })
     return User.fromRow(user)
   }
 
@@ -46,9 +50,10 @@ class Users {
     }
     if (values.password) {
       values.password = await passwords.hash_password(values.password as string)
-      return this.db.one(sql.editPassword, values)
+      const user = await this.db.one<UserRow>(sql.editPassword, values)
+      return User.fromRow(user)
     }
-    const user = await this.db.one(sql.edit, values)
+    const user = await this.db.one<UserRow>(sql.edit, values)
     return User.fromRow(user)
   }
 

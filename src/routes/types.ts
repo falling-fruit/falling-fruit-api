@@ -1,4 +1,5 @@
 import makeRouter from './makeRouter'
+import type { Services } from './services'
 import { z } from '../schemas/registry'
 import { Type, TypeCount, SubmitType } from '../schemas/schemas'
 import {
@@ -10,7 +11,7 @@ import {
 
 const idParams = z.object({ id: z.coerce.number().int().min(1) })
 
-export = function ({ db, middleware }: any) {
+export = function ({ db, middleware }: Services) {
   const { router, get, post } = makeRouter()
 
   get(

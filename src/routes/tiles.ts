@@ -1,6 +1,7 @@
 import makeRouter from './makeRouter'
+import type { Services } from './services'
 
-export = function ({ db }: any) {
+export = function ({ db }: Services) {
   const { router, get } = makeRouter()
 
   get('/tiles/:z/:x/:y.pbf', async (req: any, res: any) => {

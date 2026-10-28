@@ -1,8 +1,9 @@
 import makeRouter from './makeRouter'
+import type { Services } from './services'
 import { EditReport, Report } from '../schemas/schemas'
 import { recaptchaParam } from '../schemas/parameters'
 
-export = function ({ db, middleware }: any) {
+export = function ({ db, middleware }: Services) {
   const { router, post } = makeRouter()
 
   post(

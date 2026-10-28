@@ -7,7 +7,7 @@ type LocationRow = Partial<Location> & {
 }
 
 const _: {
-  fromRow: (location: LocationRow) => LocationRow
+  fromRow: (location: LocationRow) => Location
   toRow: (obj: Partial<AddLocation> & Record<string, unknown>) => Record<string, unknown>
 } = {} as any
 
@@ -24,7 +24,7 @@ _.fromRow = function (location) {
     location.season_stop = 11
   }
   delete location.no_season
-  return location
+  return location as Location
 }
 
 /**

@@ -1,5 +1,6 @@
 import multer from 'multer'
 import makeRouter from './makeRouter'
+import type { Services } from './services'
 import { z } from '../schemas/registry'
 import { Photo } from '../schemas/schemas'
 
@@ -14,7 +15,7 @@ const PhotoUploadBody = z.object({
   }),
 })
 
-export = function ({ db, middleware, photos }: any) {
+export = function ({ db, middleware, photos }: Services) {
   const { router, post } = makeRouter()
 
   post(

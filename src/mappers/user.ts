@@ -9,7 +9,7 @@ type UserRow = Omit<User, 'range'> & {
 }
 
 const _: {
-  fromRow: (user: UserRow) => UserRow
+  fromRow: (user: UserRow) => User
   toRow: (body: Partial<EditUser> & Record<string, unknown>) => Record<string, unknown>
 } = {} as any
 
@@ -23,7 +23,7 @@ _.fromRow = function (user) {
   if (user.range && typeof user.range === 'string') {
     user.range = JSON.parse(user.range)
   }
-  return user
+  return user as User
 }
 
 /**

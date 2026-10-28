@@ -33,7 +33,7 @@ class Photos {
   async test_unlinked(
     photo_ids: number[],
     review_id: number | null = null,
-  ): Promise<PhotoRow[]> {
+  ): Promise<Photo[]> {
     if (!photo_ids || !photo_ids.length) {
       return []
     }
@@ -60,7 +60,7 @@ class Photos {
     for (const photo of photos) {
       delete photo.observation_id
     }
-    return photos
+    return photos as unknown as Photo[]
   }
 
   get_urls(id: number): Promise<Record<string, string>> {
