@@ -3,7 +3,7 @@ import type { Router, RequestHandler } from 'express'
 import cors from 'cors'
 import compression from 'compression'
 import type { Middleware } from './routes/services'
-import makeRoutes = require('./routes')
+import makeRoutes from './routes'
 
 type Routes = ReturnType<typeof makeRoutes>
 
@@ -93,4 +93,4 @@ function createApp({ middleware, routes, apiBase }: CreateAppOptions) {
   return app
 }
 
-export = createApp
+export default createApp

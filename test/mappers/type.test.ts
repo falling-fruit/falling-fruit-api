@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import Type = require('../../src/mappers/type')
+import Type from '../../src/mappers/type'
 import type { Type as ApiType } from '../../src/schemas/schemas'
 
 type TypeInput = Partial<ApiType> & Record<string, unknown>

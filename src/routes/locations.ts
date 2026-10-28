@@ -2,7 +2,7 @@ import makeRouter from './makeRouter'
 import type { Services } from './services'
 import { z } from '../schemas/registry'
 import { delimitedQuery, intQuery, numberArrayQuery, boolQuery } from '../schemas/query'
-import createPhotos = require('../photos')
+import createPhotos from '../photos'
 import {
   Location,
   ListLocation,
@@ -38,7 +38,7 @@ const embedLocationsParam = delimitedQuery(
     'Additional information to include.\n- locations: List locations.\n',
 })
 
-export = function ({ db, middleware, auth, photos: photosService }: Services) {
+export default function ({ db, middleware, auth, photos: photosService }: Services) {
   const { router, get, post, put, drop } = makeRouter()
 
   // Routes: Location lists

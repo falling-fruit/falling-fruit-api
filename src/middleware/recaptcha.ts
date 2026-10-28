@@ -27,4 +27,4 @@ function makeRecaptcha({ recaptcha }: { recaptcha: RecaptchaV2 | null }) {
   }
 }
 
-export = makeRecaptcha
+export default makeRecaptcha

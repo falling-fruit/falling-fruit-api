@@ -42,7 +42,7 @@ function locale_to_name(locale: string): string {
   return `${prefix}_name`
 }
 
-export = {
+export default {
   locale_to_name,
 
   /**

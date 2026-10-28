@@ -1,4 +1,4 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import * as dates from '../../parsers/date'
 import type { Protocol, Pgp } from '../types'
 import type { LocationChange } from '../../schemas/schemas'
@@ -92,4 +92,4 @@ class Changes {
   }
 }
 
-export = Changes
+export default Changes

@@ -3,6 +3,7 @@
   "description": "Falling Fruit API",
   "version": "0.3.0",
   "private": true,
+  "type": "module",
   "author": {
     "name": "Ethan Welty",
     "email": "ethan@fallingfruit.org"
@@ -37,7 +38,7 @@
     "bluebird": "^3.7.2",
     "compression": "^1.8.2",
     "cors": "^2.8.5",
-    "dotenv": "^10.0.0",
+    "dotenv": "^16.4.7",
     "express": "^4.20.0",
     "express-recaptcha": "^5.0.2",
     "js-yaml": "^3.14.0",

@@ -1,4 +1,4 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import { bounds_to_lnglat_sql, muni_to_sql } from '../../sql_formatters'
 import { parse_bounds } from '../../parsers/bounds'
 import type { Protocol, Pgp } from '../types'
@@ -34,4 +34,4 @@ class Imports {
   }
 }
 
-export = Imports
+export default Imports

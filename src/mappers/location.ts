@@ -6,7 +6,7 @@ type LocationRow = Partial<Location> & {
   season_stop?: number | null
 }
 
-export = {
+export default {
   /**
    * Convert a database row into the API object.
    *

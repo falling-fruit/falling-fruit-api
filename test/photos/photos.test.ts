@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import createPhotos = require('../../src/photos')
+import createPhotos from '../../src/photos'
 
 const { is_new_photo_url, sync_legacy_first_photo } = createPhotos
 

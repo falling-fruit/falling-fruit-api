@@ -2,7 +2,7 @@ import makeRouter from './makeRouter'
 import type { Services } from './services'
 import { z } from '../schemas/registry'
 
-export = function ({ db, auth }: Services) {
+export default function ({ db, auth }: Services) {
   const { router, get } = makeRouter()
 
   get(

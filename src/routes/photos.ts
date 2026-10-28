@@ -15,7 +15,7 @@ const PhotoUploadBody = z.object({
   }),
 })
 
-export = function ({ db, auth, photos }: Services) {
+export default function ({ db, auth, photos }: Services) {
   const { router, post } = makeRouter()
 
   post(

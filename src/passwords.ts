@@ -1,4 +1,4 @@
-import bcrypt = require('bcrypt')
+import bcrypt from 'bcrypt'
 
 const passwords = {} as {
   compare_password: (password: string, hash: string) => Promise<boolean>
@@ -36,4 +36,4 @@ passwords.hash_password = function (password: string): Promise<string> {
   return bcrypt.hash(password, 10)
 }
 
-export = passwords
+export default passwords

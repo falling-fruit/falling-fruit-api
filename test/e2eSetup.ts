@@ -1,15 +1,18 @@
 import path from 'path'
+import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import type { Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 
 import dotenv from 'dotenv'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 dotenv.config({ path: path.resolve(__dirname, '..', '.env.test') })
 
-import makeDb = require('../src/db')
-import createDependencies = require('../src/dependencies')
-import createApp = require('../src/app')
+import makeDb from '../src/db'
+import createDependencies from '../src/dependencies'
+import createApp from '../src/app'
 import type { Db } from '../src/db/types'
 
 const { createDependenciesForClients } = createDependencies
@@ -186,4 +189,4 @@ function setupE2E(options: { tables?: string[] } = {}) {
   return setup
 }
 
-export = setupE2E
+export default setupE2E

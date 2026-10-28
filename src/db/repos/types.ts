@@ -1,11 +1,11 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import { MAX_GRID_ZOOM } from '../../projection'
 import {
   bounds_to_lnglat_sql,
   bounds_to_mercator_sql,
   muni_to_sql,
 } from '../../sql_formatters'
-import Type = require('../../mappers/type')
+import Type from '../../mappers/type'
 import { parse_bounds } from '../../parsers/bounds'
 import type { Protocol, Pgp } from '../types'
 import type { SubmitType, Type as ApiType, TypeCount } from '../../schemas/schemas'
@@ -99,4 +99,4 @@ class Types {
   }
 }
 
-export = Types
+export default Types

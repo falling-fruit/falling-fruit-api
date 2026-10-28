@@ -1,4 +1,4 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import { wgs84_to_mercator } from '../../projection'
 import {
   gridcell_to_geohash,
@@ -196,4 +196,4 @@ class Clusters {
   }
 }
 
-export = Clusters
+export default Clusters

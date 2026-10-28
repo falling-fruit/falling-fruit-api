@@ -1,11 +1,14 @@
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import yaml from 'js-yaml'
 import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
 
 import '../src/schemas'
 import { registry } from '../src/schemas/registry'
 import makeRoutes from '../src/routes'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const DOCS_DIR = path.resolve(__dirname, '..', 'docs')
 
@@ -74,7 +77,7 @@ function buildDocument() {
   return generated
 }
 
-if (require.main === module) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const spec = buildDocument()
   // JSON round-trip drops undefined values so js-yaml does not emit
   // !!js/undefined tags.

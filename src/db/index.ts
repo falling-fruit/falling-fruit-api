@@ -1,7 +1,7 @@
 import promise from 'bluebird'
 import { types } from 'pg'
-import monitor = require('pg-monitor')
-import repos = require('./repos')
+import monitor from 'pg-monitor'
+import repos from './repos'
 import pgPromise from 'pg-promise'
 import type { IInitOptions } from 'pg-promise'
 import type { Db, DbRepos, Pgp } from './types'
@@ -37,4 +37,4 @@ function makeDb(
   return pgp(connectionString as string)
 }
 
-export = makeDb
+export default makeDb

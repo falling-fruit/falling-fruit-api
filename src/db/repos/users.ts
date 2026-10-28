@@ -1,6 +1,6 @@
-import sqlModule = require('../sql')
-import passwords = require('../../passwords')
-import User = require('../../mappers/user')
+import sqlModule from '../sql'
+import passwords from '../../passwords'
+import User from '../../mappers/user'
 import type { Protocol, Pgp } from '../types'
 import type { EditUser, User as ApiUser } from '../../schemas/schemas'
 
@@ -81,4 +81,4 @@ class Users {
   }
 }
 
-export = Users
+export default Users

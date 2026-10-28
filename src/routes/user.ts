@@ -6,7 +6,7 @@ import { User, EditUser, Token } from '../schemas/schemas'
 import { emailProp, passwordProp } from '../schemas/properties'
 import { recaptchaParam } from '../schemas/parameters'
 
-import passwords = require('../passwords')
+import passwords from '../passwords'
 const uploads = multer({ dest: 'uploads' })
 
 const messageResponse = (example: string) =>
@@ -35,7 +35,7 @@ const EditUserBody = z.object({
   password_confirmation: z.string().min(1).optional(),
 })
 
-export = function ({ mailer, db, middleware, auth, tokenizer }: Services) {
+export default function ({ mailer, db, middleware, auth, tokenizer }: Services) {
   const { router, get, post, put, drop } = makeRouter()
 
   // Routes: Users (private)

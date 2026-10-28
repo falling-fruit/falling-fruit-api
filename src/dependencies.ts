@@ -3,12 +3,12 @@ import postmark from 'postmark'
 import aws from 'aws-sdk'
 import { RecaptchaV2 } from 'express-recaptcha'
 
-import makeDb = require('./db')
-import Tokenizer = require('./tokens')
-import makeAuth = require('./auth')
-import createMailer = require('./mailer')
-import createPhotos = require('./photos')
-import makeMiddleware = require('./middleware')
+import makeDb from './db'
+import Tokenizer from './tokens'
+import makeAuth from './auth'
+import createMailer from './mailer'
+import createPhotos from './photos'
+import makeMiddleware from './middleware'
 import makeRoutes from './routes'
 import type { Config } from './config'
 import type { Db } from './db/types'
@@ -122,4 +122,4 @@ function createDependenciesForClients(
 
 createDependencies.createDependenciesForClients = createDependenciesForClients
 
-export = createDependencies
+export default createDependencies

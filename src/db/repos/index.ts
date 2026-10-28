@@ -10,7 +10,7 @@ import Photos from './photos'
 import Changes from './changes'
 import Tiles from './tiles'
 
-export = {
+export default {
   Clusters,
   Types,
   Locations,

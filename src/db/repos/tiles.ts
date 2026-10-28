@@ -1,4 +1,4 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import type { Protocol, Pgp } from '../types'
 
 const sql = sqlModule.tiles
@@ -42,4 +42,4 @@ class Tiles {
   }
 }
 
-export = Tiles
+export default Tiles

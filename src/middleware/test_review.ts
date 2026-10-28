@@ -81,4 +81,4 @@ function test_review(...path: string[]) {
   }
 }
 
-export = test_review
+export default test_review

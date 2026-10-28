@@ -4,7 +4,7 @@ import { z } from '../schemas/registry'
 import { PublicUser } from '../schemas/schemas'
 import { userIdParam } from '../schemas/parameters'
 
-export = function ({ db, auth }: Services) {
+export default function ({ db, auth }: Services) {
   const { router, get } = makeRouter()
 
   get(

@@ -11,7 +11,7 @@ import {
 
 const idParams = z.object({ id: z.coerce.number().int().min(1) })
 
-export = function ({ db, middleware, auth }: Services) {
+export default function ({ db, middleware, auth }: Services) {
   const { router, get, post } = makeRouter()
 
   get(

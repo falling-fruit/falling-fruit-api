@@ -8,7 +8,7 @@ type UserRow = Omit<User, 'range'> & {
   range?: string | PolygonType | null
 }
 
-export = {
+export default {
   /**
    * Convert a database row into the API object.
    *

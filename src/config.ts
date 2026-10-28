@@ -1,5 +1,7 @@
-require('dotenv').config()
+import dotenv from 'dotenv'
 import { z } from 'zod'
+
+dotenv.config()
 
 const productionConfig = z.object({
   local: z.literal(false),

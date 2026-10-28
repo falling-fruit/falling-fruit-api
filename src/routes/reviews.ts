@@ -2,10 +2,10 @@ import makeRouter from './makeRouter'
 import { z } from '../schemas/registry'
 import { Review, EditReview } from '../schemas/schemas'
 import { reviewIdParam } from '../schemas/parameters'
-import createPhotos = require('../photos')
+import createPhotos from '../photos'
 import type { Services } from './services'
 
-export = function ({ db, middleware, auth, photos: photosService }: Services) {
+export default function ({ db, middleware, auth, photos: photosService }: Services) {
   const { router, get, put, drop } = makeRouter()
 
   get(

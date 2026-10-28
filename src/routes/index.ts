@@ -27,4 +27,4 @@ function makeRoutes(services: Services) {
   }
 }
 
-export = makeRoutes
+export default makeRoutes

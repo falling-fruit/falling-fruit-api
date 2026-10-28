@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import setupE2E = require('../e2eSetup')
+import setupE2E from '../e2eSetup'
 
 const setup = setupE2E({ tables: ['locations'] })
 

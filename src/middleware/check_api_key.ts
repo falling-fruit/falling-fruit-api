@@ -22,4 +22,4 @@ function makeCheckApiKey({ db }: { db: Protocol }) {
   }
 }
 
-export = makeCheckApiKey
+export default makeCheckApiKey

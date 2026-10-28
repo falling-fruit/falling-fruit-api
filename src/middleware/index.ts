@@ -1,7 +1,7 @@
-import makeCheckApiKey = require('./check_api_key')
-import makeAuthenticatePostmark = require('./authenticate_postmark')
-import makeRecaptcha = require('./recaptcha')
-import test_review = require('./test_review')
+import makeCheckApiKey from './check_api_key'
+import makeAuthenticatePostmark from './authenticate_postmark'
+import makeRecaptcha from './recaptcha'
+import test_review from './test_review'
 import type { RecaptchaV2 } from 'express-recaptcha'
 import type { Protocol } from '../db/types'
 import type Tokenizer from '../tokens'
@@ -33,4 +33,4 @@ function makeMiddleware({
   }
 }
 
-export = makeMiddleware
+export default makeMiddleware

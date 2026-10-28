@@ -17,12 +17,17 @@ import {
   validateRequestPart,
   RequestValidationError,
 } from './validation'
-import type makeAuth = require('../auth')
+import type {
+  AuthMode as _AuthMode,
+  AuthSpec as _AuthSpec,
+  User as _User,
+  AuthRequest as _AuthRequest,
+} from '../auth'
 
-type AuthMode = makeAuth.AuthMode
-type AuthSpec<Mode extends AuthMode> = makeAuth.AuthSpec<Mode>
-type User = makeAuth.User
-type AuthRequest = makeAuth.AuthRequest
+type AuthMode = _AuthMode
+type AuthSpec<Mode extends AuthMode> = _AuthSpec<Mode>
+type User = _User
+type AuthRequest = _AuthRequest
 
 const { queryResultErrorCode } = pgPromise.errors
 
@@ -271,5 +276,3 @@ function makeRouter() {
 }
 
 export default makeRouter
-module.exports = makeRouter
-module.exports.default = makeRouter

@@ -1,4 +1,4 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import type { Protocol, Pgp } from '../types'
 import type {
   EditLocationList,
@@ -74,4 +74,4 @@ class LocationLists {
   }
 }
 
-export = LocationLists
+export default LocationLists

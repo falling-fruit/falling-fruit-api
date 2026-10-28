@@ -198,4 +198,4 @@ class Tokenizer {
   }
 }
 
-export = Tokenizer
+export default Tokenizer

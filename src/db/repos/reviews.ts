@@ -1,5 +1,5 @@
-import sqlModule = require('../sql')
-import Changes = require('./changes')
+import sqlModule from '../sql'
+import Changes from './changes'
 import type { Protocol, Pgp } from '../types'
 import type { EditReview, Review } from '../../schemas/schemas'
 
@@ -65,4 +65,4 @@ class Reviews {
   }
 }
 
-export = Reviews
+export default Reviews

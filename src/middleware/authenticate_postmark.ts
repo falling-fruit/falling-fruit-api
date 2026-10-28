@@ -17,4 +17,4 @@ function makeAuthenticatePostmark({
   }
 }
 
-export = makeAuthenticatePostmark
+export default makeAuthenticatePostmark

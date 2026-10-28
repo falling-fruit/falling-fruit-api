@@ -1,4 +1,4 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import type { Protocol, Pgp } from '../types'
 import type { EditReport, Report } from '../../schemas/schemas'
 
@@ -24,4 +24,4 @@ class Reports {
   }
 }
 
-export = Reports
+export default Reports

@@ -200,4 +200,4 @@ function createPhotos({ s3 }: { s3: S3Client }): Photos {
 createPhotos.is_new_photo_url = is_new_photo_url
 createPhotos.sync_legacy_first_photo = sync_legacy_first_photo
 
-export = createPhotos
+export default createPhotos

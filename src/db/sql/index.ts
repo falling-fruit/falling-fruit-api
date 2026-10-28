@@ -1,4 +1,8 @@
 import pgPromise, { QueryFile } from 'pg-promise'
+import path from 'path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const { enumSql } = pgPromise.utils
 
@@ -14,4 +18,4 @@ const sql = enumSql(__dirname, { recursive: true }, (file) => {
   })
 }) as unknown as Sql
 
-export = sql
+export default sql

@@ -1,7 +1,7 @@
 import makeRouter from './makeRouter'
 import type { Services } from './services'
 
-export = function ({
+export default function ({
   db,
   middleware,
   auth,

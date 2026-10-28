@@ -28,12 +28,12 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
   - `schemas.ts`, `geojson.ts`, `properties.ts`: Component schemas.
   - `parameters.ts`, `security.ts`: Reusable parameters and security schemes.
 - `src/db/`
-  - `index.js`: Define database connection. Load `pg-promise` with repos:
+  - `index.ts`: Define database connection. Load `pg-promise` with repos:
   - `repos/`
-    - `index.js`: Compile all classes:
-    - `{class}.js`: Class definition with methods.
+    - `index.ts`: Compile all classes:
+    - `{class}.ts`: Class definition with methods.
   - `sql/`
-    - `index.js`: Load all SQL query files:
+    - `index.ts`: Load all SQL query files:
     - `{class}/`
       - `*.sql`: Raw SQL with variable substitutions.
 
@@ -80,8 +80,8 @@ Visit http://localhost:3300.
 Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner, split by file naming convention:
 
 - `yarn test`: run everything (unit and e2e).
-- `yarn test:unit`: run unit tests only (`test/**/*.test.js`).
-- `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.js`).
+- `yarn test:unit`: run unit tests only (`test/**/*.test.ts`).
+- `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.ts`).
 
 e2e tests require a database. `yarn test:e2e` spins one up, migrates, and runs them.
 

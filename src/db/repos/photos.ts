@@ -1,4 +1,4 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import type { Protocol, Pgp } from '../types'
 import type { Photo } from '../../schemas/schemas'
 
@@ -90,4 +90,4 @@ class Photos {
   }
 }
 
-export = Photos
+export default Photos

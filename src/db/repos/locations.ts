@@ -1,4 +1,4 @@
-import sqlModule = require('../sql')
+import sqlModule from '../sql'
 import {
   ids_to_sql,
   bounds_to_geography_sql,
@@ -7,9 +7,9 @@ import {
   types_array_to_sql,
   invasive_to_sql,
 } from '../../sql_formatters'
-import Changes = require('./changes')
-import Types = require('./types')
-import Location = require('../../mappers/location')
+import Changes from './changes'
+import Types from './types'
+import Location from '../../mappers/location'
 import { parse_bounds } from '../../parsers/bounds'
 import type { Protocol, Pgp } from '../types'
 import type {
@@ -202,4 +202,4 @@ class Locations {
   }
 }
 
-export = Locations
+export default Locations

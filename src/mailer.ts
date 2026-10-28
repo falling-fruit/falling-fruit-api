@@ -163,4 +163,4 @@ mailer.send_password_reset_not_found = function (user) {
   return mailer
 }
 
-export = createMailer
+export default createMailer
