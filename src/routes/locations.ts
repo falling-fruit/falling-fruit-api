@@ -341,24 +341,24 @@ export = function ({ db, middleware, photos: photosService }: Services) {
     async (req: any) => {
       // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
       const user_id = req.user ? req.user.id : null
-      let photos
-      if (req.body.review) {
-        photos = await db.photos.test_unlinked(req.body.review.photo_ids)
-      }
+      const review_body = req.body.review
+      const photos = review_body
+        ? await db.photos.test_unlinked(review_body.photo_ids)
+        : undefined
       const location = await db.locations.add({ ...req.body, user_id })
-      if (req.body.review) {
+      if (review_body) {
         const review = await db.reviews.add(location.id, {
-          ...req.body.review,
+          ...review_body,
           user_id,
         })
-        await db.photos.link(req.body.review.photo_ids, review.id)
+        await db.photos.link(review_body.photo_ids, review.id)
         await createPhotos.sync_legacy_first_photo(
           db.photos,
           photosService,
-          req.body.review.photo_ids,
+          review_body.photo_ids,
           review.id,
         )
-        review.photos = photos
+        review.photos = photos!
         location.reviews = [review]
       }
       await db.clusters.increment(location)
