@@ -31,33 +31,27 @@ function unmask_bits<T>(mask: number, all: T[]): T[] {
   return all.filter((_, i) => mask & (1 << i))
 }
 
-const _: {
-  locale_to_name: (locale: string) => string
-  fromRow: (type: TypeRow) => Type
-  toRow: (
-    obj: Partial<Type> & Record<string, unknown>,
-    options: ToRowOptions,
-  ) => TypeRow
-} = {} as any
-
 /**
  * Resolve a locale (e.g. 'zh-TW') to its flat column name (e.g. 'zh_tw_name').
  *
  * @param locale
  * @returns Column name.
  */
-_.locale_to_name = function (locale) {
+function locale_to_name(locale: string): string {
   const prefix = locale.toLowerCase().replace('-', '_')
   return `${prefix}_name`
 }
 
-/**
- * Convert a database row into the nested API object.
- *
- * @param type - Raw type row.
- * @returns API-shaped type.
- */
-_.fromRow = function (type) {
+export = {
+  locale_to_name,
+
+  /**
+   * Convert a database row into the nested API object.
+   *
+   * @param type - Raw type row.
+   * @returns API-shaped type.
+   */
+  fromRow(type: TypeRow): Type {
   const replaced: string[] = []
   // Format scientific names: [name, synonyms...]
   type.scientific_names = []
@@ -129,19 +123,22 @@ _.fromRow = function (type) {
     delete type[key]
   }
   return type as Type
-}
+  },
 
-/**
- * Convert an API object into a complete database row.
- *
- * @param obj - API-shaped type (from a request body).
- * @param options
- * @param options.nameColumns - Existing `*_name` columns on the table.
- * @param options.defaultNames - Columns that satisfy the "default name"
- *   requirement, in priority order (e.g. ['en_name', 'scientific_name']).
- * @returns Full type row, ready to insert.
- */
-_.toRow = function (obj, { nameColumns, defaultNames }) {
+  /**
+   * Convert an API object into a complete database row.
+   *
+   * @param obj - API-shaped type (from a request body).
+   * @param options
+   * @param options.nameColumns - Existing `*_name` columns on the table.
+   * @param options.defaultNames - Columns that satisfy the "default name"
+   *   requirement, in priority order (e.g. ['en_name', 'scientific_name']).
+   * @returns Full type row, ready to insert.
+   */
+  toRow(
+    obj: Partial<Type> & Record<string, unknown>,
+    { nameColumns, defaultNames }: ToRowOptions,
+  ): TypeRow {
   // Deconstruct nested fields back into flat columns.
   let values: TypeRow = {
     parent_id: null,
@@ -186,7 +183,7 @@ _.toRow = function (obj, { nameColumns, defaultNames }) {
   for (const [locale, names] of Object.entries<string[]>(
     values.common_names,
   )) {
-    const column = _.locale_to_name(locale)
+    const column = locale_to_name(locale)
     if (nameColumns.includes(column)) {
       values[column] = names.join(', ')
     } else {
@@ -205,6 +202,6 @@ _.toRow = function (obj, { nameColumns, defaultNames }) {
   }
   delete values.common_names
   return values
+  },
 }
 
-export = _

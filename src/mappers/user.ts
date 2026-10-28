@@ -8,38 +8,36 @@ type UserRow = Omit<User, 'range'> & {
   range?: string | PolygonType | null
 }
 
-const _: {
-  fromRow: (user: UserRow) => User
-  toRow: (body: Partial<EditUser> & Record<string, unknown>) => Record<string, unknown>
-} = {} as any
+export = {
+  /**
+   * Convert a database row into the API object.
+   *
+   * @param user - Raw user row (with `range` as a GeoJSON string).
+   * @returns API-shaped user.
+   */
+  fromRow(user: UserRow): User {
+    if (user.range && typeof user.range === 'string') {
+      user.range = JSON.parse(user.range)
+    }
+    return user as User
+  },
 
-/**
- * Convert a database row into the API object.
- *
- * @param user - Raw user row (with `range` as a GeoJSON string).
- * @returns API-shaped user.
- */
-_.fromRow = function (user) {
-  if (user.range && typeof user.range === 'string') {
-    user.range = JSON.parse(user.range)
-  }
-  return user as User
+  /**
+   * Convert a request body into a database row, applying column defaults.
+   *
+   * @param body - Request body.
+   * @returns User row (minus derived fields like the hashed password).
+   */
+  toRow(
+    body: Partial<EditUser> & Record<string, unknown>,
+  ): Record<string, unknown> {
+    return {
+      name: null,
+      bio: null,
+      range: null,
+      announcements_email: true,
+      ...body,
+    }
+  },
 }
 
-/**
- * Convert a request body into a database row, applying column defaults.
- *
- * @param body - Request body.
- * @returns User row (minus derived fields like the hashed password).
- */
-_.toRow = function (body) {
-  return {
-    name: null,
-    bio: null,
-    range: null,
-    announcements_email: true,
-    ...body,
-  }
-}
-
-export = _

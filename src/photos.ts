@@ -71,8 +71,6 @@ async function sync_legacy_first_photo(
 }
 
 function createPhotos({ s3 }: { s3: S3Client }): Photos {
-  const photos: Photos = {} as any
-
   async function resize_photo(
     input: string,
     output: string,
@@ -147,45 +145,53 @@ function createPhotos({ s3 }: { s3: S3Client }): Photos {
     return match.groups as Record<string, string>
   }
 
-  photos.copy_photo_to_old_urls = function (urls, observation_id) {
-    const keys = build_s3_photo_keys(observation_id)
-    const promises = (['thumb', 'medium', 'original'] as const).map((style) => {
-      const parsed = parse_s3_url(urls[style])
-      return s3
-        .copyObject({
-          CopySource: `${parsed.bucket}/${parsed.key}`,
-          Bucket: process.env.S3_BUCKET,
-          Key: keys[style],
-          ACL: 'public-read',
-        })
-        .promise()
-    })
-    return Promise.all(promises)
-  }
+  const photos: Photos = {
+    copy_photo_to_old_urls(urls, observation_id) {
+      const keys = build_s3_photo_keys(observation_id)
+      const promises = (['thumb', 'medium', 'original'] as const).map(
+        (style) => {
+          const parsed = parse_s3_url(urls[style])
+          return s3
+            .copyObject({
+              CopySource: `${parsed.bucket}/${parsed.key}`,
+              Bucket: process.env.S3_BUCKET,
+              Key: keys[style],
+              ACL: 'public-read',
+            })
+            .promise()
+        },
+      )
+      return Promise.all(promises)
+    },
 
-  photos.resize_and_upload_photo = async function (input) {
-    const sizes: Record<string, number> = {
-      thumb: 100,
-      medium: 300,
-      original: 2048,
-    }
-    const promises: Promise<string>[] = []
-    for (const style in sizes) {
-      const job = async function () {
-        const resized = `${input}-${style}.jpg`
-        const to_upload = await resize_photo(input, resized, sizes[style])
-        const output = path.join('photos', path.basename(input), `${style}.jpg`)
-        const upload = await upload_photo(to_upload, output)
-        if (to_upload === resized) {
-          await fs.promises.unlink(resized)
-        }
-        return upload.Location
+    async resize_and_upload_photo(input) {
+      const sizes: Record<string, number> = {
+        thumb: 100,
+        medium: 300,
+        original: 2048,
       }
-      promises.push(job())
-    }
-    const urls = await Promise.all(promises)
-    await fs.promises.unlink(input)
-    return Object.fromEntries(Object.keys(sizes).map((k, i) => [k, urls[i]]))
+      const promises: Promise<string>[] = []
+      for (const style in sizes) {
+        const job = async function () {
+          const resized = `${input}-${style}.jpg`
+          const to_upload = await resize_photo(input, resized, sizes[style])
+          const output = path.join(
+            'photos',
+            path.basename(input),
+            `${style}.jpg`,
+          )
+          const upload = await upload_photo(to_upload, output)
+          if (to_upload === resized) {
+            await fs.promises.unlink(resized)
+          }
+          return upload.Location
+        }
+        promises.push(job())
+      }
+      const urls = await Promise.all(promises)
+      await fs.promises.unlink(input)
+      return Object.fromEntries(Object.keys(sizes).map((k, i) => [k, urls[i]]))
+    },
   }
 
   return photos
