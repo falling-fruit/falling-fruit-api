@@ -32,7 +32,7 @@ async function uploadPhoto(headers: Record<string, string> = {}) {
     body: form,
   })
   const text = await response.text()
-  return { status: response.status, body: text ? JSON.parse(text) : null }
+  return { status: response.status, body: text ? (JSON.parse(text) as unknown) : null }
 }
 
 test('POST /photos uploads a photo and returns its urls', async () => {

@@ -120,7 +120,7 @@ test('DELETE /reviews/:id lets the author delete their review', async () => {
 
   assert.equal(result.status, 204)
 
-  const remaining = await setup.db.oneOrNone(
+  const remaining = await setup.db.oneOrNone<{ id: number }>(
     'SELECT id FROM observations WHERE id = ${id}',
     { id: review.id },
   )

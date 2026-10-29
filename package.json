@@ -20,7 +20,7 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "node --import tsx --test 'test/**/*.test.ts'",
     "test:e2e": "yarn build && yarn db:up && yarn db:migrate && node --import tsx --test --experimental-test-isolation=none 'test/**/*.e2e.ts'",

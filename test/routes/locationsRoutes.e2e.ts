@@ -151,7 +151,7 @@ test('DELETE /locations/:id lets the author delete their location', async () => 
   })
 
   assert.equal(result.status, 204)
-  const row = await setup.db.oneOrNone(
+  const row = await setup.db.oneOrNone<{ id: number }>(
     'SELECT id FROM locations WHERE id = ${id}',
     { id: location.id },
   )

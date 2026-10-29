@@ -86,7 +86,7 @@ test('DELETE /user deletes the authenticated user', async () => {
   })
 
   assert.equal(result.status, 204)
-  const row = await setup.db.oneOrNone(
+  const row = await setup.db.oneOrNone<{ id: number }>(
     'SELECT id FROM users WHERE id = ${id}',
     { id: user.id },
   )
