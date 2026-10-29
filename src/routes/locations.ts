@@ -25,7 +25,7 @@ import {
   recaptchaParam,
 } from '../schemas/parameters'
 
-const set_equal = function (a: any[], b: any[]) {
+const set_equal = function <T>(a: T[], b: T[]) {
   return a.length === b.length && a.every((value) => b.includes(value))
 }
 

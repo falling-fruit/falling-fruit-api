@@ -55,7 +55,7 @@ function createDependencies(config: Config) {
 
   let postmarkClient: EmailClient
   let s3Client: S3Client
-  let recaptcha
+  let recaptcha: RecaptchaV2 | null
   if (config.local) {
     postmarkClient = createLoggingPostmarkClient()
     s3Client = createLoggingS3({ apiOrigin: config.apiOrigin })
