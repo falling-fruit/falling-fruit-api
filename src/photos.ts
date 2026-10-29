@@ -39,10 +39,10 @@ const S3_URL_REGEX =
 
 function is_new_photo_url(url: string): boolean {
   const match = S3_URL_REGEX.exec(url)
-  if (match == null) {
+  if (match?.groups == null) {
     return false
   }
-  return match.groups!.key.startsWith('photos/')
+  return match.groups.key.startsWith('photos/')
 }
 
 type PhotosDb = {

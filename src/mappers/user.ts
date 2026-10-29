@@ -31,7 +31,7 @@ export default {
    */
   fromRow(user: UserRow): User {
     if (user.range && typeof user.range === 'string') {
-      user.range = JSON.parse(user.range)
+      user.range = JSON.parse(user.range) as PolygonType
     }
     return user as User
   },

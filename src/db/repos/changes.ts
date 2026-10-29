@@ -66,10 +66,18 @@ class Changes {
     user_id?: number | null
   }) {
     const is_review = description === 'visited'
+    const location_id = is_review ? review?.location_id : location?.id
+    if (location_id == null) {
+      throw Error(
+        is_review
+          ? 'A review with a location_id is required for a "visited" change'
+          : 'A location with an id is required for this change',
+      )
+    }
     const values = {
       description: description,
       location: location,
-      location_id: is_review ? review!.location_id : location!.id,
+      location_id: location_id,
       review: review,
       review_id: review ? review.id : null,
       user_id: user_id,

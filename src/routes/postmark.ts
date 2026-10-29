@@ -1,6 +1,18 @@
 import makeRouter from './makeRouter'
 import type { Services } from './services'
 
+/**
+ * Subscription-change webhook payload from Postmark.
+ * https://postmarkapp.com/developer/webhooks/subscription-change-webhook
+ */
+type PostmarkSubscriptionChange = {
+  ServerID?: number
+  MessageStream?: string
+  RecordType?: string
+  SuppressSending?: boolean
+  Recipient?: string
+}
+
 export default function ({
   db,
   middleware,
@@ -17,21 +29,23 @@ export default function ({
     auth.none,
     middleware.authenticate_postmark,
     async (req) => {
+      const body = req.body as PostmarkSubscriptionChange
       if (
-        req.body.ServerID !== postmarkServerId ||
-        req.body.MessageStream !== postmarkBroadcastStream ||
-        req.body.RecordType !== 'SubscriptionChange' ||
-        typeof req.body.SuppressSending !== 'boolean'
+        body.ServerID !== postmarkServerId ||
+        body.MessageStream !== postmarkBroadcastStream ||
+        body.RecordType !== 'SubscriptionChange' ||
+        typeof body.SuppressSending !== 'boolean' ||
+        typeof body.Recipient !== 'string'
       ) {
         throw Error(
           `Unexpected request from Postmark: ${JSON.stringify(req.body)}`,
         )
       }
-      if (req.body.SuppressSending) {
-        await db.users.unsubscribe(req.body.Recipient)
+      if (body.SuppressSending) {
+        await db.users.unsubscribe(body.Recipient)
         return { message: 'Unsubscribe successful' }
       } else {
-        await db.users.subscribe(req.body.Recipient)
+        await db.users.subscribe(body.Recipient)
         return { message: 'Subscribe successful' }
       }
     },

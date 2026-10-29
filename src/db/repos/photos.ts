@@ -42,7 +42,7 @@ class Photos {
     const found_ids = photos.map((photo) => photo.id)
     const missing = photo_ids.filter((id) => !found_ids.includes(id))
     if (missing.length > 0) {
-      throw Error(`Photo(s) ${missing} not found`)
+      throw Error(`Photo(s) ${missing.join(', ')} not found`)
     }
     // Fail if one or more already assigned to a(nother) review
     const assigned = photos.filter(
@@ -52,7 +52,7 @@ class Photos {
     )
     if (assigned.length > 0) {
       throw Error(
-        `Photo(s) ${assigned.map((photo) => photo.id)} already assigned to another review`,
+        `Photo(s) ${assigned.map((photo) => photo.id).join(', ')} already assigned to another review`,
       )
     }
     for (const photo of photos) {

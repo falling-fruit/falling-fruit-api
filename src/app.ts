@@ -80,9 +80,9 @@ function createApp({ middleware, routes, apiBase }: CreateAppOptions) {
       `${apiBase}/postmark/subscription`,
     ]
     if (skip_api_key.includes(req.path)) {
-      return next()
+      return void next()
     }
-    return middleware.check_api_key(req, res, next)
+    void middleware.check_api_key(req, res, next).catch(next)
   }
   app.use(preRouteHandler)
 

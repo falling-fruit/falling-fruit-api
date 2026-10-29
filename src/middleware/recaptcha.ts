@@ -15,8 +15,9 @@ function makeRecaptcha({ recaptcha }: { recaptcha: RecaptchaV2 | null }) {
     }
     const header = req.header('g-recaptcha-response')
     if (header) {
-      req.body = req.body || {}
-      req.body['g-recaptcha-response'] = header
+      const body = (req.body ?? {}) as Record<string, unknown>
+      body['g-recaptcha-response'] = header
+      req.body = body
     }
     recaptcha.verify(req, (error) => {
       if (error) {

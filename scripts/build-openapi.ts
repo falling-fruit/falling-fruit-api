@@ -3,17 +3,25 @@ import path from 'path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import yaml from 'js-yaml'
 import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
+import type { OpenAPIObject } from 'openapi3-ts/oas30'
 
 import '../src/schemas'
 import { registry } from '../src/schemas/registry'
 import makeRoutes from '../src/routes'
+import type { Services } from '../src/routes/services'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const DOCS_DIR = path.resolve(__dirname, '..', 'docs')
 
-function loadYaml(file: string): any {
-  return yaml.load(fs.readFileSync(file, 'utf8'))
+/** Static metadata read from `docs/base.yml`. */
+type BaseDocument = Pick<
+  OpenAPIObject,
+  'openapi' | 'info' | 'servers' | 'tags'
+>
+
+function loadYaml(file: string): BaseDocument {
+  return yaml.load(fs.readFileSync(file, 'utf8')) as BaseDocument
 }
 
 // Register every route's OpenAPI path by instantiating the route factories
@@ -22,7 +30,7 @@ function loadYaml(file: string): any {
 function registerRoutePaths(): void {
   const noop = () => undefined
   const callable = () => noop
-  const servicesProxy: any = new Proxy(
+  const servicesProxy = new Proxy(
     {},
     {
       get() {
@@ -37,7 +45,7 @@ function registerRoutePaths(): void {
         })
       },
     },
-  )
+  ) as unknown as Services
   makeRoutes(servicesProxy)
 }
 
@@ -60,12 +68,13 @@ function buildDocument() {
   const schemas = generated.components?.schemas ?? {}
   const parameters = generated.components?.parameters ?? {}
   const inlinedSchemaNames = new Set<string>()
-  for (const param of Object.values(parameters) as any[]) {
-    const ref: string | undefined = param?.schema?.$ref
+  for (const param of Object.values(parameters)) {
+    const schema = (param as { schema?: { $ref?: string } }).schema
+    const ref = schema?.$ref
     if (typeof ref === 'string') {
       const name = ref.replace('#/components/schemas/', '')
       if (schemas[name]) {
-        param.schema = schemas[name]
+        ;(param as { schema?: unknown }).schema = schemas[name]
         inlinedSchemaNames.add(name)
       }
     }
@@ -81,7 +90,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const spec = buildDocument()
   // JSON round-trip drops undefined values so js-yaml does not emit
   // !!js/undefined tags.
-  const clean = JSON.parse(JSON.stringify(spec))
+  const clean = JSON.parse(JSON.stringify(spec)) as OpenAPIObject
   const out = yaml.dump(clean, { noRefs: true, lineWidth: -1 })
   const target = path.join(DOCS_DIR, 'openapi.yml')
   fs.writeFileSync(target, out)

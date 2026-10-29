@@ -44,8 +44,10 @@ type TypedReq<Params, Query, Body> = Omit<
   body: Body
   query: Query
   params: Params
-  file?: any
-  files?: any
+  file?: Express.Multer.File
+  files?:
+    | Express.Multer.File[]
+    | Record<string, Express.Multer.File[]>
 }
 
 // Request typed from a route spec's request block.
@@ -56,11 +58,11 @@ type SpecReq<Req extends RequestSpec> = TypedReq<
 >
 
 // Request for a bare string path: no schema, so parts fall back to Express
-// defaults and body to `any`.
+// defaults and body to `unknown` (handlers narrow it themselves).
 type RawReq = TypedReq<
   Record<string, string>,
   Record<string, string | undefined>,
-  any
+  unknown
 >
 
 type HandlerResult<Res> = Res | void | undefined
@@ -90,16 +92,25 @@ type SpecHandlers<
   Req extends RequestSpec,
   Responses extends Record<string, ResponseSpec>,
 > = [
-  ...any[],
+  ...RequestHandler[],
   HandlerFor<Mode, SpecReq<Req>, InferResponseFromResponses<Responses>>,
 ]
 
 type RawHandlers<Mode extends AuthMode> = [
-  ...any[],
+  ...RequestHandler[],
   HandlerFor<Mode, RawReq, unknown>,
 ]
 
 type RouteArg = string | RouteSpec<RequestSpec>
+
+// The route's final handler, independent of auth arity. Request and response
+// shapes are erased to `unknown` here; the caller-facing overloads preserve the
+// precise inferred types, and the runtime dispatch re-casts per auth mode.
+type AnyHandler = HandlerFor<AuthMode, unknown, unknown>
+
+// The full handler list passed to a route: leading middleware plus the final
+// route handler.
+type AnyHandlers = [...RequestHandler[], AnyHandler]
 
 function makeValidationMiddleware(compiled: CompiledRoute): RequestHandler {
   return (req, res, next) => {
@@ -136,19 +147,14 @@ function makeRouter() {
     method: Method,
     arg: RouteArg,
     auth: AuthSpec<AuthMode>,
-    handlers: any[],
+    handlers: AnyHandlers,
   ) {
     const path = typeof arg === 'string' ? arg : arg.path
     const compiled: CompiledRoute | undefined =
       typeof arg === 'string' ? undefined : compileRoute(arg)
 
     const preHandlers = handlers.slice(0, -1) as RequestHandler[]
-    const handler = handlers[handlers.length - 1] as HandlerFor<
-      AuthMode,
-      any,
-      any
-    >
-
+    const handler = handlers[handlers.length - 1] as AnyHandler
     if (compiled) {
       registerOperation(method, compiled)
     }
@@ -165,16 +171,22 @@ function makeRouter() {
     middleware.push(...(auth?.handlers ?? []))
     middleware.push(...preHandlers)
 
-    ;(router[method] as any)(
-      path,
-      ...middleware,
-      async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const dispatch: RequestHandler = (
+      req: AuthRequest,
+      res: Response,
+      next: NextFunction,
+    ) => {
+      void (async () => {
         try {
           const user: User | null = req.user ?? null
           const data =
             auth.mode === 'none'
-              ? await (handler as HandlerFor<'none', any, any>)(req, res, next)
-              : await (handler as HandlerFor<'optional', any, any>)(
+              ? await (handler as HandlerFor<'none', unknown, unknown>)(
+                  req,
+                  res,
+                  next,
+                )
+              : await (handler as HandlerFor<'optional', unknown, unknown>)(
                   req,
                   user,
                   res,
@@ -185,18 +197,24 @@ function makeRouter() {
               return void res.status(200).json(data)
             }
           }
-        } catch (err: any) {
-          console.log('[caught]', err || err.message)
+        } catch (err) {
+          const error = err as { message?: string; code?: number }
+          console.log('[caught]', err || error.message)
           if (err instanceof RequestValidationError) {
             return void res.status(400).json({ error: err.message })
           }
-          if (method === 'get' && err.code === queryResultErrorCode.noData) {
+          if (method === 'get' && error.code === queryResultErrorCode.noData) {
             return void res.status(404).json({ error: 'Not found' })
           }
-          return void res.status(400).json({ error: err.message || err })
+          return void res.status(400).json({ error: error.message || err })
         }
-      },
-    )
+      })()
+    }
+    const typedRouter = router as unknown as Record<
+      Method,
+      (path: string, ...handlers: RequestHandler[]) => unknown
+    >
+    typedRouter[method](path, ...middleware, dispatch)
   }
 
   function get<
@@ -213,9 +231,13 @@ function makeRouter() {
     auth: AuthSpec<Mode>,
     ...handlers: RawHandlers<Mode>
   ): void
-  function get(arg: RouteArg, auth: AuthSpec<AuthMode>, ...handlers: any[]) {
-    register_route('get', arg, auth, handlers)
-  }
+  function get(
+      arg: RouteArg,
+      auth: AuthSpec<AuthMode>,
+      ...handlers: unknown[]
+    ) {
+      register_route('get', arg, auth, handlers as AnyHandlers)
+    }
 
   function post<
     Req extends RequestSpec,
@@ -231,9 +253,13 @@ function makeRouter() {
     auth: AuthSpec<Mode>,
     ...handlers: RawHandlers<Mode>
   ): void
-  function post(arg: RouteArg, auth: AuthSpec<AuthMode>, ...handlers: any[]) {
-    register_route('post', arg, auth, handlers)
-  }
+  function post(
+      arg: RouteArg,
+      auth: AuthSpec<AuthMode>,
+      ...handlers: unknown[]
+    ) {
+      register_route('post', arg, auth, handlers as AnyHandlers)
+    }
 
   function put<
     Req extends RequestSpec,
@@ -249,9 +275,13 @@ function makeRouter() {
     auth: AuthSpec<Mode>,
     ...handlers: RawHandlers<Mode>
   ): void
-  function put(arg: RouteArg, auth: AuthSpec<AuthMode>, ...handlers: any[]) {
-    register_route('put', arg, auth, handlers)
-  }
+  function put(
+      arg: RouteArg,
+      auth: AuthSpec<AuthMode>,
+      ...handlers: unknown[]
+    ) {
+      register_route('put', arg, auth, handlers as AnyHandlers)
+    }
 
   // delete is a reserved word
   function drop<
@@ -268,9 +298,13 @@ function makeRouter() {
     auth: AuthSpec<Mode>,
     ...handlers: RawHandlers<Mode>
   ): void
-  function drop(arg: RouteArg, auth: AuthSpec<AuthMode>, ...handlers: any[]) {
-    register_route('delete', arg, auth, handlers)
-  }
+  function drop(
+      arg: RouteArg,
+      auth: AuthSpec<AuthMode>,
+      ...handlers: unknown[]
+    ) {
+      register_route('delete', arg, auth, handlers as AnyHandlers)
+    }
 
   return { router, get, post, put, drop }
 }

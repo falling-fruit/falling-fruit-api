@@ -44,6 +44,19 @@ type PasswordResetData = {
   id: number
 }
 
+/**
+ * Shape of the JWT payloads this service issues. `jwt.JwtPayload` types its
+ * custom claims as `any` via an index signature; narrowing to this type keeps
+ * field reads type-safe.
+ */
+type DecodedPayload = jwt.JwtPayload & {
+  id: number
+  roles?: string[]
+  email?: string
+  exp?: number
+  jti?: string
+}
+
 class Tokenizer {
   secret: string
   algorithm: Algorithm
@@ -65,11 +78,11 @@ class Tokenizer {
     token: string,
     options: jwt.VerifyOptions = {},
     secret: jwt.Secret = this.secret,
-  ): jwt.JwtPayload {
+  ): DecodedPayload {
     return jwt.verify(token, secret, {
       algorithms: [this.algorithm],
       ...options,
-    }) as jwt.JwtPayload
+    }) as DecodedPayload
   }
 
   sign_and_wrap_access(
@@ -95,7 +108,10 @@ class Tokenizer {
   verify_access(token: string, res: Response): AccessTokenData | undefined {
     try {
       const data = this.verify(token)
-      return { id: data.id, roles: data.roles, exp: data.exp!, jti: data.jti! }
+      if (data.exp == null || data.jti == null) {
+        throw new jwt.JsonWebTokenError('Missing exp or jti claim')
+      }
+      return { id: data.id, roles: data.roles ?? [], exp: data.exp, jti: data.jti }
     } catch (err) {
       if (err instanceof jwt.TokenExpiredError) {
         // Phrase: no equivalent (see devise.failure.timeout for sessions)
@@ -109,7 +125,10 @@ class Tokenizer {
   verify_refresh(token: string, res: Response): RefreshTokenData | undefined {
     try {
       const data = this.verify(token)
-      return { id: data.id, exp: data.exp!, jti: data.jti! }
+      if (data.exp == null || data.jti == null) {
+        throw new jwt.JsonWebTokenError('Missing exp or jti claim')
+      }
+      return { id: data.id, exp: data.exp, jti: data.jti }
     } catch (err) {
       if (err instanceof jwt.TokenExpiredError) {
         // Phrase: no equivalent (see devise.failure.timeout for sessions)
@@ -163,7 +182,7 @@ class Tokenizer {
     res: Response,
   ): PasswordResetData | undefined {
     try {
-      const data = jwt.decode(token) as jwt.JwtPayload
+      const data = jwt.decode(token) as DecodedPayload
       return { id: data.id }
     } catch {
       // Phrase: devise.failure.invalid_token

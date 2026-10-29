@@ -360,7 +360,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
           review_body.photo_ids,
           review.id,
         )
-        review.photos = photos!
+        review.photos = photos ?? []
         location.reviews = [review]
       }
       await db.clusters.increment(location)

@@ -14,7 +14,7 @@ test('signup with a new email creates a user and sends a confirmation email', as
   assert.equal(result.status, 200)
   assert.deepEqual(setup.postmark.subjects(), ['Confirmation instructions'])
 
-  const user = await setup.db.oneOrNone(
+  const user = await setup.db.oneOrNone<{ email: string }>(
     'SELECT email FROM users WHERE email = ${email}',
     { email: 'new.user@example.com' }
   )
@@ -33,7 +33,7 @@ test('signup with an existing email does not create a duplicate', async () => {
   assert.equal(result.status, 200)
   assert.deepEqual(setup.postmark.subjects(), ['Registration attempt'])
 
-  const count = await setup.db.one(
+  const count = await setup.db.one<{ n: number }>(
     'SELECT COUNT(*)::int AS n FROM users WHERE email = ${email}',
     { email: 'taken@example.com' }
   )

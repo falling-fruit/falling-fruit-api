@@ -39,6 +39,9 @@ export default function ({ db, auth, photos }: Services) {
     // middleware.recaptcha,
     uploads.single('file'),
     async (req, user) => {
+      if (!req.file) {
+        throw Error('No file uploaded')
+      }
       const urls = await photos.resize_and_upload_photo(req.file.path)
       return db.photos.add(urls, user ? user.id : null)
     },

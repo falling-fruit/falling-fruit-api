@@ -12,7 +12,7 @@ export interface ResponseSpec {
   description: string
   schema?: z.ZodTypeAny
   mediaType?: string
-  headers?: Record<string, any>
+  headers?: ResponseConfig['headers']
 }
 
 export interface RequestSpec {
@@ -95,7 +95,7 @@ export type InferQuery<Req extends RequestSpec> =
 export type InferBody<Req extends RequestSpec> =
   ValidatedBodySchema<Req> extends z.ZodTypeAny
     ? InferOutput<ValidatedBodySchema<Req>>
-    : any
+    : unknown
 
 export type SpecRequest<Spec> =
   Spec extends RouteSpec<infer Req, Record<string, ResponseSpec>>
@@ -167,10 +167,10 @@ function compileResponses(
 export function compileRoute(spec: RouteSpec): CompiledRoute {
   const request: NonNullable<RouteConfig['request']> = {}
   if (spec.request?.params) {
-    request.params = spec.request.params as any
+    request.params = spec.request.params as typeof request.params
   }
   if (spec.request?.query) {
-    request.query = spec.request.query as any
+    request.query = spec.request.query as typeof request.query
   }
   if (spec.request?.headers) {
     request.headers = spec.request.headers

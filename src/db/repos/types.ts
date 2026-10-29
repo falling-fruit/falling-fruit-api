@@ -15,26 +15,29 @@ const sql = sqlModule.types
 
 type TypeRow = Parameters<typeof Type.fromRow>[0]
 
-type TypeColumn = keyof TypesRow & string
+type TypeColumn = Extract<keyof TypesRow, string>
 
 class Types {
   db: Protocol
   pgp: Pgp
   names: TypeColumn[]
   default_names: TypeColumn[]
+  ready: Promise<void>
 
   constructor(db: Protocol, pgp: Pgp) {
     this.db = db
     this.pgp = pgp
     this.names = []
-    db.any<{ column_name: string }>(
-      `SELECT column_name FROM information_schema.columns
+    this.ready = db
+      .any<{ column_name: string }>(
+        `SELECT column_name FROM information_schema.columns
        WHERE table_schema = 'public' AND table_name = 'types'`,
-    ).then((result) => {
-      this.names = result
-        .map((row) => row.column_name)
-        .filter((key) => key.endsWith('_name')) as TypeColumn[]
-    })
+      )
+      .then((result) => {
+        this.names = result
+          .map((row) => row.column_name)
+          .filter((key) => key.endsWith('_name')) as TypeColumn[]
+      })
     this.default_names = ['en_name', 'scientific_name']
   }
 
@@ -66,7 +69,7 @@ class Types {
 
   async list(): Promise<ApiType[]> {
     const types = await this.db.any<TypeRow>(sql.list)
-    return types.map(Type.fromRow)
+    return types.map((type) => Type.fromRow(type))
   }
 
   count({
