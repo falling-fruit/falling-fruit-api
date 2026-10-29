@@ -20,6 +20,8 @@ import type {
 
 const sql = sqlModule.locations
 
+type LocationRow = Parameters<typeof Location.fromRow>[0] & { id: number }
+
 type LocationListParams = {
   ids?: number[]
   bounds?: string[]
@@ -51,7 +53,7 @@ class Locations {
     obj: Partial<AddLocation> & Record<string, unknown>,
   ): Promise<ApiLocation> {
     const values = Location.toRow(obj)
-    const location = await this.db.one<ApiLocation>(sql.add, values)
+    const location = await this.db.one<LocationRow>(sql.add, values)
     await this.changes.add({
       description: 'added',
       location: location,
@@ -66,7 +68,7 @@ class Locations {
     user: { id: number } | null,
   ): Promise<ApiLocation> {
     const values = { ...obj, id: parseInt(String(id)) }
-    const location = await this.db.one<ApiLocation>(sql.edit, values)
+    const location = await this.db.one<LocationRow>(sql.edit, values)
     await this.changes.add({
       description: 'edited',
       location: location,
@@ -79,7 +81,7 @@ class Locations {
     id: number | string,
     user: { id: number } | null,
   ): Promise<ApiLocation> {
-    const location = await this.db.one<ApiLocation>(sql.show, {
+    const location = await this.db.one<LocationRow>(sql.show, {
       id: parseInt(String(id)),
       user_id: user ? user.id : null,
     })

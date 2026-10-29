@@ -26,6 +26,8 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down -v",
     "db:migrate": "dbmate --env-file .env.test up",
+    "db:types": "yarn db:up && yarn db:migrate && kanel",
+    "db:types:generate": "kanel",
     "build": "tsx scripts/build-openapi.ts",
     "validate": "yarn build && npx swagger-cli validate docs/openapi.yml"
   },
@@ -52,6 +54,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
     "@types/bcrypt": "^6.0.0",
     "@types/bluebird": "^3.5.42",
     "@types/compression": "^1.7.5",
@@ -62,6 +65,7 @@
     "@types/multer": "^1.4.12",
     "@types/node": "^22.16.0",
     "@types/pg": "^8.23.1",
+    "kanel": "3.16.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.0"
   },

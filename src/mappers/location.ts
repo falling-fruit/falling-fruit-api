@@ -1,6 +1,7 @@
 import type { AddLocation, Location } from '../schemas/schemas'
+import type { default as LocationsRow, LocationsInitializer } from '../db/generated/public/Locations'
 
-type LocationRow = Partial<Location> & {
+type LocationRow = Partial<LocationsRow> & {
   no_season?: boolean | null
   season_start?: number | null
   season_stop?: number | null
@@ -20,7 +21,7 @@ export default {
       location.season_stop = 11
     }
     delete location.no_season
-    return location as Location
+    return location as unknown as Location
   },
 
   /**
@@ -31,7 +32,7 @@ export default {
    */
   toRow(
     obj: Partial<AddLocation> & Record<string, unknown>,
-  ): Record<string, unknown> {
+  ): LocationsInitializer & Record<string, unknown> {
     return {
       season_start: null,
       season_stop: null,

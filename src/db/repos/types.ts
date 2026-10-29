@@ -8,17 +8,20 @@ import {
 import Type from '../../mappers/type'
 import { parse_bounds } from '../../parsers/bounds'
 import type { Protocol, Pgp } from '../types'
+import type { default as TypesRow } from '../generated/public/Types'
 import type { SubmitType, Type as ApiType, TypeCount } from '../../schemas/schemas'
 
 const sql = sqlModule.types
 
 type TypeRow = Parameters<typeof Type.fromRow>[0]
 
+type TypeColumn = keyof TypesRow & string
+
 class Types {
   db: Protocol
   pgp: Pgp
-  names: string[]
-  default_names: string[]
+  names: TypeColumn[]
+  default_names: TypeColumn[]
 
   constructor(db: Protocol, pgp: Pgp) {
     this.db = db
@@ -30,14 +33,14 @@ class Types {
     ).then((result) => {
       this.names = result
         .map((row) => row.column_name)
-        .filter((key) => key.endsWith('_name'))
+        .filter((key) => key.endsWith('_name')) as TypeColumn[]
     })
     this.default_names = ['en_name', 'scientific_name']
   }
 
   locale_to_names(value: string): string[] {
     const column = Type.locale_to_name(value)
-    if (this.names.includes(column)) {
+    if (this.names.some((name) => name === column)) {
       return [column, ...this.default_names].filter(
         (value, index, array) => array.indexOf(value) === index,
       )

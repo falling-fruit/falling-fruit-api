@@ -60,5 +60,16 @@ jobs:
       - name: Apply migrations
         run: dbmate up
 
+      - name: Check generated DB types are up to date
+        run: |
+          yarn db:types:generate
+          if ! git diff --exit-code --stat src/db/generated; then
+            echo "::error::Generated DB types are stale. Run 'yarn db:types' and commit the result."
+            exit 1
+          fi
+
+      - name: Type-check
+        run: yarn typecheck
+
       - name: Run tests
         run: yarn test

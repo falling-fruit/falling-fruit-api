@@ -36,6 +36,10 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
     - `index.ts`: Load all SQL query files:
     - `{class}/`
       - `*.sql`: Raw SQL with variable substitutions.
+  - `generated/`: TypeScript row types derived from the live Postgres schema by
+    [`kanel`](https://github.com/kristiandupont/kanel) (`public/{Table}.ts`).
+    These are committed and consumed by repos/mappers for type-safe queries.
+    Do not edit by hand; see [Database types](#database-types).
 
 # Development
 
@@ -84,6 +88,33 @@ Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner,
 - `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.ts`).
 
 e2e tests require a database. `yarn test:e2e` spins one up, migrates, and runs them.
+
+## Database types
+
+Row types in `src/db/generated/` are derived from the live Postgres schema by
+[`kanel`](https://github.com/kristiandupont/kanel) (configured in
+`.kanelrc.cjs`). Each table yields a row interface, an `Initializer`, a
+`Mutator`, and a branded id type, which repos and mappers consume for type-safe
+queries instead of hand-written or `any`-typed rows.
+
+Regenerate after any schema change (migration):
+
+```sh
+yarn db:types  # db:up + db:migrate + kanel, reading .env.test
+```
+
+The generated files are committed so that `yarn typecheck` works without a
+running database. CI regenerates them against the migrated schema and fails if
+the committed output is stale, so run `yarn db:types` and commit the result
+whenever you add a migration.
+
+Notes:
+
+- `int8`/`bigint` columns map to `number` (matching the `INT8` type parser in
+  `src/db/index.ts`); PostGIS `geometry`/`geography` map to `string` (GeoJSON,
+  decoded in the mappers). See the overrides in `.kanelrc.cjs`.
+- kanel prints harmless `Unknown type 'geometry' / 'double precision'` warnings
+  for the PostGIS SQL functions; those routine wrappers are not consumed.
 
 ## Documentation
 

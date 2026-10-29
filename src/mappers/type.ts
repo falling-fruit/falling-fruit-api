@@ -1,4 +1,5 @@
 import type { Type } from '../schemas/schemas'
+import type { default as TypesRow } from '../db/generated/public/Types'
 
 type TypeCategory = 'forager' | 'freegan' | 'honeybee' | 'grafter'
 
@@ -9,9 +10,8 @@ const TYPE_CATEGORIES: TypeCategory[] = [
   'grafter',
 ]
 
-// Flat database row: a dynamic set of columns (e.g. `en_name`, `scientific_name`,
-// `*_url`, `category_mask`) that does not map one-to-one onto the API schema.
-type TypeRow = Record<string, any>
+// Columns from DB but also enriched fields like common_names, urls
+type TypeRow = Partial<Record<keyof TypesRow, any>> & Record<string, any>
 
 type ToRowOptions = {
   nameColumns: string[]
