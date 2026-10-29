@@ -269,11 +269,11 @@ export const EditLocation = allOf('EditLocation', [
       example:
         'Two mulberry trees with a few low branches overhanging the sidewalk.',
     }),
-    season_start: z.number().int().min(0).max(11).optional().openapi({
+    season_start: z.number().int().min(0).max(11).nullable().optional().openapi({
       description: 'First month in season (zero-based).',
       example: 6,
     }),
-    season_stop: z.number().int().min(0).max(11).optional().openapi({
+    season_stop: z.number().int().min(0).max(11).nullable().optional().openapi({
       description: 'Last month in season (zero-based).',
       example: 8,
     }),
