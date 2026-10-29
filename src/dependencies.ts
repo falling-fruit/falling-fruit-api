@@ -29,13 +29,17 @@ function createLoggingPostmarkClient(): EmailClient {
 
 function createLoggingS3({ apiOrigin }: { apiOrigin?: string }): S3Client {
   return {
-    upload({ Key }) {
+    upload({ Body, Key }) {
       return {
         promise() {
           const base = (apiOrigin || '').replace(/\/+$/, '')
           const location = `${base}/uploads/${Key.split(path.sep).join('/')}`
           console.log(`[s3 disabled] upload Key: ${Key} -> ${location}`)
-          return Promise.resolve({ Location: location })
+          return new Promise((resolve, reject) => {
+            Body.on('error', reject)
+            Body.on('end', () => resolve({ Location: location }))
+            Body.resume()
+          })
         },
       }
     },
