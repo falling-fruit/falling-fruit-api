@@ -243,7 +243,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
           'SELECT id, roles, encrypted_password, confirmed_at FROM users WHERE email = ${email}',
           { email: req.body.username.toLowerCase() },
         )
-      } catch (err) {
+      } catch {
         // Phrase: devise.failure.invalid
         return void res
           .status(401)
@@ -322,7 +322,7 @@ export default function ({ mailer, db, middleware, auth, tokenizer }: Services) 
       if (!user) {
         return void res.status(401).json({ error: 'Invalid refresh token' })
       }
-      const [tokens, jti, exp] = tokenizer.sign_and_wrap_access(
+      const [tokens, jti] = tokenizer.sign_and_wrap_access(
         user,
         data.exp,
       )

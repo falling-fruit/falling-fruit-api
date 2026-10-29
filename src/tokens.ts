@@ -165,7 +165,7 @@ class Tokenizer {
     try {
       const data = jwt.decode(token) as jwt.JwtPayload
       return { id: data.id }
-    } catch (err) {
+    } catch {
       // Phrase: devise.failure.invalid_token
       return void res
         .status(401)

@@ -20,6 +20,7 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "node --import tsx --test 'test/**/*.test.ts'",
     "test:e2e": "yarn build && yarn db:up && yarn db:migrate && node --import tsx --test 'test/**/*.e2e.ts'",
@@ -65,9 +66,12 @@
     "@types/multer": "^1.4.12",
     "@types/node": "^22.16.0",
     "@types/pg": "^8.23.1",
+    "eslint": "^9",
+    "globals": "^17.13.0",
     "kanel": "3.16.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8"
   },
   "resolutions": {
     "@types/express-serve-static-core": "^4.17.33"

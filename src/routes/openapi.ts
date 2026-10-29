@@ -173,7 +173,7 @@ export function compileRoute(spec: RouteSpec): CompiledRoute {
     request.query = spec.request.query as any
   }
   if (spec.request?.headers) {
-    request.headers = spec.request.headers as any
+    request.headers = spec.request.headers
   }
   if (spec.request?.body) {
     request.body = {

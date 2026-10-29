@@ -14,7 +14,7 @@ type CreateAppOptions = {
 }
 
 function is_object(x: unknown): x is Record<string, unknown> {
-  return !!x && (x as object).constructor === Object
+  return !!x && x.constructor === Object
 }
 
 function null_empty_strings(obj: unknown): unknown {

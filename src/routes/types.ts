@@ -9,8 +9,6 @@ import {
   recaptchaParam,
 } from '../schemas/parameters'
 
-const idParams = z.object({ id: z.coerce.number().int().min(1) })
-
 export default function ({ db, middleware, auth }: Services) {
   const { router, get, post } = makeRouter()
 

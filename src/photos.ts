@@ -35,7 +35,7 @@ type Photos = {
 }
 
 const S3_URL_REGEX =
-  /^https?:\/\/(?<bucket>[^\.]+)\.s3\.(?<region>[^\.]+)\.amazonaws\.com\/(?<key>.*)$/
+  /^https?:\/\/(?<bucket>[^.]+)\.s3\.(?<region>[^.]+)\.amazonaws\.com\/(?<key>.*)$/
 
 function is_new_photo_url(url: string): boolean {
   const match = S3_URL_REGEX.exec(url)

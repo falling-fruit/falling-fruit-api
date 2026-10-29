@@ -97,7 +97,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
       },
     },
     auth.required_role('user'),
-    async (req, user) => {
+    async (req, _user) => {
       if (req.query.embed?.includes('locations')) {
         return await db.locationLists.showListWithLocations(req.params.list_id)
       }

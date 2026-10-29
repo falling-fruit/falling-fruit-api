@@ -11,7 +11,7 @@ export const registry = new OpenAPIRegistry()
 export { z }
 
 export function register<T extends z.ZodTypeAny>(id: string, schema: T): T {
-  const described = schema.openapi(id) as T
+  const described = schema.openapi(id)
   registry.register(id, described)
   return described
 }
