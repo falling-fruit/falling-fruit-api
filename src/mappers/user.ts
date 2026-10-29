@@ -5,12 +5,12 @@ import type { default as UsersRow } from '../db/generated/public/Users'
 
 type PolygonType = z.infer<typeof Polygon>
 
-// The database row as returned by queries: the generated table type, but with
-// `range` already decoded from a PostGIS GeoJSON string into a Polygon by this
-// mapper. All other columns keep their generated types.
-type UserRow = Omit<UsersRow, 'range'> & {
+// The database row as returned by queries: the API-shaped fields the SQL
+// produces (as a partial), except `range` arrives as a PostGIS GeoJSON string
+// and is decoded to a Polygon by this mapper.
+type UserRow = Omit<Partial<User>, 'range'> & {
   range?: string | PolygonType | null
-}
+} & Record<string, unknown>
 
 // Named parameters bound by the add/edit SQL. Columns are typed from the
 // generated row, except `range`, which the SQL serializes via
@@ -33,7 +33,7 @@ export default {
     if (user.range && typeof user.range === 'string') {
       user.range = JSON.parse(user.range)
     }
-    return user as unknown as User
+    return user as User
   },
 
   /**
@@ -52,4 +52,3 @@ export default {
     }
   },
 }
-

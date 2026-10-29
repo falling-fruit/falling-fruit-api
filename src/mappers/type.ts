@@ -10,8 +10,32 @@ const TYPE_CATEGORIES: TypeCategory[] = [
   'grafter',
 ]
 
-// Columns from DB but also enriched fields like common_names, urls
-type TypeRow = Partial<Record<keyof TypesRow, any>> & Record<string, any>
+// The database row as returned by queries: the generated table columns (all
+// optional, since queries select varying subsets). Dynamic `*_name` and
+// `*_url` columns beyond those in the generated type are read via the string
+// index signature, typed `unknown` and narrowed at each read site.
+type TypeRow = Partial<Record<keyof TypesRow, unknown>> & Record<string, unknown>
+
+// The object accumulated while converting a flat row into the nested API
+// shape. Flat source columns are read (and then deleted) via the `TypeRow`
+// index signature; the nested fields below are built up in place.
+type FromRowWorking = TypeRow & {
+  scientific_names?: string[]
+  common_names?: Record<string, string[]>
+  urls?: Record<string, string>
+  categories?: TypeCategory[]
+}
+
+// The object accumulated while converting a nested API object back into a flat
+// row. Nested fields are consumed (and then deleted); flat columns are written
+// via the index signature.
+type ToRowWorking = Record<string, unknown> & {
+  common_names?: Record<string, string[]>
+  scientific_names?: string[]
+  categories?: TypeCategory[]
+  notes?: string | null
+  category_mask?: number | null
+}
 
 type ToRowOptions = {
   nameColumns: string[]
@@ -51,72 +75,80 @@ export default {
    * @param type - Raw type row.
    * @returns API-shaped type.
    */
-  fromRow(type: TypeRow): Type {
+  fromRow(row: TypeRow): Type {
+  const type: FromRowWorking = row
   const replaced: string[] = []
+  const scientific_names: string[] = []
+  const common_names: Record<string, string[]> = {}
+  const urls: Record<string, string> = {}
   // Format scientific names: [name, synonyms...]
-  type.scientific_names = []
-  if (type.scientific_name) {
-    type.scientific_names.push(type.scientific_name)
+  if (typeof type.scientific_name === 'string') {
+    scientific_names.push(type.scientific_name)
   }
-  if (type.scientific_synonyms) {
-    type.scientific_names.push(...type.scientific_synonyms.split(', '))
+  if (typeof type.scientific_synonyms === 'string') {
+    scientific_names.push(...type.scientific_synonyms.split(', '))
   }
+  type.scientific_names = scientific_names
   replaced.push('scientific_name', 'scientific_synonyms')
   // Format common names: {locale: [name, synonyms...], ...}
-  type.common_names = {}
+  type.common_names = common_names
   // Format urls: {tag: url, ...}
-  type.urls = {}
+  type.urls = urls
   for (const key in type) {
     if (key == 'scientific_name') {
       continue
     }
     if (key.endsWith('_name')) {
       replaced.push(key)
-      if (type[key]) {
-        type.common_names[key.replace('_name', '')] = type[key].split(', ')
+      const value = type[key]
+      if (typeof value === 'string' && value) {
+        common_names[key.replace('_name', '')] = value.split(', ')
       }
     } else if (key.endsWith('_url')) {
       replaced.push(key)
-      if (type[key]) {
-        type.urls[key.replace('_url', '')] = type[key]
+      const value = type[key]
+      if (typeof value === 'string' && value) {
+        urls[key.replace('_url', '')] = value
       }
     }
   }
   // Extract common names from notes
-  if (type.notes) {
+  if (typeof type.notes === 'string' && type.notes) {
     const regex = /^common_names\.([a-z]{2}(?:_[a-z]{2})?): ([^\n]+)$/gm
     let match
     while ((match = regex.exec(type.notes)) !== null) {
       const [_, locale, names] = match
-      type.common_names[locale] = names.split(', ')
+      common_names[locale] = names.split(', ')
     }
   }
   delete type.notes
   // Append English synonyms
-  if (type.en_synonyms) {
+  if (typeof type.en_synonyms === 'string' && type.en_synonyms) {
     const synonyms = type.en_synonyms.split(', ')
-    if ('en' in type.common_names) {
-      type.common_names.en.push(...synonyms)
+    if ('en' in common_names) {
+      common_names.en.push(...synonyms)
     } else {
-      type.common_names.en = synonyms
+      common_names.en = synonyms
     }
   }
   replaced.push('en_synonyms')
   // Replace _ with - in all common name keys
-  for (const key in type.common_names) {
+  for (const key in common_names) {
     if (key.includes('_')) {
       const new_key = key.replace('_', '-')
-      type.common_names[new_key] = type.common_names[key]
-      delete type.common_names[key]
+      common_names[new_key] = common_names[key]
+      delete common_names[key]
     }
   }
   // TEMP: Generate USDA URL from symbol
-  if (type.usda_symbol) {
-    type.urls.usda = `https://plants.usda.gov/home/plantProfile?symbol=${type.usda_symbol}`
+  if (typeof type.usda_symbol === 'string' && type.usda_symbol) {
+    urls.usda = `https://plants.usda.gov/home/plantProfile?symbol=${type.usda_symbol}`
   }
   replaced.push('usda_symbol')
   // Format categories: {categories: [category, ...]}
-  type.categories = unmask_bits(type.category_mask, TYPE_CATEGORIES)
+  const category_mask =
+    typeof type.category_mask === 'number' ? type.category_mask : 0
+  type.categories = unmask_bits(category_mask, TYPE_CATEGORIES)
   replaced.push('category_mask')
   // Drop replaced properties
   for (const key of replaced) {
@@ -140,7 +172,7 @@ export default {
     { nameColumns, defaultNames }: ToRowOptions,
   ): TypeRow {
   // Deconstruct nested fields back into flat columns.
-  let values: TypeRow = {
+  let values: ToRowWorking = {
     parent_id: null,
     common_names: {},
     scientific_names: [],
@@ -152,10 +184,11 @@ export default {
     ...obj,
   }
   // Extract English name and synonyms
-  if ('en' in values.common_names) {
-    values.en_name = values.common_names.en[0]
-    values.en_synonyms = values.common_names.en.slice(1).join(', ') || null
-    delete values.common_names['en']
+  const common_names = values.common_names ?? {}
+  if ('en' in common_names) {
+    values.en_name = common_names.en[0]
+    values.en_synonyms = common_names.en.slice(1).join(', ') || null
+    delete common_names['en']
   }
   // Flatten scientific names
   if (values.scientific_names) {
@@ -181,7 +214,7 @@ export default {
   let has_default = defaultNames.some((name) => Boolean(values[name]))
   // Transfer remaining names to a language_name column, if it exists, or to notes
   for (const [locale, names] of Object.entries<string[]>(
-    values.common_names,
+    values.common_names ?? {},
   )) {
     const column = locale_to_name(locale)
     if (nameColumns.includes(column)) {
@@ -204,4 +237,3 @@ export default {
   return values
   },
 }
-

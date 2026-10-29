@@ -1,11 +1,13 @@
 import type { AddLocation, Location } from '../schemas/schemas'
-import type { default as LocationsRow, LocationsInitializer } from '../db/generated/public/Locations'
+import type { LocationsInitializer } from '../db/generated/public/Locations'
 
-type LocationRow = Partial<LocationsRow> & {
+// The database row as returned by queries: the API-shaped fields the SQL
+// produces (as a partial, since queries select varying subsets and joins),
+// plus the transient `no_season` column consumed by `fromRow`. Dates arrive as
+// ISO strings, matching the API shape.
+type LocationRow = Partial<Location> & {
   no_season?: boolean | null
-  season_start?: number | null
-  season_stop?: number | null
-}
+} & Record<string, unknown>
 
 export default {
   /**
@@ -21,7 +23,7 @@ export default {
       location.season_stop = 11
     }
     delete location.no_season
-    return location as unknown as Location
+    return location as Location
   },
 
   /**
@@ -44,4 +46,3 @@ export default {
     }
   },
 }
-
