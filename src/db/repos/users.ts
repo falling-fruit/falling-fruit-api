@@ -46,11 +46,11 @@ class Users {
 
   async edit(req: EditRequest, authUser: { id: number }): Promise<ApiUser> {
     const values: Record<string, unknown> = {
-      ...req.body,
+      ...User.toRow(req.body),
       id: authUser.id,
     }
-    if (values.password) {
-      values.password = await passwords.hash_password(values.password as string)
+    if (req.body.password) {
+      values.password = await passwords.hash_password(req.body.password)
       const user = await this.db.one<UserRow>(sql.editPassword, values)
       return User.fromRow(user)
     }

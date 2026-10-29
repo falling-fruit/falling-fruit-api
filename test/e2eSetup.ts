@@ -13,6 +13,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env.test') })
 import makeDb from '../src/db'
 import createDependencies from '../src/dependencies'
 import createApp from '../src/app'
+import Tokenizer from '../src/tokens'
 import type { Db } from '../src/db/types'
 
 const { createDependenciesForClients } = createDependencies
@@ -55,9 +56,19 @@ class FakeS3Client {
 
   upload(params: S3Params) {
     this.uploads.push(params)
+    const body = params.Body as NodeJS.ReadableStream | undefined
+    const drained = body
+      ? new Promise<void>((resolve, reject) => {
+          body.on('data', () => {})
+          body.on('end', () => resolve())
+          body.on('error', reject)
+        })
+      : Promise.resolve()
     return {
       promise: () =>
-        Promise.resolve({ Location: `https://example.com/${params.Key}` }),
+        drained.then(() => ({
+          Location: `https://example.com/${params.Key}`,
+        })),
     }
   }
 
@@ -84,23 +95,46 @@ type E2EResponse = {
 }
 
 class E2ESetup {
-  tables: string[]
+  tables: Set<string>
   db: Db
   postmark: FakePostmarkClient
   s3: FakeS3Client
+  tokenizer: Tokenizer
   server: Server | null
   url: string | null
+  apiBase: string
+  private starting: Promise<E2ESetup> | null
 
-  constructor({ tables = [] }: { tables?: string[] } = {}) {
-    this.tables = tables
+  constructor() {
+    this.tables = new Set()
     this.db = makeDb(process.env.DB, false)
     this.postmark = new FakePostmarkClient()
     this.s3 = new FakeS3Client()
+    this.tokenizer = new Tokenizer(JWT_SECRET)
     this.server = null
     this.url = null
+    this.apiBase = API_BASE
+    this.starting = null
+  }
+
+  registerTables(tables: string[]) {
+    for (const table of tables) {
+      this.tables.add(table)
+    }
   }
 
   async start() {
+    if (this.server) {
+      return this
+    }
+    if (this.starting) {
+      return this.starting
+    }
+    this.starting = this.doStart()
+    return this.starting
+  }
+
+  private async doStart() {
     const { middleware, routes } = createDependenciesForClients(
       {
         local: true,
@@ -169,6 +203,60 @@ class E2ESetup {
     return { status: response.status, body: parsed, response }
   }
 
+  async createUser({
+    email = 'user@example.com',
+    password = 'supersecret',
+    name = 'Test User',
+    roles = ['user'],
+    confirmed = true,
+  }: {
+    email?: string
+    password?: string
+    name?: string | null
+    roles?: string[]
+    confirmed?: boolean
+  } = {}): Promise<{
+    id: number
+    email: string
+    password: string
+    roles: string[]
+    token: string
+    authHeaders: Record<string, string>
+  }> {
+    const user = await this.db.users.add({
+      body: { email: email.toLowerCase(), password, name },
+    })
+    const rolesMask = roles.includes('admin') ? 11 : 10
+    await this.db.none(
+      'UPDATE users SET roles_mask = ${rolesMask} WHERE id = ${id}',
+      { id: user.id, rolesMask },
+    )
+    if (confirmed) {
+      await this.db.users.confirm(user.id)
+    }
+    const token = await this.signAccessToken({ id: user.id, roles })
+    return {
+      id: user.id,
+      email: email.toLowerCase(),
+      password,
+      roles,
+      token,
+      authHeaders: { authorization: `Bearer ${token}` },
+    }
+  }
+
+  async signAccessToken(user: {
+    id: number
+    roles?: string[]
+  }): Promise<string> {
+    const [tokens, jti, exp] = this.tokenizer.sign_and_wrap_access(user)
+    await this.db.none(
+      'INSERT INTO refresh_tokens (user_id, jti, exp) VALUES (${user_id}, ${jti}, ${exp})',
+      { user_id: user.id, jti, exp },
+    )
+    return tokens.access_token
+  }
+
   async close() {
     if (this.server) {
       const server = this.server
@@ -178,14 +266,37 @@ class E2ESetup {
       this.server = null
     }
     await this.db.$pool.end()
+    this.starting = null
   }
 }
 
+let sharedSetup: E2ESetup | null = null
+let activeFiles = 0
+
+function getSharedSetup(): E2ESetup {
+  if (!sharedSetup) {
+    sharedSetup = new E2ESetup()
+  }
+  return sharedSetup
+}
+
 function setupE2E(options: { tables?: string[] } = {}) {
-  const setup = new E2ESetup(options)
-  test.before(() => setup.start())
+  const setup = getSharedSetup()
+  setup.registerTables(options.tables ?? [])
+
+  test.before(async () => {
+    activeFiles += 1
+    await setup.start()
+  })
   test.beforeEach(() => setup.reset())
-  test.after(() => setup.close())
+  test.after(async () => {
+    activeFiles -= 1
+    if (activeFiles === 0) {
+      await setup.close()
+      sharedSetup = null
+    }
+  })
+
   return setup
 }
 

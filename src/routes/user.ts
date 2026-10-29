@@ -3,6 +3,7 @@ import makeRouter from './makeRouter'
 import type { Services } from './services'
 import { z, inlineAllOf } from '../schemas/registry'
 import { User, EditUser, Token } from '../schemas/schemas'
+import { Polygon } from '../schemas/geojson'
 import { emailProp, passwordProp } from '../schemas/properties'
 import { recaptchaParam } from '../schemas/parameters'
 
@@ -43,6 +44,9 @@ const EditUserBody = z.object({
   email: emailProp,
   name: z.string().min(1).nullable().optional(),
   bio: z.string().min(1).nullable().optional(),
+  range: inlineAllOf([Polygon, z.object({})])
+    .nullable()
+    .optional(),
   announcements_email: z.boolean().optional(),
   password: passwordProp.optional(),
   password_confirmation: z.string().min(1).optional(),

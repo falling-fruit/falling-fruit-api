@@ -67,7 +67,7 @@ class Locations {
     obj: Record<string, unknown>,
     user: { id: number } | null,
   ): Promise<ApiLocation> {
-    const values = { ...obj, id: parseInt(String(id)) }
+    const values = { ...Location.toRow(obj), id: parseInt(String(id)) }
     const location = await this.db.one<LocationRow>(sql.edit, values)
     await this.changes.add({
       description: 'edited',

@@ -33,7 +33,12 @@ class LocationLists {
     id: number | string,
     obj: Partial<EditLocationList> & Record<string, unknown>,
   ): Promise<LocationList> {
-    const values = { ...obj, id: parseInt(String(id)) }
+    const values = {
+      name: null,
+      description: null,
+      ...obj,
+      id: parseInt(String(id)),
+    }
     return this.db.one<LocationList>(sql.editList, values)
   }
 

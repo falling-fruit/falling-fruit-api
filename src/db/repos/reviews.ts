@@ -48,7 +48,15 @@ class Reviews {
     id: number | string,
     obj: Partial<EditReview> & Record<string, unknown>,
   ): Promise<Review> {
-    const values = { ...obj, id: parseInt(String(id)) }
+    const values = {
+      observed_on: null,
+      comment: null,
+      fruiting: null,
+      quality_rating: null,
+      yield_rating: null,
+      ...obj,
+      id: parseInt(String(id)),
+    }
     const review = await this.db.one<Review>(sql.edit, values)
     await this.changes.edit_review(id, review)
     return review
