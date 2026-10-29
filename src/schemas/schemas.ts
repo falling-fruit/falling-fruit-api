@@ -1,4 +1,4 @@
-import { z, register, allOf, inlineAllOf } from './registry'
+import { z, register, allOf, inlineAllOf, intEnum } from './registry'
 import { Polygon } from './geojson'
 import { emailProp, nameProp, bioProp } from './properties'
 
@@ -249,15 +249,7 @@ export const EditLocation = allOf('EditLocation', [
         'Whether suspected to be wrong in some way and requires verification.',
       example: false,
     }),
-    access: z
-      .union([
-        z.literal(0),
-        z.literal(1),
-        z.literal(2),
-        z.literal(3),
-        z.literal(4),
-      ])
-      .nullable()
+    access: intEnum([0, 1, 2, 3, 4], { nullable: true })
       .optional()
       .openapi({
         description:
@@ -299,37 +291,19 @@ export const BaseReview = register(
         format: 'date',
         example: '2014-06-19',
       }),
-      fruiting: z
-        .union([z.literal(0), z.literal(1), z.literal(2)])
-        .nullable()
+      fruiting: intEnum([0, 1, 2], { nullable: true })
         .optional()
         .openapi({
           description: 'Fruiting status.',
           example: 2,
         }),
-      quality_rating: z
-        .union([
-          z.literal(0),
-          z.literal(1),
-          z.literal(2),
-          z.literal(3),
-          z.literal(4),
-        ])
-        .nullable()
+      quality_rating: intEnum([0, 1, 2, 3, 4], { nullable: true })
         .optional()
         .openapi({
           description: 'Quality rating.',
           example: 2,
         }),
-      yield_rating: z
-        .union([
-          z.literal(0),
-          z.literal(1),
-          z.literal(2),
-          z.literal(3),
-          z.literal(4),
-        ])
-        .nullable()
+      yield_rating: intEnum([0, 1, 2, 3, 4], { nullable: true })
         .optional()
         .openapi({
           description: 'Yield rating.',
@@ -404,27 +378,9 @@ export const Review = allOf('Review', [
       example: 'Ethan',
     }),
     comment: z.string().min(1).nullable(),
-    fruiting: z
-      .union([z.literal(0), z.literal(1), z.literal(2)])
-      .nullable(),
-    quality_rating: z
-      .union([
-        z.literal(0),
-        z.literal(1),
-        z.literal(2),
-        z.literal(3),
-        z.literal(4),
-      ])
-      .nullable(),
-    yield_rating: z
-      .union([
-        z.literal(0),
-        z.literal(1),
-        z.literal(2),
-        z.literal(3),
-        z.literal(4),
-      ])
-      .nullable(),
+    fruiting: intEnum([0, 1, 2], { nullable: true }),
+    quality_rating: intEnum([0, 1, 2, 3, 4], { nullable: true }),
+    yield_rating: intEnum([0, 1, 2, 3, 4], { nullable: true }),
     observed_on: z.string().date().nullable(),
     photos: z.array(Photo),
   }),
@@ -559,15 +515,7 @@ export const Location = allOf('Location', [
     lng: z.number().min(-180).max(180),
     type_ids: z.array(z.number().int().min(1)),
     unverified: z.boolean(),
-    access: z
-      .union([
-        z.literal(0),
-        z.literal(1),
-        z.literal(2),
-        z.literal(3),
-        z.literal(4),
-      ])
-      .nullable(),
+    access: intEnum([0, 1, 2, 3, 4], { nullable: true }),
     description: z.string().min(1).nullable(),
     season_start: z.number().int().min(0).max(11),
     season_stop: z.number().int().min(0).max(11),
@@ -753,20 +701,11 @@ export const EditReport = register(
         description: 'Location ID.',
         example: 3383,
       }),
-      problem_code: z
-        .union([
-          z.literal(0),
-          z.literal(1),
-          z.literal(2),
-          z.literal(3),
-          z.literal(4),
-          z.literal(5),
-        ])
-        .openapi({
-          description:
-            'Problem code.\n- 0: Location is spam\n- 1: Location does not exist\n- 2: Location is a duplicate\n- 3: Inappropriate review photo\n- 4: Inappropriate review comment\n- 5: Other (explain below)\n',
-          example: 1,
-        }),
+      problem_code: intEnum([0, 1, 2, 3, 4, 5]).openapi({
+        description:
+          'Problem code.\n- 0: Location is spam\n- 1: Location does not exist\n- 2: Location is a duplicate\n- 3: Inappropriate review photo\n- 4: Inappropriate review comment\n- 5: Other (explain below)\n',
+        example: 1,
+      }),
       comment: z.string().min(1).nullable().optional().openapi({
         description: 'Comment. Required if `problem_code` is 5.',
         example: 'This tree was cut down.',
@@ -796,16 +735,7 @@ export const Report = allOf('Report', [
       description: 'ID of reporting User (if authenticated).',
       example: 321,
     }),
-    resolution_code: z
-      .union([
-        z.literal(0),
-        z.literal(1),
-        z.literal(2),
-        z.literal(3),
-        z.literal(4),
-        z.literal(5),
-      ])
-      .nullable()
+    resolution_code: intEnum([0, 1, 2, 3, 4, 5], { nullable: true })
       .optional()
       .openapi({
         description:

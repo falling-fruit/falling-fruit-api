@@ -16,6 +16,29 @@ export function register<T extends z.ZodTypeAny>(id: string, schema: T): T {
   return described
 }
 
+export function intEnum<const V extends readonly [number, ...number[]]>(
+  values: V,
+  opts: { nullable: true },
+): z.ZodNullable<z.ZodUnion<{ [K in keyof V]: z.ZodLiteral<V[K]> }>>
+export function intEnum<const V extends readonly [number, ...number[]]>(
+  values: V,
+  opts?: { nullable?: false },
+): z.ZodUnion<{ [K in keyof V]: z.ZodLiteral<V[K]> }>
+export function intEnum<const V extends readonly [number, ...number[]]>(
+  values: V,
+  { nullable = false }: { nullable?: boolean } = {},
+) {
+  const literals = values.map((v) => z.literal(v)) as unknown as {
+    [K in keyof V]: z.ZodLiteral<V[K]>
+  }
+  const described = z.union(literals).openapi({
+    type: 'integer',
+    enum: values as unknown as number[],
+    ...(nullable ? { nullable: true } : {}),
+  })
+  return nullable ? described.nullable() : described
+}
+
 type IntersectionOf<Members extends z.ZodTypeAny[]> = Members extends [
   infer First extends z.ZodTypeAny,
 ]

@@ -492,23 +492,14 @@ components:
               description: Whether suspected to be wrong in some way and requires verification.
               example: false
             access:
-              anyOf:
-                - type: number
-                  enum:
-                    - 0
-                - type: number
-                  enum:
-                    - 1
-                - type: number
-                  enum:
-                    - 2
-                - type: number
-                  enum:
-                    - 3
-                - type: number
-                  enum:
-                    - 4
-                - nullable: true
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+              nullable: true
               description: |
                 Access level.
                 - 0: Location is on my property.
@@ -557,57 +548,34 @@ components:
           description: Date visited in format YYYY-MM-DD. Cannot be in the future.
           example: '2014-06-19'
         fruiting:
-          anyOf:
-            - type: number
-              enum:
-                - 0
-            - type: number
-              enum:
-                - 1
-            - type: number
-              enum:
-                - 2
-            - nullable: true
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+          nullable: true
           description: Fruiting status.
           example: 2
         quality_rating:
-          anyOf:
-            - type: number
-              enum:
-                - 0
-            - type: number
-              enum:
-                - 1
-            - type: number
-              enum:
-                - 2
-            - type: number
-              enum:
-                - 3
-            - type: number
-              enum:
-                - 4
-            - nullable: true
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+          nullable: true
           description: Quality rating.
           example: 2
         yield_rating:
-          anyOf:
-            - type: number
-              enum:
-                - 0
-            - type: number
-              enum:
-                - 1
-            - type: number
-              enum:
-                - 2
-            - type: number
-              enum:
-                - 3
-            - type: number
-              enum:
-                - 4
-            - nullable: true
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+          nullable: true
           description: Yield rating.
           example: 3
       title: Review (base)
@@ -684,53 +652,30 @@ components:
               nullable: true
               minLength: 1
             fruiting:
-              anyOf:
-                - type: number
-                  enum:
-                    - 0
-                - type: number
-                  enum:
-                    - 1
-                - type: number
-                  enum:
-                    - 2
-                - nullable: true
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+              nullable: true
             quality_rating:
-              anyOf:
-                - type: number
-                  enum:
-                    - 0
-                - type: number
-                  enum:
-                    - 1
-                - type: number
-                  enum:
-                    - 2
-                - type: number
-                  enum:
-                    - 3
-                - type: number
-                  enum:
-                    - 4
-                - nullable: true
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+              nullable: true
             yield_rating:
-              anyOf:
-                - type: number
-                  enum:
-                    - 0
-                - type: number
-                  enum:
-                    - 1
-                - type: number
-                  enum:
-                    - 2
-                - type: number
-                  enum:
-                    - 3
-                - type: number
-                  enum:
-                    - 4
-                - nullable: true
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+              nullable: true
             observed_on:
               type: string
               nullable: true
@@ -907,23 +852,14 @@ components:
               description: Whether suspected to be wrong in some way and requires verification.
               example: false
             access:
-              anyOf:
-                - type: number
-                  enum:
-                    - 0
-                - type: number
-                  enum:
-                    - 1
-                - type: number
-                  enum:
-                    - 2
-                - type: number
-                  enum:
-                    - 3
-                - type: number
-                  enum:
-                    - 4
-                - nullable: true
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+              nullable: true
               description: |
                 Access level.
                 - 0: Location is on my property.
@@ -991,23 +927,14 @@ components:
               description: Whether suspected to be wrong in some way and requires verification.
               example: false
             access:
-              anyOf:
-                - type: number
-                  enum:
-                    - 0
-                - type: number
-                  enum:
-                    - 1
-                - type: number
-                  enum:
-                    - 2
-                - type: number
-                  enum:
-                    - 3
-                - type: number
-                  enum:
-                    - 4
-                - nullable: true
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+              nullable: true
               description: |
                 Access level.
                 - 0: Location is on my property.
@@ -1059,23 +986,14 @@ components:
             unverified:
               type: boolean
             access:
-              anyOf:
-                - type: number
-                  enum:
-                    - 0
-                - type: number
-                  enum:
-                    - 1
-                - type: number
-                  enum:
-                    - 2
-                - type: number
-                  enum:
-                    - 3
-                - type: number
-                  enum:
-                    - 4
-                - nullable: true
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+              nullable: true
             description:
               type: string
               nullable: true
@@ -1391,25 +1309,14 @@ components:
           description: Location ID.
           example: 3383
         problem_code:
-          anyOf:
-            - type: number
-              enum:
-                - 0
-            - type: number
-              enum:
-                - 1
-            - type: number
-              enum:
-                - 2
-            - type: number
-              enum:
-                - 3
-            - type: number
-              enum:
-                - 4
-            - type: number
-              enum:
-                - 5
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
           description: |
             Problem code.
             - 0: Location is spam
@@ -1454,26 +1361,15 @@ components:
               description: ID of reporting User (if authenticated).
               example: 321
             resolution_code:
-              anyOf:
-                - type: number
-                  enum:
-                    - 0
-                - type: number
-                  enum:
-                    - 1
-                - type: number
-                  enum:
-                    - 2
-                - type: number
-                  enum:
-                    - 3
-                - type: number
-                  enum:
-                    - 4
-                - type: number
-                  enum:
-                    - 5
-                - nullable: true
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+                - 3
+                - 4
+                - 5
+              nullable: true
               description: |
                 Resolution code.
                 - 0: Made no changes
