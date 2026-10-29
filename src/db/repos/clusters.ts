@@ -190,8 +190,6 @@ class Clusters {
       await this.db.none(
         `${this.pgp.helpers.update(clusters, this.cs_update)} WHERE v.id = t.id`,
       )
-    } else {
-      console.error('No clusters to decrement')
     }
   }
 }

@@ -199,7 +199,6 @@ function makeRouter() {
           }
         } catch (err) {
           const error = err as { message?: string; code?: number }
-          console.log('[caught]', err || error.message)
           if (err instanceof RequestValidationError) {
             return void res.status(400).json({ error: err.message })
           }
