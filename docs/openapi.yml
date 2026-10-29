@@ -525,12 +525,14 @@ components:
               example: Two mulberry trees with a few low branches overhanging the sidewalk.
             season_start:
               type: integer
+              nullable: true
               minimum: 0
               maximum: 11
               description: First month in season (zero-based).
               example: 6
             season_stop:
               type: integer
+              nullable: true
               minimum: 0
               maximum: 11
               description: Last month in season (zero-based).
@@ -938,12 +940,14 @@ components:
               example: Two mulberry trees with a few low branches overhanging the sidewalk.
             season_start:
               type: integer
+              nullable: true
               minimum: 0
               maximum: 11
               description: First month in season (zero-based).
               example: 6
             season_stop:
               type: integer
+              nullable: true
               minimum: 0
               maximum: 11
               description: Last month in season (zero-based).
@@ -1020,12 +1024,14 @@ components:
               example: Two mulberry trees with a few low branches overhanging the sidewalk.
             season_start:
               type: integer
+              nullable: true
               minimum: 0
               maximum: 11
               description: First month in season (zero-based).
               example: 6
             season_stop:
               type: integer
+              nullable: true
               minimum: 0
               maximum: 11
               description: Last month in season (zero-based).
@@ -1747,7 +1753,6 @@ paths:
             type: integer
             nullable: true
             minimum: 0
-            maximum: 14
             default: null
             description: 'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid. If provided, only counts the Types of Locations whose Cluster centerpoints at this zoom level fall within `bounds` (faster). Otherwise, a full count is performed using Location coordinates.'
           required: false

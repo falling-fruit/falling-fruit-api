@@ -30,7 +30,8 @@
     "db:types": "yarn db:up && yarn db:migrate && kanel",
     "db:types:generate": "kanel",
     "build": "tsx scripts/build-openapi.ts",
-    "validate": "yarn build && npx swagger-cli validate docs/openapi.yml"
+    "validate": "yarn build && npx swagger-cli validate docs/openapi.yml",
+    "postinstall": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath scripts/hooks || true"
   },
   "dependencies": {
     "@apidevtools/swagger-cli": "^4.0.4",

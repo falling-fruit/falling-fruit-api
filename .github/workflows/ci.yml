@@ -76,3 +76,6 @@ jobs:
 
       - name: Run tests
         run: yarn test
+
+      - name: Validate OpenAPI
+        run: yarn validate

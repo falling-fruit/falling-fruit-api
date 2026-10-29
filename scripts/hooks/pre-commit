@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+SPEC=docs/openapi.yml
+
+staged_inputs=$(git diff --cached --name-only --diff-filter=ACMR -- src/routes src/schemas docs/base.yml)
+if [ -z "$staged_inputs" ]; then
+  exit 0
+fi
+
+needs_build=0
+if [ ! -f "$SPEC" ]; then
+  needs_build=1
+else
+  while IFS= read -r -d '' input; do
+    if [ "$input" -nt "$SPEC" ]; then
+      needs_build=1
+      break
+    fi
+  done < <(find src/routes src/schemas docs/base.yml -type f -print0)
+fi
+
+if [ "$needs_build" -eq 0 ]; then
+  exit 0
+fi
+
+yarn build >/dev/null 2>&1
+
+if ! git diff --quiet -- "$SPEC"; then
+  git add "$SPEC"
+fi
