@@ -67,7 +67,7 @@ export default function ({ db, middleware, auth }: Services) {
         query: z.object({
           bounds: boundsParam,
           muni: muniParam,
-          zoom: z.coerce.number().int().min(0).max(14).optional().openapi({
+          zoom: z.coerce.number().int().min(0).optional().openapi({
             description:
               'Zoom level, where the world is divided into a 2<sup>zoom</sup> x 2<sup>zoom</sup> grid. If provided, only counts the Types of Locations whose Cluster centerpoints at this zoom level fall within `bounds` (faster). Otherwise, a full count is performed using Location coordinates.',
             default: null,
