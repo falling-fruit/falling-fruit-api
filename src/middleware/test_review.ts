@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
+import type { BaseReview } from '../schemas/schemas'
 
-function is_date_in_future(datestamp: string | number | Date): boolean {
+function is_date_in_future(datestamp: string): boolean {
   // Compare date to current date + 1 day (accounting for timezones)
   const date = new Date(datestamp)
   date.setUTCHours(0, 0, 0, 0)
@@ -43,12 +44,11 @@ function is_null(value: unknown, zero = false): boolean {
   }
 }
 
-function test_review(...path: string[]) {
+type ReviewFields = Partial<BaseReview> & { photo_ids?: unknown }
+
+function test_review<B>(select: (body: B) => ReviewFields | null | undefined) {
   return function (req: Request, res: Response, next: NextFunction) {
-    const review = path.reduce(
-      (prev: any, curr) => prev && prev[curr],
-      req.body,
-    )
+    const review = select(req.body as B)
     if (!review) {
       return void next()
     }
@@ -65,7 +65,7 @@ function test_review(...path: string[]) {
         .json({ error: 'observed_on is required when fruiting is provided' })
     }
     // Require content
-    const required = [
+    const required: (keyof ReviewFields)[] = [
       'photo_ids',
       'comment',
       'fruiting',

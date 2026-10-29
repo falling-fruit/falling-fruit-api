@@ -43,7 +43,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
       },
     },
     auth.required_role('user'),
-    middleware.test_review(),
+    middleware.test_review((body: EditReview) => body),
     async (req, user, res) => {
       const original = await db.reviews.show(req.params.id)
       if (user.id != original.user_id) {

@@ -339,7 +339,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     },
     auth.optional,
     middleware.recaptcha,
-    middleware.test_review('review'),
+    middleware.test_review((body: AddLocation) => body.review),
     async (req, user) => {
       // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
       const user_id = user ? user.id : null
@@ -622,7 +622,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     },
     auth.optional,
     middleware.recaptcha,
-    middleware.test_review(),
+    middleware.test_review((body: EditReview) => body),
     async (req, user) => {
       // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
       const photos = await db.photos.test_unlinked(req.body.photo_ids)
