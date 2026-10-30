@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgis/postgis:14-3.4
+    environment:
+      POSTGRES_USER: fallingfruit
+      POSTGRES_PASSWORD: fallingfruit
+      POSTGRES_DB: fallingfruit_db
+    ports:
+      - "${DB_HOST_PORT:-5433}:5432"
+    volumes:
+      - ./docker/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fallingfruit -d fallingfruit_db"]
+      interval: 2s
+      timeout: 5s
+      retries: 30

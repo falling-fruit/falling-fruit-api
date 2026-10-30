@@ -13,17 +13,33 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
 
 # Layout
 
-- `index.js`: Define routes and generic handlers. Start server.
-- `helpers.js`: Define helper functions.
-- `db/`
-  - `index.js`: Define database connection. Load `pg-promise` with repos:
+- `src/index.ts`: Load configuration and start the server.
+- `src/app.ts`: Assemble the Express app (middleware, routers).
+- `src/dependencies.ts`: Wire up db, mailer, photos, middleware, and routes.
+- `src/routes/`
+  - `index.ts`: Compile all route factories.
+  - `makeRouter.ts`: Router factory with per-route request validation.
+  - `openapi.ts`: Compact route spec → OpenAPI operation + validation config.
+  - `validation.ts`: Zod-backed request validation errors.
+  - `{resource}.ts`: Route handlers with inline OpenAPI operation specs.
+- `src/schemas/`: Zod schemas, the single source of truth for both runtime
+  validation and the generated OpenAPI spec.
+  - `registry.ts`: Shared `zod-to-openapi` registry and `allOf` helpers.
+  - `schemas.ts`, `geojson.ts`, `properties.ts`: Component schemas.
+  - `parameters.ts`, `security.ts`: Reusable parameters and security schemes.
+- `src/db/`
+  - `index.ts`: Define database connection. Load `pg-promise` with repos:
   - `repos/`
-    - `index.js`: Compile all classes:
-    - `{class}.js`: Class definition with methods.
+    - `index.ts`: Compile all classes:
+    - `{class}.ts`: Class definition with methods.
   - `sql/`
-    - `index.js`: Load all SQL query files:
+    - `index.ts`: Load all SQL query files:
     - `{class}/`
       - `*.sql`: Raw SQL with variable substitutions.
+  - `generated/`: TypeScript row types derived from the live Postgres schema by
+    [`kanel`](https://github.com/kristiandupont/kanel) (`public/{Table}.ts`).
+    These are committed and consumed by repos/mappers for type-safe queries.
+    Do not edit by hand; see [Database types](#database-types).
 
 # Development
 
@@ -63,10 +79,74 @@ yarn start
 
 Visit http://localhost:3300.
 
-## Documentation
+## Testing
 
-Validate and build the OpenAPI documentation:
+Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner, split by file naming convention:
+
+- `yarn test`: run everything (unit and e2e).
+- `yarn test:unit`: run unit tests only (`test/**/*.test.ts`).
+- `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.ts`).
+
+e2e tests require a database. `yarn test:e2e` spins one up, migrates, and runs them.
+
+## Database types
+
+Row types in `src/db/generated/` are derived from the live Postgres schema by
+[`kanel`](https://github.com/kristiandupont/kanel) (configured in
+`.kanelrc.cjs`). Each table yields a row interface, an `Initializer`, a
+`Mutator`, and a branded id type, which repos and mappers consume for type-safe
+queries instead of hand-written or `any`-typed rows.
+
+Regenerate after any schema change (migration):
 
 ```sh
-yarn validate && yarn build
+yarn db:types  # db:up + db:migrate + kanel, reading .env.test
 ```
+
+The generated files are committed so that `yarn typecheck` works without a
+running database. CI regenerates them against the migrated schema and fails if
+the committed output is stale, so run `yarn db:types` and commit the result
+whenever you add a migration.
+
+Notes:
+
+- `int8`/`bigint` columns map to `number` (matching the `INT8` type parser in
+  `src/db/index.ts`); PostGIS `geometry`/`geography` map to `string` (GeoJSON,
+  decoded in the mappers). See the overrides in `.kanelrc.cjs`.
+- kanel prints harmless `Unknown type 'geometry' / 'double precision'` warnings
+  for the PostGIS SQL functions; those routine wrappers are not consumed.
+
+## Documentation
+
+The OpenAPI spec is generated from Zod schemas, which are the single source of
+truth for both runtime validation and the documentation:
+
+- `src/schemas/`: Zod component schemas, parameters, and security schemes,
+  registered with [`@asteasolutions/zod-to-openapi`](https://github.com/asteasolutions/zod-to-openapi).
+- `src/routes/*.ts`: Each route declares its OpenAPI operation inline via a
+  compact spec alongside its handler. The same schemas drive runtime request
+  validation and compile-time response typing: a handler's return type is bound
+  to its documented 2xx response schema.
+- `docs/base.yml`: Static metadata (`info`, `tags`, `servers`).
+
+`scripts/build-openapi.ts` registers every schema and route operation, merges
+`base.yml`, and writes the bundled `docs/openapi.yml`.
+
+Build the spec, or build and validate it:
+
+```sh
+yarn build     # regenerate docs/openapi.yml
+yarn validate  # build, then validate the result
+```
+
+Type-check the TypeScript sources:
+
+```sh
+yarn typecheck
+```
+
+Request bodies and path parameters are validated against the Zod schemas on
+every request (invalid requests return `400`). Responses are not validated at
+runtime; instead, each handler's return type is bound at compile time to its
+documented 2xx response schema, so `yarn typecheck` catches response-shape
+mismatches.
