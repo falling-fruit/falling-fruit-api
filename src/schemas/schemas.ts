@@ -2,6 +2,18 @@ import { z, register, allOf, inlineAllOf, intEnum } from './registry'
 import { Polygon } from './geojson'
 import { emailProp, nameProp, bioProp } from './properties'
 
+const normalizeLongitude = (lng: number) => ((((lng + 180) % 360) + 360) % 360) - 180
+
+const normalizeLng = (value: unknown) =>
+  typeof value === 'number' ? normalizeLongitude(value) : value
+
+const submitLng = z.preprocess(normalizeLng, z.number().min(-180).max(180))
+
+const submitLngOptional = z.preprocess(
+  normalizeLng,
+  z.number().min(-180).max(180).optional(),
+)
+
 // Shared field fragments (composed via allOf)
 
 export const IdField = register(
@@ -21,7 +33,7 @@ export const LatLngFields = register(
       description: 'Latitude in WGS84 decimal degrees.',
       example: 45.6789,
     }),
-    lng: z.number().min(-180).max(180).optional().openapi({
+    lng: submitLngOptional.openapi({
       description: 'Longitude in WGS84 decimal degrees.',
       example: -123.45678,
     }),
@@ -239,7 +251,7 @@ export const EditLocation = allOf('EditLocation', [
   LatLngFields,
   z.object({
     lat: z.number().min(-85.0511).max(85.0511),
-    lng: z.number().min(-180).max(180),
+    lng: submitLng,
     type_ids: z.array(z.number().int().min(1)).openapi({
       description: 'Type IDs.',
       example: [97, 92],
