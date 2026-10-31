@@ -27,6 +27,7 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down -v",
     "db:migrate": "dbmate --env-file .env.test up",
+    "db:migration": "dbmate new",
     "db:types": "yarn db:up && yarn db:migrate && kanel",
     "db:types:generate": "kanel",
     "build": "tsx scripts/build-openapi.ts",

@@ -89,6 +89,21 @@ Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner,
 
 e2e tests require a database. `yarn test:e2e` spins one up, migrates, and runs them.
 
+## Database migrations
+
+Migrations are managed with [`dbmate`](https://github.com/amacneil/dbmate) and located in [`./migrations`](./migrations).
+Create a new migration with:
+
+```sh
+yarn db:migration <migration_name>
+```
+
+Add SQL statements in the `-- migrate:up` and (optional) `-- migrate:down` sections, then run:
+
+```sh
+yarn db:migrate
+```
+
 ## Database types
 
 Row types in `src/db/generated/` are derived from the live Postgres schema by
