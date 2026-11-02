@@ -56,5 +56,5 @@ export function createS3Client(config: Config): S3Client {
     accessKeyId: config.s3.accessKeyId,
     secretAccessKey: config.s3.secretAccessKey,
     apiVersion: '2006-03-01',
-  }) as unknown as S3Client
+  })
 }
