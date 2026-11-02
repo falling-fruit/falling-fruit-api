@@ -6,7 +6,7 @@ dotenv.config()
 const coreSchema = z.object({
   NODE_ENV: z.string().optional(),
   PORT: z.string().optional(),
-  WEB_ORIGIN: z.url().optional(),
+  WEB_ORIGIN: z.url(),
   DB: z.url(),
   JWT_SECRET: z.string(),
 })
@@ -52,7 +52,7 @@ export type RecaptchaConfig = {
 export type Config = {
   local: boolean
   port?: string
-  webOrigin?: string
+  webOrigin: string
   dbUrl?: string
   jwtSecret?: string
   s3: S3Config | null

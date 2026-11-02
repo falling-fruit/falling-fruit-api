@@ -3,7 +3,7 @@ import { RecaptchaV2 } from 'express-recaptcha'
 import makeDb from './db'
 import Tokenizer from './tokens'
 import makeAuth from './auth'
-import createMailer from './mail/mailer'
+import Mailer from './mail/mailer'
 import { createEmailClient } from './mail/email_client'
 import createPhotos from './photos'
 import makeMiddleware from './middleware'
@@ -43,7 +43,7 @@ function createDependenciesForClients(
 ) {
   const tokenizer = new Tokenizer(config.jwtSecret ?? '')
   const auth = makeAuth({ tokenizer })
-  const mailer = createMailer({
+  const mailer = new Mailer({
     client: postmarkClient,
     webOrigin: config.webOrigin,
   })

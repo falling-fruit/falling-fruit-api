@@ -29,7 +29,5 @@ export function createEmailClient(config: Config): EmailClient {
   if (!config.postmark) {
     return createLoggingEmailClient()
   }
-  // The SDK client is stricter about null vs undefined than the app's minimal
-  // contract, so it is adapted to the contract at this boundary.
   return new postmark.ServerClient(config.postmark.apiToken) as EmailClient
 }

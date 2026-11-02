@@ -2,11 +2,10 @@ import type { Db } from '../db/types'
 import type Tokenizer from '../tokens'
 import type { Auth } from '../auth'
 import type makeMiddleware from '../middleware'
-import type createMailer from '../mail/mailer'
+import type Mailer from '../mail/mailer'
 import type createPhotos from '../photos'
 
 export type Middleware = ReturnType<typeof makeMiddleware>
-export type Mailer = ReturnType<typeof createMailer>
 export type Photos = ReturnType<typeof createPhotos>
 
 export interface Services {
