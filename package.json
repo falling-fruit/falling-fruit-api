@@ -23,15 +23,15 @@
     "lint": "eslint . --max-warnings=0",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "node --import tsx --test 'test/**/*.test.ts'",
-    "test:e2e": "yarn build && yarn e2edb:up && yarn db:migrate:test && node --import tsx --test --experimental-test-isolation=none 'test/**/*.e2e.ts'",
+    "test:e2e": "yarn e2edb:up && node --import tsx --test --experimental-test-isolation=none 'test/**/*.e2e.ts'",
     "e2edb:up": "docker compose up -d --wait && yarn dbmate --env-file .env.test up",
     "e2edb:down": "docker compose down -v",
     "db:migrate": "dbmate up",
     "db:migration": "dbmate new",
     "codegen:types": "yarn e2edb:up && yarn db:migrate:test && yarn codegen:types:generate",
     "codegen:types:generate": "kanel",
-    "build": "tsx scripts/build-openapi.ts",
-    "validate": "yarn build && npx swagger-cli validate docs/openapi.yml",
+    "docs:build": "tsx scripts/build-openapi.ts",
+    "docs": "yarn docs:build && npx swagger-cli validate docs/openapi.yml",
     "postinstall": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath scripts/hooks || true"
   },
   "dependencies": {

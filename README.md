@@ -71,6 +71,15 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
 cp .env.example .env
 ```
 
+- Install [Docker](https://docs.docker.com/get-docker/) (with Compose). It is
+  not required to run the API itself, but is used to provision a disposable
+  [PostGIS](https://postgis.net) database for the end-to-end tests
+  (`yarn test:e2e`) and for generating database types (`yarn db:types`). Using
+  Docker pins everyone (and CI) to the same Postgres + PostGIS version defined
+  in [`docker-compose.yml`](./docker-compose.yml), so you do not need to install
+  and maintain PostGIS locally. The container is mapped to host port `5433` by
+  default to avoid clashing with a local Postgres on `5432`.
+
 ## Usage
 
 ```sh
@@ -87,7 +96,9 @@ Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner,
 - `yarn test:unit`: run unit tests only (`test/**/*.test.ts`).
 - `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.ts`).
 
-e2e tests require a database. `yarn test:e2e` spins one up, migrates, and runs them.
+e2e tests require a database. `yarn test:e2e` starts the dockerized PostGIS
+database (`yarn e2edb:up`), migrates it, and runs them. Tear it down afterwards
+with `yarn e2edb:down`.
 
 ## Database migrations
 
@@ -150,8 +161,8 @@ truth for both runtime validation and the documentation:
 Build the spec, or build and validate it:
 
 ```sh
-yarn build     # regenerate docs/openapi.yml
-yarn validate  # build, then validate the result
+yarn docs:build  # regenerate docs/openapi.yml
+yarn validate    # build, then validate the result
 ```
 
 Type-check the TypeScript sources:

@@ -46,8 +46,7 @@ jobs:
           PGPASSWORD: fallingfruit
         run: |
           psql -h localhost -U fallingfruit -d fallingfruit_db \
-            -c "CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;" \
-            -c "CREATE EXTENSION IF NOT EXISTS intarray WITH SCHEMA public;"
+            -f docker/db-init/01-extensions.sql
 
       - name: Apply migrations
         run: yarn dbmate up
@@ -70,4 +69,4 @@ jobs:
         run: yarn test
 
       - name: Validate OpenAPI
-        run: yarn validate
+        run: yarn docs 
