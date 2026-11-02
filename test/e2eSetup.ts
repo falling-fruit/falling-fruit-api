@@ -108,7 +108,7 @@ class E2ESetup {
 
   constructor() {
     this.tables = new Set()
-    this.db = makeDb(process.env.DB, false)
+    this.db = makeDb(process.env.DATABASE_URL, false)
     this.postmark = new FakePostmarkClient()
     this.s3 = new FakeS3Client()
     this.tokenizer = new Tokenizer(JWT_SECRET)
@@ -141,7 +141,7 @@ class E2ESetup {
         NODE_ENV: 'development',
         PORT: '0',
         WEB_ORIGIN: 'http://localhost',
-        DB: process.env.DB,
+        DATABASE_URL: process.env.DATABASE_URL,
         JWT_SECRET,
       }),
       {

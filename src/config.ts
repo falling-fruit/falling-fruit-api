@@ -7,7 +7,7 @@ const coreSchema = z.object({
   NODE_ENV: z.string().optional(),
   PORT: z.string().optional(),
   WEB_ORIGIN: z.url(),
-  DB: z.url(),
+  DATABASE_URL: z.url(),
   JWT_SECRET: z.string(),
 })
 
@@ -86,7 +86,7 @@ export function Config(env: NodeJS.ProcessEnv = process.env): Config {
     local,
     port: core.PORT,
     webOrigin: core.WEB_ORIGIN,
-    dbUrl: core.DB,
+    dbUrl: core.DATABASE_URL,
     jwtSecret: core.JWT_SECRET,
     s3: parseBlock(s3Schema, env, local, (values) => ({
       region: values.S3_REGION,

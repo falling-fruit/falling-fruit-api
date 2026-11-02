@@ -26,7 +26,6 @@ jobs:
 
     env:
       DATABASE_URL: postgres://fallingfruit:fallingfruit@localhost:5432/fallingfruit_db?sslmode=disable
-      DB: postgres://fallingfruit:fallingfruit@localhost:5432/fallingfruit_db?sslmode=disable
       DBMATE_MIGRATIONS_DIR: ./migrations
       DBMATE_NO_DUMP_SCHEMA: "1"
       NODE_ENV: test
@@ -50,21 +49,14 @@ jobs:
             -c "CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;" \
             -c "CREATE EXTENSION IF NOT EXISTS intarray WITH SCHEMA public;"
 
-      - name: Install dbmate
-        run: |
-          sudo curl -fsSL \
-            -o /usr/local/bin/dbmate \
-            https://github.com/amacneil/dbmate/releases/download/v2.36.0/dbmate-linux-amd64
-          sudo chmod +x /usr/local/bin/dbmate
-
       - name: Apply migrations
-        run: dbmate up
+        run: yarn dbmate up
 
       - name: Check generated DB types are up to date
         run: |
-          yarn db:types:generate
+          yarn codegen:types:generate
           if ! git diff --exit-code --stat src/db/generated; then
-            echo "::error::Generated DB types are stale. Run 'yarn db:types' and commit the result."
+          echo "::error::Generated DB types are stale. Run 'yarn codegen:types' and commit the result."
             exit 1
           fi
 

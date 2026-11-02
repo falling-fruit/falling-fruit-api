@@ -115,7 +115,7 @@ queries instead of hand-written or `any`-typed rows.
 Regenerate after any schema change (migration):
 
 ```sh
-yarn db:types  # db:up + db:migrate + kanel, reading .env.test
+yarn db:types  # e2edb:up + db:migrate + kanel, reading .env.test
 ```
 
 The generated files are committed so that `yarn typecheck` works without a
