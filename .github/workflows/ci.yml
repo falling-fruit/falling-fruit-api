@@ -26,7 +26,6 @@ jobs:
 
     env:
       DATABASE_URL: postgres://fallingfruit:fallingfruit@localhost:5432/fallingfruit_db?sslmode=disable
-      DBMATE_MIGRATIONS_DIR: ./migrations
       DBMATE_NO_DUMP_SCHEMA: "1"
       NODE_ENV: test
 
@@ -46,16 +45,16 @@ jobs:
           PGPASSWORD: fallingfruit
         run: |
           psql -h localhost -U fallingfruit -d fallingfruit_db \
-            -f docker/db-init/01-extensions.sql
+            -f db/init/01-extensions.sql
 
       - name: Apply migrations
         run: yarn dbmate up
 
       - name: Check generated DB types are up to date
         run: |
-          yarn codegen:types:generate
+          yarn codegen:generate
           if ! git diff --exit-code --stat src/db/generated; then
-          echo "::error::Generated DB types are stale. Run 'yarn codegen:types' and commit the result."
+          echo "::error::Generated DB types are stale. Run 'yarn codegen' and commit the result."
             exit 1
           fi
 

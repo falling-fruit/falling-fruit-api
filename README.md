@@ -102,17 +102,17 @@ with `yarn e2edb:down`.
 
 ## Database migrations
 
-Migrations are managed with [`dbmate`](https://github.com/amacneil/dbmate) and located in [`./migrations`](./migrations).
+Migrations are managed with [`dbmate`](https://github.com/amacneil/dbmate) and located in [`./db/migrations`](./db/migrations).
 Create a new migration with:
 
 ```sh
-yarn db:migration <migration_name>
+yarn dbmate new <migration_name>
 ```
 
 Add SQL statements in the `-- migrate:up` and (optional) `-- migrate:down` sections, then run:
 
 ```sh
-yarn db:migrate
+yarn dbmate up
 ```
 
 ## Database types
