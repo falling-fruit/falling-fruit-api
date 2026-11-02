@@ -1,4 +1,3 @@
-import promise from 'bluebird'
 import monitor from 'pg-monitor'
 import repos from './repos'
 import pgPromise from 'pg-promise'
@@ -10,7 +9,6 @@ function makeDb(
   attachMonitor = false,
 ): Db {
   const options: IInitOptions<DbRepos> = {
-    promiseLib: promise,
     extend: (obj, _dc) => {
       obj.clusters = new repos.Clusters(obj, pgp)
       obj.types = new repos.Types(obj, pgp)

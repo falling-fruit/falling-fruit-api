@@ -3,7 +3,7 @@
 Falling Fruit API
 =================
 
-NodeJS API using [express](https://github.com/expressjs/express), [pg-promise](https://github.com/vitaly-t/pg-promise), and [bluebird](https://github.com/petkaantonov/bluebird).
+NodeJS API using [express](https://github.com/expressjs/express) and [pg-promise](https://github.com/vitaly-t/pg-promise).
 
 You can browse the OpenAPI definition for the main branch [here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/falling-fruit/api/main/docs/openapi.yml), and for the live API [here](https://petstore.swagger.io/?url=https://fallingfruit.org/api/0.3/openapi.yml).
 
@@ -76,11 +76,7 @@ Create a new migration with:
 yarn dbmate new <migration_name>
 ```
 
-Add SQL statements in the `-- migrate:up` and (optional) `-- migrate:down` sections, then run:
-
-```sh
-yarn dbmate up
-```
+Add SQL statements in the `-- migrate:up` and (optional) `-- migrate:down` sections, then run `yarn codegen`. 
 
 ## Database types
 
