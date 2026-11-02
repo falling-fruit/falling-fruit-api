@@ -47,6 +47,10 @@ cp .env.example .env
   [PostGIS](https://postgis.net) database for the end-to-end tests
   (`yarn test:e2e`) and for generating database types (`yarn codegen`).
 
+- If you want to use the e2e database in the API, set DATABASE_URL to the value in `.env.test` and run `yarn e2edb:up`.
+
+- You can also provision your own PostGIS database - see `.github/workflows/ci.yml` for a setup to recreate.
+
 ## Usage
 
 ```sh
