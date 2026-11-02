@@ -1,6 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import sharp from 'sharp'
+import aws from 'aws-sdk'
+import type { Config } from './config'
 
 type Promisable<T> = { promise(): Promise<T> }
 
@@ -70,7 +72,13 @@ async function sync_legacy_first_photo(
   }
 }
 
-function createPhotos({ s3 }: { s3: S3Client }): Photos {
+function createPhotos({
+  s3,
+  bucket,
+}: {
+  s3: S3Client
+  bucket?: string
+}): Photos {
   async function resize_photo(
     input: string,
     output: string,
@@ -106,7 +114,7 @@ function createPhotos({ s3 }: { s3: S3Client }): Photos {
     return s3
       .upload({
         ACL: 'public-read',
-        Bucket: process.env.S3_BUCKET,
+        Bucket: bucket,
         Body: fs.createReadStream(input),
         Key: output,
         ContentType: 'image/jpeg',
@@ -154,7 +162,7 @@ function createPhotos({ s3 }: { s3: S3Client }): Photos {
           return s3
             .copyObject({
               CopySource: `${parsed.bucket}/${parsed.key}`,
-              Bucket: process.env.S3_BUCKET,
+              Bucket: bucket,
               Key: keys[style],
               ACL: 'public-read',
             })
@@ -197,7 +205,46 @@ function createPhotos({ s3 }: { s3: S3Client }): Photos {
   return photos
 }
 
+function createLoggingS3(): S3Client {
+  return {
+    upload({ Body, Key }) {
+      return {
+        promise() {
+          const location = `/uploads/${Key.split(path.sep).join('/')}`
+          console.log(`[s3 disabled] upload Key: ${Key} -> ${location}`)
+          return new Promise((resolve, reject) => {
+            Body.on('error', reject)
+            Body.on('end', () => resolve({ Location: location }))
+            Body.resume()
+          })
+        },
+      }
+    },
+    copyObject({ CopySource, Key }) {
+      return {
+        promise() {
+          console.log(`[s3 disabled] copyObject ${CopySource} -> ${Key}`)
+          return Promise.resolve({})
+        },
+      }
+    },
+  }
+}
+
+function createS3Client(config: Config): S3Client {
+  if (!config.s3) {
+    return createLoggingS3()
+  }
+  return new aws.S3({
+    region: config.s3.region,
+    accessKeyId: config.s3.accessKeyId,
+    secretAccessKey: config.s3.secretAccessKey,
+    apiVersion: '2006-03-01',
+  }) as unknown as S3Client
+}
+
 createPhotos.is_new_photo_url = is_new_photo_url
 createPhotos.sync_legacy_first_photo = sync_legacy_first_photo
+createPhotos.createS3Client = createS3Client
 
 export default createPhotos

@@ -33,4 +33,6 @@ function makeMiddleware({
   }
 }
 
+makeMiddleware.createRecaptcha = makeRecaptcha.createRecaptcha
+
 export default makeMiddleware

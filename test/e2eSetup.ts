@@ -14,6 +14,7 @@ import makeDb from '../src/db'
 import createDependencies from '../src/dependencies'
 import createApp from '../src/app'
 import Tokenizer from '../src/tokens'
+import { Config } from '../src/config'
 import type { Db } from '../src/db/types'
 
 const { createDependenciesForClients } = createDependencies
@@ -136,10 +137,13 @@ class E2ESetup {
 
   private async doStart() {
     const { middleware, routes } = createDependenciesForClients(
-      {
-        local: true,
-        jwtSecret: JWT_SECRET,
-      },
+      Config({
+        NODE_ENV: 'development',
+        PORT: '0',
+        WEB_ORIGIN: 'http://localhost',
+        DB: process.env.DB,
+        JWT_SECRET,
+      }),
       {
         db: this.db,
         postmarkClient: this.postmark,

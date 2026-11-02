@@ -1,6 +1,3 @@
-import path from 'path'
-import postmark from 'postmark'
-import aws from 'aws-sdk'
 import { RecaptchaV2 } from 'express-recaptcha'
 
 import makeDb from './db'
@@ -15,72 +12,11 @@ import type { Db } from './db/types'
 import type { EmailClient } from './mailer'
 import type { S3Client } from './photos'
 
-function createLoggingPostmarkClient(): EmailClient {
-  return {
-    sendEmail({ To, Subject, Tag, HtmlBody }) {
-      console.log(
-        `[email disabled] To: ${To} | Subject: ${Subject} | Tag: ${Tag}\n` +
-          HtmlBody,
-      )
-      return Promise.resolve()
-    },
-  }
-}
-
-function createLoggingS3({ apiOrigin }: { apiOrigin?: string }): S3Client {
-  return {
-    upload({ Body, Key }) {
-      return {
-        promise() {
-          const base = (apiOrigin || '').replace(/\/+$/, '')
-          const location = `${base}/uploads/${Key.split(path.sep).join('/')}`
-          console.log(`[s3 disabled] upload Key: ${Key} -> ${location}`)
-          return new Promise((resolve, reject) => {
-            Body.on('error', reject)
-            Body.on('end', () => resolve({ Location: location }))
-            Body.resume()
-          })
-        },
-      }
-    },
-    copyObject({ CopySource, Key }) {
-      return {
-        promise() {
-          console.log(`[s3 disabled] copyObject ${CopySource} -> ${Key}`)
-          return Promise.resolve({})
-        },
-      }
-    },
-  }
-}
-
 function createDependencies(config: Config) {
   const db = makeDb(config.dbUrl, true)
-
-  let postmarkClient: EmailClient
-  let s3Client: S3Client
-  let recaptcha: RecaptchaV2 | null
-  if (config.local) {
-    postmarkClient = createLoggingPostmarkClient()
-    s3Client = createLoggingS3({ apiOrigin: config.apiOrigin })
-    recaptcha = null
-  } else {
-    // The SDK clients are stricter about null vs undefined than the app's
-    // minimal contracts, so they are adapted to the contracts at this boundary.
-    postmarkClient = new postmark.ServerClient(
-      config.postmarkApiToken,
-    ) as EmailClient
-    s3Client = new aws.S3({
-      region: config.s3Region,
-      accessKeyId: config.s3AccessKeyId,
-      secretAccessKey: config.s3SecretAccessKey,
-      apiVersion: '2006-03-01',
-    }) as unknown as S3Client
-    recaptcha = new RecaptchaV2(
-      config.recaptchaSiteKey,
-      config.recaptchaSecretKey,
-    )
-  }
+  const postmarkClient = createMailer.createEmailClient(config)
+  const s3Client = createPhotos.createS3Client(config)
+  const recaptcha = makeMiddleware.createRecaptcha(config)
 
   return createDependenciesForClients(config, {
     db,
@@ -106,13 +42,16 @@ function createDependenciesForClients(
 ) {
   const tokenizer = new Tokenizer(config.jwtSecret ?? '')
   const auth = makeAuth({ tokenizer })
-  const mailer = createMailer({ client: postmarkClient })
-  const photos = createPhotos({ s3: s3Client })
+  const mailer = createMailer({
+    client: postmarkClient,
+    webOrigin: config.webOrigin,
+  })
+  const photos = createPhotos({ s3: s3Client, bucket: config.s3?.bucket })
   const middleware = makeMiddleware({
     db,
     tokenizer,
     recaptcha,
-    postmarkSecret: config.local ? undefined : config.postmarkSecret,
+    postmarkSecret: config.postmark?.secret,
   })
   const routes = makeRoutes({
     db,
@@ -121,10 +60,8 @@ function createDependenciesForClients(
     auth,
     mailer,
     photos,
-    postmarkServerId: config.local ? undefined : config.postmarkServerId,
-    postmarkBroadcastStream: config.local
-      ? undefined
-      : config.postmarkBroadcastStream,
+    postmarkServerId: config.postmark?.serverId,
+    postmarkBroadcastStream: config.postmark?.broadcastStream,
   })
 
   return { db, tokenizer, auth, mailer, photos, middleware, routes }

@@ -1,3 +1,6 @@
+import postmark from 'postmark'
+import type { Config } from './config'
+
 /** Minimal email client contract (satisfied by Postmark's ServerClient). */
 export type EmailClient = {
   sendEmail(message: {
@@ -26,7 +29,13 @@ type Mailer = {
   send_password_reset_not_found: (user: MailUser) => unknown
 }
 
-function createMailer({ client }: { client: EmailClient }): Mailer {
+function createMailer({
+  client,
+  webOrigin,
+}: {
+  client: EmailClient
+  webOrigin?: string
+}): Mailer {
   function send_email({
     to,
     subject,
@@ -58,11 +67,11 @@ function createMailer({ client }: { client: EmailClient }): Mailer {
     body: `
       <p>Welcome to Falling Fruit,</p>
       <p>To activate your account, you must confirm your email (${user.email}) by clicking the link below:<br/>
-      <a href="${process.env.WEB_ORIGIN}/auth/confirmation?token=${token}">Confirm your email</a>
+      <a href="${webOrigin}/auth/confirmation?token=${token}">Confirm your email</a>
       </p>
       <p>Falling Fruit is powered by its users, so if you have the opportunity to add or improve it, please do so. Happy foraging!</p>
       <hr/>
-      <p style="color: #666;">If you're having trouble clicking the link above, copy and paste this URL into your browser:<br/>${process.env.WEB_ORIGIN}/auth/confirmation?token=${token}
+      <p style="color: #666;">If you're having trouble clicking the link above, copy and paste this URL into your browser:<br/>${webOrigin}/auth/confirmation?token=${token}
       </p>
     `,
     tag: 'email-confirmation'
@@ -77,10 +86,10 @@ function createMailer({ client }: { client: EmailClient }): Mailer {
     body: `
       <p>Hello ${user.name || user.email},</p>
       <p>Someone (possibly you) tried to sign up using this email (${user.email}). You already have an account, so you can sign in here instead:<br/>
-      ${process.env.WEB_ORIGIN}/auth/sign_in
+      ${webOrigin}/auth/sign_in
       </p>
       <p>If you forgot your password, reset it here:<br/>
-      ${process.env.WEB_ORIGIN}/auth/password/new
+      ${webOrigin}/auth/password/new
       </p>
       <hr/>
       <p style="color: #666;">If you didn't request this, you can safely ignore this email or reply with any questions.</p>
@@ -97,7 +106,7 @@ function createMailer({ client }: { client: EmailClient }): Mailer {
     body: `
       <p>Hello,</p>
       <p>Someone (possibly you) requested a link to confirm a Falling Fruit account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:<br/>
-      ${process.env.WEB_ORIGIN}/auth/confirmation/new
+      ${webOrigin}/auth/confirmation/new
       </p>
       <hr/>
       <p style="color: #666;">If you didn't request this, you can safely ignore this email or reply with any questions.</p>
@@ -114,7 +123,7 @@ function createMailer({ client }: { client: EmailClient }): Mailer {
     body: `
       <p>Hello ${user.name || user.email},</p>
       <p>Someone (most likely you) requested a link to confirm your email (${user.email}). Your email is already confirmed, so you can simply sign in here:<br/>
-      ${process.env.WEB_ORIGIN}/auth/sign_in
+      ${webOrigin}/auth/sign_in
       </p>
       <hr/>
       <p style="color: #666;">If you didn't request this, you can safely ignore this email or reply with any questions.</p>
@@ -133,11 +142,11 @@ function createMailer({ client }: { client: EmailClient }): Mailer {
     body: `
       <p>Hello ${user.name || user.email},</p>
       <p>Someone (most likely you) requested a link to change your password:<br/>
-      <a href="${process.env.WEB_ORIGIN}/auth/password/edit?token=${token}">Change your password</a>
+      <a href="${webOrigin}/auth/password/edit?token=${token}">Change your password</a>
       </p>
       <hr/>
       <p style="color: #666;">If you're having trouble clicking the link above, copy and paste this URL into your browser:<br/>
-      ${process.env.WEB_ORIGIN}/auth/password/edit?token=${token}
+      ${webOrigin}/auth/password/edit?token=${token}
       </p>
       <p style="color: #666;">If you didn't request this, you can safely ignore this email. Your password won't change unless you visit the link above and create a new one.</p>
     `,
@@ -153,7 +162,7 @@ function createMailer({ client }: { client: EmailClient }): Mailer {
     body: `
       <p>Hello,</p>
       <p>Someone (possibly you) requested a link to change the password for a Falling Fruit account. However, no account is associated with this email (${user.email}). If you made this request, please try again using a different email address:<br/>
-      ${process.env.WEB_ORIGIN}/auth/password/new
+      ${webOrigin}/auth/password/new
       </p>
       <hr/>
       <p style="color: #666;">If you didn't request this, you can safely ignore this email or reply with any questions.</p>
@@ -166,5 +175,28 @@ function createMailer({ client }: { client: EmailClient }): Mailer {
 
   return mailer
 }
+
+function createLoggingEmailClient(): EmailClient {
+  return {
+    sendEmail({ To, Subject, Tag, HtmlBody }) {
+      console.log(
+        `[email disabled] To: ${To} | Subject: ${Subject} | Tag: ${Tag}\n` +
+          HtmlBody,
+      )
+      return Promise.resolve()
+    },
+  }
+}
+
+function createEmailClient(config: Config): EmailClient {
+  if (!config.postmark) {
+    return createLoggingEmailClient()
+  }
+  // The SDK client is stricter about null vs undefined than the app's minimal
+  // contract, so it is adapted to the contract at this boundary.
+  return new postmark.ServerClient(config.postmark.apiToken) as EmailClient
+}
+
+createMailer.createEmailClient = createEmailClient
 
 export default createMailer

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
-import type { RecaptchaV2 } from 'express-recaptcha'
+import { RecaptchaV2 } from 'express-recaptcha'
+import type { Config } from '../config'
 
 /** Request with the optional authenticated user and a mutable body. */
 type RecaptchaRequest = Request & { user?: unknown }
@@ -27,5 +28,14 @@ function makeRecaptcha({ recaptcha }: { recaptcha: RecaptchaV2 | null }) {
     })
   }
 }
+
+function createRecaptcha(config: Config): RecaptchaV2 | null {
+  if (!config.recaptcha) {
+    return null
+  }
+  return new RecaptchaV2(config.recaptcha.siteKey, config.recaptcha.secretKey)
+}
+
+makeRecaptcha.createRecaptcha = createRecaptcha
 
 export default makeRecaptcha
