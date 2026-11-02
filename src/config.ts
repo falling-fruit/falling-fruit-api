@@ -106,5 +106,3 @@ export function Config(env: NodeJS.ProcessEnv = process.env): Config {
     })),
   }
 }
-
-export const config = Config()

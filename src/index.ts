@@ -1,7 +1,8 @@
-import { config } from './config'
+import { Config } from './config'
 import createDependencies from './dependencies'
 import createApp from './app'
 
+const config = Config()
 const { middleware, routes } = createDependencies(config)
 const app = createApp({ middleware, routes, apiBase: process.env.API_BASE || '' })
 
