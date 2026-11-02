@@ -2,7 +2,7 @@ import makeRouter from './makeRouter'
 import { z } from '../schemas/registry'
 import { Review, EditReview } from '../schemas/schemas'
 import { reviewIdParam } from '../schemas/parameters'
-import createPhotos from '../photos'
+import { sync_legacy_first_photo } from '../photos/photos'
 import type { Services } from './services'
 
 export default function ({ db, middleware, auth, photos: photosService }: Services) {
@@ -58,12 +58,10 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
       )
       const review = await db.reviews.edit(req.params.id, req.body)
       await db.photos.link(req.body.photo_ids, review.id)
-      await createPhotos.sync_legacy_first_photo(
-        db.photos,
-        photosService,
-        req.body.photo_ids,
-        review.id,
-      )
+      await sync_legacy_first_photo(db.photos,
+      photosService,
+      req.body.photo_ids,
+      review.id,)
       review.photos = photos
       return review
     },

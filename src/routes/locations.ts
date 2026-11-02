@@ -2,7 +2,7 @@ import makeRouter from './makeRouter'
 import type { Services } from './services'
 import { z } from '../schemas/registry'
 import { delimitedQuery, intQuery, numberArrayQuery, boolQuery } from '../schemas/query'
-import createPhotos from '../photos'
+import { sync_legacy_first_photo } from '../photos/photos'
 import {
   Location,
   ListLocation,
@@ -354,12 +354,10 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
           user_id,
         })
         await db.photos.link(review_body.photo_ids, review.id)
-        await createPhotos.sync_legacy_first_photo(
-          db.photos,
-          photosService,
-          review_body.photo_ids,
-          review.id,
-        )
+        await sync_legacy_first_photo(db.photos,
+        photosService,
+        review_body.photo_ids,
+        review.id,)
         review.photos = photos ?? []
         location.reviews = [review]
       }
@@ -631,12 +629,10 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
         user_id: user ? user.id : null,
       })
       await db.photos.link(req.body.photo_ids, review.id)
-      await createPhotos.sync_legacy_first_photo(
-        db.photos,
-        photosService,
-        req.body.photo_ids,
-        review.id,
-      )
+      await sync_legacy_first_photo(db.photos,
+      photosService,
+      req.body.photo_ids,
+      review.id,)
       review.photos = photos
       return review
     },

@@ -1,9 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import createPhotos from '../../src/photos'
-
-const { is_new_photo_url, sync_legacy_first_photo } = createPhotos
+import {
+  is_new_photo_url,
+  sync_legacy_first_photo,
+} from '../../src/photos/photos'
 
 type PhotosDb = Parameters<typeof sync_legacy_first_photo>[0]
 type Photos = Parameters<typeof sync_legacy_first_photo>[1]
