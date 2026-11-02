@@ -3,7 +3,7 @@
 Falling Fruit API
 =================
 
-NodeJS API using [express](https://github.com/expressjs/express), [pg-promise](https://github.com/vitaly-t/pg-promise), and [bluebird](https://github.com/petkaantonov/bluebird). The code structure is inspired by this [pg-promise demo](https://github.com/vitaly-t/pg-promise-demo) and this more general [tutorial](http://mherman.org/blog/2016/03/13/designing-a-restful-api-with-node-and-postgres/#.WgOMrhNSyEI).
+NodeJS API using [express](https://github.com/expressjs/express), [pg-promise](https://github.com/vitaly-t/pg-promise), and [bluebird](https://github.com/petkaantonov/bluebird).
 
 You can browse the OpenAPI definition for the main branch [here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/falling-fruit/api/main/docs/openapi.yml), and for the live API [here](https://petstore.swagger.io/?url=https://fallingfruit.org/api/0.3/openapi.yml).
 
@@ -11,33 +11,6 @@ You can browse the OpenAPI definition for the main branch [here](https://petstor
 
 Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([falling-fruit-web](https://github.com/falling-fruit/falling-fruit-web)).
 
-# Layout
-
-- `src/index.ts`: Load configuration and start the server.
-- `src/app.ts`: Assemble the Express app (middleware, routers).
-- `src/dependencies.ts`: Wire up db, mailer, photos, middleware, and routes.
-- `src/routes/`
-  - `index.ts`: Compile all route factories.
-  - `makeRouter.ts`: Router factory with per-route request validation.
-  - `openapi.ts`: Compact route spec → OpenAPI operation + validation config.
-  - `validation.ts`: Zod-backed request validation errors.
-  - `{resource}.ts`: Route handlers with inline OpenAPI operation specs.
-- `src/schemas/`: Zod schemas, the single source of truth for both runtime
-  validation and the generated OpenAPI spec.
-  - `registry.ts`: Shared `zod-to-openapi` registry and `allOf` helpers.
-  - `schemas.ts`, `geojson.ts`, `properties.ts`: Component schemas.
-  - `parameters.ts`, `security.ts`: Reusable parameters and security schemes.
-- `src/db/`
-  - `index.ts`: Define database connection. Load `pg-promise` with repos:
-  - `repos/`
-    - `index.ts`: Compile all classes:
-    - `{class}.ts`: Class definition with methods.
-  - `sql/`
-    - `index.ts`: Load all SQL query files:
-    - `{class}/`
-      - `*.sql`: Raw SQL with variable substitutions.
-  - `generated/`: TypeScript row types derived from the live Postgres schema by
-    [`kanel`](https://github.com/kristiandupont/kanel) (`public/{Table}.ts`).
 
 # Development
 

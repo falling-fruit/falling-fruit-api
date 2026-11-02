@@ -29,7 +29,7 @@
     "codegen": "yarn e2edb:up && yarn codegen:generate",
     "codegen:generate": "kanel",
     "docs:build": "tsx scripts/build-openapi.ts",
-    "docs": "yarn docs:build && npx swagger-cli validate docs/openapi.yml",
+    "docs": "yarn docs:build && yarn swagger-cli validate docs/openapi.yml",
     "postinstall": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath scripts/hooks || true"
   },
   "dependencies": {

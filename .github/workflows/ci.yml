@@ -68,4 +68,9 @@ jobs:
         run: yarn test
 
       - name: Validate OpenAPI
-        run: yarn docs 
+        run: |
+          yarn docs
+          if ! git diff --exit-code --stat docs/openapi.yml; then
+            echo "::error::Committed docs/openapi.yml is stale. Run 'yarn docs:build' and commit the result."
+            exit 1
+          fi 
