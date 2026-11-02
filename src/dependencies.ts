@@ -3,18 +3,19 @@ import { RecaptchaV2 } from 'express-recaptcha'
 import makeDb from './db'
 import Tokenizer from './tokens'
 import makeAuth from './auth'
-import createMailer from './mailer'
+import createMailer from './mail/mailer'
+import { createEmailClient } from './mail/email_client'
 import createPhotos from './photos'
 import makeMiddleware from './middleware'
 import makeRoutes from './routes'
 import type { Config } from './config'
 import type { Db } from './db/types'
-import type { EmailClient } from './mailer'
+import type { EmailClient } from './mail/email_client'
 import type { S3Client } from './photos'
 
 function createDependencies(config: Config) {
   const db = makeDb(config.dbUrl, true)
-  const postmarkClient = createMailer.createEmailClient(config)
+  const postmarkClient = createEmailClient(config)
   const s3Client = createPhotos.createS3Client(config)
   const recaptcha = makeMiddleware.createRecaptcha(config)
 

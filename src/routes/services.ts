@@ -2,7 +2,7 @@ import type { Db } from '../db/types'
 import type Tokenizer from '../tokens'
 import type { Auth } from '../auth'
 import type makeMiddleware from '../middleware'
-import type createMailer from '../mailer'
+import type createMailer from '../mail/mailer'
 import type createPhotos from '../photos'
 
 export type Middleware = ReturnType<typeof makeMiddleware>
