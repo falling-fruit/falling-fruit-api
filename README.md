@@ -38,8 +38,6 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
       - `*.sql`: Raw SQL with variable substitutions.
   - `generated/`: TypeScript row types derived from the live Postgres schema by
     [`kanel`](https://github.com/kristiandupont/kanel) (`public/{Table}.ts`).
-    These are committed and consumed by repos/mappers for type-safe queries.
-    Do not edit by hand; see [Database types](#database-types).
 
 # Development
 
@@ -74,11 +72,7 @@ cp .env.example .env
 - Install [Docker](https://docs.docker.com/get-docker/) (with Compose). It is
   not required to run the API itself, but is used to provision a disposable
   [PostGIS](https://postgis.net) database for the end-to-end tests
-  (`yarn test:e2e`) and for generating database types (`yarn db:types`). Using
-  Docker pins everyone (and CI) to the same Postgres + PostGIS version defined
-  in [`docker-compose.yml`](./docker-compose.yml), so you do not need to install
-  and maintain PostGIS locally. The container is mapped to host port `5433` by
-  default to avoid clashing with a local Postgres on `5432`.
+  (`yarn test:e2e`) and for generating database types (`yarn codegen`).
 
 ## Usage
 
@@ -119,28 +113,11 @@ yarn dbmate up
 
 Row types in `src/db/generated/` are derived from the live Postgres schema by
 [`kanel`](https://github.com/kristiandupont/kanel) (configured in
-`.kanelrc.cjs`). Each table yields a row interface, an `Initializer`, a
-`Mutator`, and a branded id type, which repos and mappers consume for type-safe
-queries instead of hand-written or `any`-typed rows.
-
-Regenerate after any schema change (migration):
+`.kanelrc.cjs`). Regenerate after any schema change (migration):
 
 ```sh
-yarn db:types  # e2edb:up + db:migrate + kanel, reading .env.test
+yarn codegen
 ```
-
-The generated files are committed so that `yarn typecheck` works without a
-running database. CI regenerates them against the migrated schema and fails if
-the committed output is stale, so run `yarn db:types` and commit the result
-whenever you add a migration.
-
-Notes:
-
-- `int8`/`bigint` columns map to `number` (matching the `INT8` type parser in
-  `src/db/index.ts`); PostGIS `geometry`/`geography` map to `string` (GeoJSON,
-  decoded in the mappers). See the overrides in `.kanelrc.cjs`.
-- kanel prints harmless `Unknown type 'geometry' / 'double precision'` warnings
-  for the PostGIS SQL functions; those routine wrappers are not consumed.
 
 ## Documentation
 
@@ -158,11 +135,10 @@ truth for both runtime validation and the documentation:
 `scripts/build-openapi.ts` registers every schema and route operation, merges
 `base.yml`, and writes the bundled `docs/openapi.yml`.
 
-Build the spec, or build and validate it:
+Build and validate the spec:
 
 ```sh
-yarn docs:build  # regenerate docs/openapi.yml
-yarn validate    # build, then validate the result
+yarn docs
 ```
 
 Type-check the TypeScript sources:
@@ -170,9 +146,3 @@ Type-check the TypeScript sources:
 ```sh
 yarn typecheck
 ```
-
-Request bodies and path parameters are validated against the Zod schemas on
-every request (invalid requests return `400`). Responses are not validated at
-runtime; instead, each handler's return type is bound at compile time to its
-documented 2xx response schema, so `yarn typecheck` catches response-shape
-mismatches.
