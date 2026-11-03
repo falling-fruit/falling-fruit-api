@@ -61,6 +61,9 @@ jobs:
       - name: Lint
         run: yarn lint
 
+      - name: Knip
+        run: yarn knip
+
       - name: Type-check
         run: yarn typecheck
 
