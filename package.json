@@ -18,7 +18,7 @@
   },
   "license": "GPL-3.0",
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "tsx scripts/seed-dev.ts && tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
     "knip": "knip",
