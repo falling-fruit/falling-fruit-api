@@ -3,7 +3,7 @@
 Falling Fruit API
 =================
 
-NodeJS API using [express](https://github.com/expressjs/express), [pg-promise](https://github.com/vitaly-t/pg-promise), and [bluebird](https://github.com/petkaantonov/bluebird). The code structure is inspired by this [pg-promise demo](https://github.com/vitaly-t/pg-promise-demo) and this more general [tutorial](http://mherman.org/blog/2016/03/13/designing-a-restful-api-with-node-and-postgres/#.WgOMrhNSyEI).
+NodeJS API using [express](https://github.com/expressjs/express) and [pg-promise](https://github.com/vitaly-t/pg-promise).
 
 You can browse the OpenAPI definition for the main branch [here](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/falling-fruit/api/main/docs/openapi.yml), and for the live API [here](https://petstore.swagger.io/?url=https://fallingfruit.org/api/0.3/openapi.yml).
 
@@ -11,19 +11,6 @@ You can browse the OpenAPI definition for the main branch [here](https://petstor
 
 Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([falling-fruit-web](https://github.com/falling-fruit/falling-fruit-web)).
 
-# Layout
-
-- `index.js`: Define routes and generic handlers. Start server.
-- `helpers.js`: Define helper functions.
-- `db/`
-  - `index.js`: Define database connection. Load `pg-promise` with repos:
-  - `repos/`
-    - `index.js`: Compile all classes:
-    - `{class}.js`: Class definition with methods.
-  - `sql/`
-    - `index.js`: Load all SQL query files:
-    - `{class}/`
-      - `*.sql`: Raw SQL with variable substitutions.
 
 # Development
 
@@ -55,6 +42,15 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
 cp .env.example .env
 ```
 
+- Install [Docker](https://docs.docker.com/get-docker/) (with Compose). It is
+  not required to run the API itself, but is used to provision a disposable
+  [PostGIS](https://postgis.net) database for the end-to-end tests
+  (`yarn test:e2e`) and for generating database types (`yarn codegen`).
+
+- If you want to use the e2e database in the API, set DATABASE_URL to the value in `.env.test` and run `yarn e2edb:up`.
+
+- You can also provision your own PostGIS database - see `.github/workflows/ci.yml` for a setup to recreate.
+
 ## Usage
 
 ```sh
@@ -63,10 +59,63 @@ yarn start
 
 Visit http://localhost:3300.
 
-## Documentation
+## Testing
 
-Validate and build the OpenAPI documentation:
+Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner, split by file naming convention:
+
+- `yarn test`: run everything (unit and e2e).
+- `yarn test:unit`: run unit tests only (`test/**/*.test.ts`).
+- `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.ts`).
+
+e2e tests require a database. `yarn test:e2e` starts the dockerized PostGIS
+database (`yarn e2edb:up`), migrates it, and runs them. Tear it down afterwards
+with `yarn e2edb:down`.
+
+## Database migrations
+
+Migrations are managed with [`dbmate`](https://github.com/amacneil/dbmate) and located in [`./db/migrations`](./db/migrations).
+Create a new migration with:
 
 ```sh
-yarn validate && yarn build
+yarn dbmate new <migration_name>
+```
+
+Add SQL statements in the `-- migrate:up` and (optional) `-- migrate:down` sections, then run `yarn codegen`. 
+
+## Database types
+
+Row types in `src/db/generated/` are derived from the live Postgres schema by
+[`kanel`](https://github.com/kristiandupont/kanel) (configured in
+`.kanelrc.cjs`). Regenerate after any schema change (migration):
+
+```sh
+yarn codegen
+```
+
+## Documentation
+
+The OpenAPI spec is generated from Zod schemas, which are the single source of
+truth for both runtime validation and the documentation:
+
+- `src/schemas/`: Zod component schemas, parameters, and security schemes,
+  registered with [`@asteasolutions/zod-to-openapi`](https://github.com/asteasolutions/zod-to-openapi).
+- `src/routes/*.ts`: Each route declares its OpenAPI operation inline via a
+  compact spec alongside its handler. The same schemas drive runtime request
+  validation and compile-time response typing: a handler's return type is bound
+  to its documented 2xx response schema.
+- `docs/base.yml`: Static metadata (`info`, `tags`, `servers`).
+
+`scripts/build-openapi.ts` registers every schema and route operation, merges
+`base.yml`, and writes the bundled `docs/openapi.yml`.
+
+Build and validate the spec:
+
+```sh
+yarn docs
+```
+
+Type-check the TypeScript sources:
+
+```sh
+yarn typecheck
 ```
