@@ -45,7 +45,7 @@
     "express-recaptcha": "^5.0.2",
     "js-yaml": "^3.14.0",
     "jsonwebtoken": "^9.0.0",
-    "multer": "2.4.0",
+    "multer": "2.5.0",
     "pg-monitor": "2.0.0",
     "pg-promise": "^11.5.5",
     "postmark": "^2.7.8",
