@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.resolve(__dirname, '..', '.env.test') })
 
 import makeDb from '../src/db'
+import { seedApiKey, seedUser } from '../src/db/seed'
 import createDependencies from '../src/dependencies'
 import createApp from '../src/app'
 import Tokenizer from '../src/tokens'
@@ -166,10 +167,7 @@ class E2ESetup {
     this.s3.reset()
     const tables = ['api_keys', ...this.tables]
     await this.db.none(`TRUNCATE ${tables.join(', ')} RESTART IDENTITY CASCADE`)
-    await this.db.none(
-      'INSERT INTO api_keys (api_key, api_type, name) VALUES (${key}, ${type}, ${name})',
-      { key: TEST_API_KEY, type: 'web', name: 'e2e' }
-    )
+    await seedApiKey(this.db, { key: TEST_API_KEY, type: 'web', name: 'e2e' })
   }
 
   async request(
@@ -227,21 +225,17 @@ class E2ESetup {
     token: string
     authHeaders: Record<string, string>
   }> {
-    const user = await this.db.users.add({
-      body: { email: email.toLowerCase(), password, name },
+    const { id } = await seedUser(this.db, {
+      email,
+      password,
+      name,
+      roles,
+      confirmed,
     })
-    const rolesMask = roles.includes('admin') ? 11 : 10
-    await this.db.none(
-      'UPDATE users SET roles_mask = ${rolesMask} WHERE id = ${id}',
-      { id: user.id, rolesMask },
-    )
-    if (confirmed) {
-      await this.db.users.confirm(user.id)
-    }
-    const token = await this.signAccessToken({ id: user.id, roles })
+    const token = await this.signAccessToken({ id, roles })
     return {
-      id: user.id,
-      email: email.toLowerCase(),
+      id,
+      email,
       password,
       roles,
       token,

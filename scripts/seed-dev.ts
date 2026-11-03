@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import makeDb from '../src/db'
+import { seedApiKey, seedUser } from '../src/db/seed'
 
 if (process.env.NODE_ENV !== 'development') {
   throw new Error(
@@ -14,18 +15,30 @@ if (!key) {
 
 const db = makeDb(process.env.DATABASE_URL)
 
-const existing = await db.oneOrNone(
-  'SELECT 1 FROM api_keys WHERE api_key = $<key>',
+const existingKey = await db.oneOrNone(
+  'SELECT 1 FROM api_keys WHERE api_key = ${key}',
   { key },
 )
-
-if (!existing) {
-  await db.none(
-    `INSERT INTO api_keys (api_key, api_type, name)
-     VALUES ($<key>, 'web', 'local-dev')`,
-    { key },
-  )
+if (!existingKey) {
+  await seedApiKey(db, { key, type: 'web', name: 'local-dev' })
   console.log(`Seeded development API key "${key}"`)
+}
+
+const users = [
+  { email: 'admin@fallingfruit.org', name: 'Admin', roles: ['admin', 'user'] },
+  { email: 'user@fallingfruit.org', name: 'User', roles: ['user'] },
+]
+
+for (const { email, name, roles } of users) {
+  const existingUser = await db.oneOrNone(
+    'SELECT 1 FROM users WHERE email = ${email}',
+    { email },
+  )
+  if (existingUser) {
+    continue
+  }
+  await seedUser(db, { email, password: 'password', name, roles, confirmed: true })
+  console.log(`Seeded development user "${email}" (${roles.join(', ')})`)
 }
 
 await db.$pool.end()
