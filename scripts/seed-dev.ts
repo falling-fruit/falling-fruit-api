@@ -15,11 +15,11 @@ if (!key) {
 
 const db = makeDb(process.env.DATABASE_URL)
 
-const existingKey = await db.oneOrNone(
-  'SELECT 1 FROM api_keys WHERE api_key = ${key}',
+const existingKey = await db.oneOrNone<{ exists: boolean }>(
+  'SELECT EXISTS (SELECT 1 FROM api_keys WHERE api_key = ${key}) AS exists',
   { key },
 )
-if (!existingKey) {
+if (!existingKey?.exists) {
   await seedApiKey(db, { key, type: 'web', name: 'local-dev' })
   console.log(`Seeded development API key "${key}"`)
 }
@@ -30,11 +30,11 @@ const users = [
 ]
 
 for (const { email, name, roles } of users) {
-  const existingUser = await db.oneOrNone(
-    'SELECT 1 FROM users WHERE email = ${email}',
+  const existingUser = await db.oneOrNone<{ exists: boolean }>(
+    'SELECT EXISTS (SELECT 1 FROM users WHERE email = ${email}) AS exists',
     { email },
   )
-  if (existingUser) {
+  if (existingUser?.exists) {
     continue
   }
   await seedUser(db, { email, password: 'password', name, roles, confirmed: true })
