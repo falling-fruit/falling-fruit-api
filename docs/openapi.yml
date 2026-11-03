@@ -113,6 +113,24 @@ components:
       minLength: 1
       description: Bio ('about you').
       example: Mulberries are my favorite fruit.
+    problem_code:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+      description: |
+        Problem code.
+        - 0: Location is spam
+        - 1: Location does not exist
+        - 2: Location is a duplicate
+        - 3: Inappropriate review photo
+        - 4: Inappropriate review comment
+        - 5: Other (explain below)
+      example: 1
     Point:
       type: array
       items:
@@ -899,6 +917,55 @@ components:
                 - $ref: '#/components/schemas/EditReview'
                 - title: Review (edit)
                   description: Review properties that can be edited.
+    OpenReport:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
+          example: '2014-06-19T01:02:03.456Z'
+        problem_code:
+          $ref: '#/components/schemas/problem_code'
+        comment:
+          type: string
+          nullable: true
+          minLength: 1
+          description: Comment. Only included for an authenticated admin.
+          example: This tree was cut down.
+        reported_by_me:
+          type: boolean
+          description: Whether the report was made by the authenticated user. Only included for an authenticated user.
+          example: true
+        reporter:
+          type: object
+          properties:
+            user_id:
+              type: integer
+              nullable: true
+              minimum: 1
+              description: ID of reporting User (if authenticated).
+              example: 321
+            name:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Name of the reporter.
+              example: Jane
+            email:
+              allOf:
+                - $ref: '#/components/schemas/email'
+                - description: Email of the reporter.
+          required:
+            - user_id
+            - name
+            - email
+          description: Reporter details. Only included for an authenticated admin.
+      required:
+        - created_at
+        - problem_code
+      title: Open report
+      description: 'An unresolved Report of a problem with a Location. Fields beyond `created_at` and `problem_code` are only included for authenticated users (`reported_by_me`) or admins (`comment`, `reporter`).'
     Location:
       allOf:
         - $ref: '#/components/schemas/IdField'
@@ -1073,6 +1140,11 @@ components:
                   - title: Location List
                     description: List of saved locations.
               description: User's lists that include the Location.
+            open_reports:
+              type: array
+              items:
+                $ref: '#/components/schemas/OpenReport'
+              description: Unresolved reports of problems with the Location. Empty if there are none.
           required:
             - lat
             - lng
@@ -1089,6 +1161,7 @@ components:
             - country
             - muni
             - lists
+            - open_reports
     LocationChange:
       allOf:
         - $ref: '#/components/schemas/LatLngFields'
@@ -1309,23 +1382,7 @@ components:
           description: Location ID.
           example: 3383
         problem_code:
-          type: integer
-          enum:
-            - 0
-            - 1
-            - 2
-            - 3
-            - 4
-            - 5
-          description: |
-            Problem code.
-            - 0: Location is spam
-            - 1: Location does not exist
-            - 2: Location is a duplicate
-            - 3: Inappropriate review photo
-            - 4: Inappropriate review comment
-            - 5: Other (explain below)
-          example: 1
+          $ref: '#/components/schemas/problem_code'
         comment:
           type: string
           nullable: true
@@ -2092,13 +2149,14 @@ paths:
                 - import
             description: |
               Additional information to include.
-              - reviews: Location reviews.
-              - import: Imported dataset.
+              - reviews: Location reviews (deprecated).
+              - import: Imported dataset (deprecated).
+            deprecated: true
           required: false
           description: |
             Additional information to include.
-            - reviews: Location reviews.
-            - import: Imported dataset.
+            - reviews: Location reviews (deprecated).
+            - import: Imported dataset (deprecated).
           name: embed
           in: query
           explode: false

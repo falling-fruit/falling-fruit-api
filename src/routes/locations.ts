@@ -466,7 +466,8 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
           ).openapi({
             param: { name: 'embed', in: 'query', explode: false },
             description:
-              'Additional information to include.\n- reviews: Location reviews.\n- import: Imported dataset.\n',
+              'Additional information to include.\n- reviews: Location reviews (deprecated).\n- import: Imported dataset (deprecated).\n',
+            deprecated: true,
           }),
         }),
       },
@@ -477,6 +478,10 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     auth.optional,
     async (req, user) => {
       const location = await db.locations.show(req.params.id, user)
+      location.open_reports = await db.reports.listOpenForLocation(
+        req.params.id,
+        user,
+      )
       const embedded = req.query.embed
       if (embedded) {
         if (embedded.includes('reviews')) {

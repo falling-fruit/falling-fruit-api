@@ -1,6 +1,6 @@
 import { z, register, allOf, inlineAllOf, intEnum } from './registry'
 import { Polygon } from './geojson'
-import { emailProp, nameProp, bioProp } from './properties'
+import { emailProp, nameProp, bioProp, problemCodeProp } from './properties'
 
 const normalizeLongitude = (lng: number) => ((((lng + 180) % 360) + 360) % 360) - 180
 
@@ -518,6 +518,53 @@ export const AddLocation = allOf('AddLocation', [
   description: 'Location properties that can be added.',
 })
 
+export const OpenReport = register(
+  'OpenReport',
+  z
+    .object({
+      created_at: z.string().datetime({ offset: true }).openapi({
+        description:
+          'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.',
+        format: 'date-time',
+        example: '2014-06-19T01:02:03.456Z',
+      }),
+      problem_code: problemCodeProp,
+      comment: z.string().min(1).nullable().optional().openapi({
+        description: 'Comment. Only included for an authenticated admin.',
+        example: 'This tree was cut down.',
+      }),
+      reported_by_me: z.boolean().optional().openapi({
+        description:
+          'Whether the report was made by the authenticated user. Only included for an authenticated user.',
+        example: true,
+      }),
+      reporter: z
+        .object({
+          user_id: z.number().int().min(1).nullable().openapi({
+            description: 'ID of reporting User (if authenticated).',
+            example: 321,
+          }),
+          name: z.string().min(1).nullable().openapi({
+            description: 'Name of the reporter.',
+            example: 'Jane',
+          }),
+          email: emailProp.openapi({
+            description: 'Email of the reporter.',
+          }),
+        })
+        .optional()
+        .openapi({
+          description:
+            'Reporter details. Only included for an authenticated admin.',
+        }),
+    })
+    .openapi({
+      title: 'Open report',
+      description:
+        'An unresolved Report of a problem with a Location. Fields beyond `created_at` and `problem_code` are only included for authenticated users (`reported_by_me`) or admins (`comment`, `reporter`).',
+    }),
+)
+
 export const Location = allOf('Location', [
   IdField,
   EditLocation,
@@ -571,6 +618,10 @@ export const Location = allOf('Location', [
     }),
     lists: z.array(LocationList).openapi({
       description: "User's lists that include the Location.",
+    }),
+    open_reports: z.array(OpenReport).openapi({
+      description:
+        'Unresolved reports of problems with the Location. Empty if there are none.',
     }),
   }),
 ]).openapi({
@@ -713,11 +764,7 @@ export const EditReport = register(
         description: 'Location ID.',
         example: 3383,
       }),
-      problem_code: intEnum([0, 1, 2, 3, 4, 5]).openapi({
-        description:
-          'Problem code.\n- 0: Location is spam\n- 1: Location does not exist\n- 2: Location is a duplicate\n- 3: Inappropriate review photo\n- 4: Inappropriate review comment\n- 5: Other (explain below)\n',
-        example: 1,
-      }),
+      problem_code: problemCodeProp,
       comment: z.string().min(1).nullable().optional().openapi({
         description: 'Comment. Required if `problem_code` is 5.',
         example: 'This tree was cut down.',
@@ -818,4 +865,5 @@ export type PublicUser = z.infer<typeof PublicUser>
 export type User = z.infer<typeof User>
 export type EditReport = z.infer<typeof EditReport>
 export type Report = z.infer<typeof Report>
+export type OpenReport = z.infer<typeof OpenReport>
 export type Token = z.infer<typeof Token>
