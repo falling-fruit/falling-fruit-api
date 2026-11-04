@@ -4,10 +4,7 @@ import pgPromise from 'pg-promise'
 import type { IInitOptions } from 'pg-promise'
 import type { Db, DbRepos, Pgp } from './types'
 
-function makeDb(
-  connectionString: string | undefined,
-  attachMonitor = false,
-): Db {
+function makeDb(connectionString: string, attachMonitor: boolean): Db {
   const options: IInitOptions<DbRepos> = {
     extend: (obj, _dc) => {
       obj.clusters = new repos.Clusters(obj, pgp)
@@ -31,9 +28,6 @@ function makeDb(
   pgp.pg.types.setTypeParser(pgp.pg.types.builtins.INT8, parseInt)
   // Return DATE without timestamp (YYYY-MM-DD)
   pgp.pg.types.setTypeParser(pgp.pg.types.builtins.DATE, String)
-  if (!connectionString) {
-    throw Error('A database connection string is required')
-  }
   return pgp(connectionString)
 }
 

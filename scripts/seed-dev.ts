@@ -13,7 +13,12 @@ if (!key) {
   throw new Error('DEV_API_KEY must be set to seed a development API key')
 }
 
-const db = makeDb(process.env.DATABASE_URL)
+const databaseUrl = process.env.DATABASE_URL
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL must be set to seed the development database')
+}
+
+const db = makeDb(databaseUrl, false)
 
 const existingKey = await db.oneOrNone<{ exists: boolean }>(
   'SELECT EXISTS (SELECT 1 FROM api_keys WHERE api_key = ${key}) AS exists',

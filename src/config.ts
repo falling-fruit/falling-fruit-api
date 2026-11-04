@@ -53,7 +53,7 @@ export type Config = {
   local: boolean
   port?: string
   webOrigin: string
-  dbUrl?: string
+  dbUrl: string
   jwtSecret?: string
   s3: S3Config | null
   postmark: PostmarkConfig | null
