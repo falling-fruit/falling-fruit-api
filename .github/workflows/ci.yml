@@ -11,7 +11,7 @@ jobs:
 
     services:
       db:
-        image: postgis/postgis:14-3.4
+        image: postgis/postgis:15-3.6
         env:
           POSTGRES_USER: fallingfruit
           POSTGRES_PASSWORD: fallingfruit
@@ -43,9 +43,7 @@ jobs:
       - name: Create PostGIS extensions
         env:
           PGPASSWORD: fallingfruit
-        run: |
-          psql -h localhost -U fallingfruit -d fallingfruit_db \
-            -f db/init/01-extensions.sql
+        run: psql -h localhost -U fallingfruit -d fallingfruit_db
 
       - name: Apply migrations
         run: yarn dbmate up
@@ -76,4 +74,4 @@ jobs:
           if ! git diff --exit-code --stat docs/openapi.yml; then
             echo "::error::Committed docs/openapi.yml is stale. Run 'yarn docs:build' and commit the result."
             exit 1
-          fi 
+          fi
