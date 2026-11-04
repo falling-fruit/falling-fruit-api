@@ -24,7 +24,7 @@ const JWT_SECRET = 'test-secret'
 const API_BASE = ''
 const TEST_API_KEY = 'test-api-key'
 
-const DATABASE_URL = process.env.DATABASE_URL!
+const DATABASE_URL = process.env.DATABASE_URL || 'should be set in .env.test'
 
 type Email = { Subject: string; [key: string]: unknown }
 
