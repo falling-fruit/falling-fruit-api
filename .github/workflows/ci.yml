@@ -12,28 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Start database service
-        run: |
-          set -a; source .env.test; set +a
-          eval "$(node -e '
-            const u = new URL(process.env.DATABASE_URL);
-            const q = (s) => `\x27${s.replace(/\x27/g, `\x27\\\x27\x27`)}\x27`;
-            console.log(`POSTGRES_USER=${q(decodeURIComponent(u.username))}`);
-            console.log(`POSTGRES_PASSWORD=${q(decodeURIComponent(u.password))}`);
-            console.log(`POSTGRES_DB=${q(u.pathname.slice(1))}`);
-            console.log(`DB_PORT=${u.port}`);
-          ')"
-          docker run -d --name db \
-            -e POSTGRES_USER="$POSTGRES_USER" -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" -e POSTGRES_DB="$POSTGRES_DB" \
-            -p "$DB_PORT:5432" \
-            --health-cmd "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" \
-            --health-interval 2s --health-timeout 5s --health-retries 30 \
-            postgis/postgis:15-3.6
-          until [ "$(docker inspect -f '{{.State.Health.Status}}' db)" = healthy ]; do
-            [ "$(docker inspect -f '{{.State.Running}}' db)" = true ] || { docker logs db; }
-            sleep 1
-          done
-
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
@@ -41,17 +19,6 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Apply migrations
-        run: yarn dbmate --env-file .env.test up
-
-      - name: Check generated DB types are up to date
-        run: |
-          yarn codegen:generate
-          if ! git diff --exit-code --stat src/db/generated; then
-          echo "::error::Generated DB types are stale. Run 'yarn codegen' and commit the result."
-            exit 1
-          fi
 
       - name: Lint
         run: yarn lint
@@ -62,9 +29,6 @@ jobs:
       - name: Type-check
         run: yarn typecheck
 
-      - name: Run tests
-        run: yarn test
-
       - name: Validate OpenAPI
         run: |
           yarn docs
@@ -72,3 +36,17 @@ jobs:
             echo "::error::Committed docs/openapi.yml is stale. Run 'yarn docs:build' and commit the result."
             exit 1
           fi
+
+      - name: Start database
+        run: yarn e2edb:up
+
+      - name: Check generated DB types are up to date
+        run: |
+          yarn codegen:generate
+          if ! git diff --exit-code --stat src/db/generated; then
+          echo "::error::Generated DB types are stale. Run 'yarn codegen' and commit the result."
+            exit 1
+          fi
+
+      - name: Run tests
+        run: yarn test
