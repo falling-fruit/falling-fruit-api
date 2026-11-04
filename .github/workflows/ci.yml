@@ -9,28 +9,30 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
 
-    services:
-      db:
-        image: postgis/postgis:15-3.6
-        env:
-          POSTGRES_USER: fallingfruit
-          POSTGRES_PASSWORD: fallingfruit
-          POSTGRES_DB: fallingfruit_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U fallingfruit -d fallingfruit_db"
-          --health-interval 2s
-          --health-timeout 5s
-          --health-retries 30
-
-    env:
-      DATABASE_URL: postgres://fallingfruit:fallingfruit@localhost:5432/fallingfruit_db?sslmode=disable
-      DBMATE_NO_DUMP_SCHEMA: "1"
-      NODE_ENV: test
-
     steps:
       - uses: actions/checkout@v4
+
+      - name: Start database service
+        run: |
+          set -a; source .env.test; set +a
+          eval "$(node -e '
+            const u = new URL(process.env.DATABASE_URL);
+            const q = (s) => `\x27${s.replace(/\x27/g, `\x27\\\x27\x27`)}\x27`;
+            console.log(`POSTGRES_USER=${q(decodeURIComponent(u.username))}`);
+            console.log(`POSTGRES_PASSWORD=${q(decodeURIComponent(u.password))}`);
+            console.log(`POSTGRES_DB=${q(u.pathname.slice(1))}`);
+            console.log(`DB_PORT=${u.port}`);
+          ')"
+          docker run -d --name db \
+            -e POSTGRES_USER="$POSTGRES_USER" -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" -e POSTGRES_DB="$POSTGRES_DB" \
+            -p "$DB_PORT:5432" \
+            --health-cmd "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" \
+            --health-interval 2s --health-timeout 5s --health-retries 30 \
+            postgis/postgis:15-3.6
+          until [ "$(docker inspect -f '{{.State.Health.Status}}' db)" = healthy ]; do
+            [ "$(docker inspect -f '{{.State.Running}}' db)" = true ] || { docker logs db; }
+            sleep 1
+          done
 
       - uses: actions/setup-node@v4
         with:
@@ -41,7 +43,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Apply migrations
-        run: yarn dbmate up
+        run: yarn dbmate --env-file .env.test up
 
       - name: Check generated DB types are up to date
         run: |
