@@ -40,11 +40,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Create PostGIS extensions
-        env:
-          PGPASSWORD: fallingfruit
-        run: psql -h localhost -U fallingfruit -d fallingfruit_db
-
       - name: Apply migrations
         run: yarn dbmate up
 
