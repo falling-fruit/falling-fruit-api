@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgis/postgis:14-3.4
+    image: postgis/postgis:15-3.6
     environment:
       POSTGRES_USER: fallingfruit
       POSTGRES_PASSWORD: fallingfruit
