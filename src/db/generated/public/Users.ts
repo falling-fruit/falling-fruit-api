@@ -147,6 +147,9 @@ export interface UsersInitializer {
 
   location?: string | null;
 
+  /** Default value: ARRAY['user'::text] */
+  roles?: string[];
+
   /** Default value: false */
   private?: boolean;
 }
@@ -214,6 +217,8 @@ export interface UsersMutator {
   range_radius_unit?: string | null;
 
   location?: string | null;
+
+  roles?: string[];
 
   private?: boolean;
 }
