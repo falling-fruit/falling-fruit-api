@@ -216,12 +216,12 @@ ALTER SEQUENCE public.changes_id_seq OWNED BY public.changes.id;
 
 CREATE TABLE public.clusters (
     geohash text NOT NULL,
-    type_id integer NOT NULL,
     muni boolean NOT NULL,
     x real NOT NULL,
     y real NOT NULL,
     count integer NOT NULL,
     zoom integer NOT NULL,
+    type_id integer NOT NULL,
     id integer NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     updated_at timestamp without time zone DEFAULT now() NOT NULL
@@ -455,31 +455,8 @@ CREATE TABLE public.users (
     range_radius_unit character varying(255),
     location public.geography(Point,4326),
     roles text[] DEFAULT ARRAY['user'::text] NOT NULL,
-    private boolean DEFAULT false NOT NULL,
-    name_before_migration text
+    private boolean DEFAULT false NOT NULL
 );
-
-
---
--- Name: mailing_list; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.mailing_list AS
- WITH last_refresh_token AS (
-         SELECT refresh_tokens.user_id,
-            max(refresh_tokens.updated_at) AS updated_at
-           FROM public.refresh_tokens
-          GROUP BY refresh_tokens.user_id
-        )
- SELECT users.id,
-    users.name,
-    users.email,
-    GREATEST(users.last_sign_in_at, users.confirmed_at, last_refresh_token.updated_at) AS last_sign_in_at,
-    EXTRACT(days FROM (GREATEST(users.last_sign_in_at, users.confirmed_at, last_refresh_token.updated_at) - users.confirmed_at)) AS days_since_confirmed
-   FROM (public.users
-     LEFT JOIN last_refresh_token ON ((last_refresh_token.user_id = users.id)))
-  WHERE ((users.confirmed_at IS NOT NULL) AND (users.announcements_email IS TRUE) AND ((users.bio IS NULL) OR (users.bio <> ALL (ARRAY['BOOOOOOOM'::text, 'Nice girl'::text, 'Ask me'::text, 'bs2site.at'::text, 'bs2best.at'::text, 'Welcome to My Louis Vuitton Outlet Store Online! Our shop provides quality Louis'::text, 'Cheap Coach online store offers best with beautiful design Coach bags for shoppe'::text, 'Our Tiffany Jewellery Store Is One Of The Best Tiffany Online Store Offers Tiffa'::text, 'Cheap Moncler jackets on sale at MONCLER Outlet,Buy discount Moncler jacket from'::text, 'Swiss Replica Watches ,High Quality Replica Watches Online Shop'::text, 'pre owned handbags, used louis vuitton handbags, used chanel handbags, used ...'::text, 'pre owned handbags, used louis vuitton handbags, used chanel handbags, used ... '::text, 'Buy discount UGG Classic Paisley Boots,UGG Classic Paisley Boots,cheap UGG for'::text, 'Buy discount UGG Classic Paisley Boots,UGG Classic Paisley Boots,cheap UGG  for '::text]))))
-  ORDER BY GREATEST(users.last_sign_in_at, users.confirmed_at, last_refresh_token.updated_at) DESC;
 
 
 --
@@ -730,15 +707,6 @@ CREATE TABLE public.types (
     zh_hant_name text,
     zh_hans_name text,
     uk_name text,
-    label text GENERATED ALWAYS AS (((((id)::text || ':'::text) ||
-CASE
-    WHEN (en_name IS NOT NULL) THEN (' '::text || (en_name)::text)
-    ELSE ''::text
-END) ||
-CASE
-    WHEN (scientific_name IS NOT NULL) THEN ((' ['::text || (scientific_name)::text) || ']'::text)
-    ELSE ''::text
-END)) STORED,
     user_id integer,
     ru_name text,
     ja_name text,
