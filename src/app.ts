@@ -1,5 +1,6 @@
 import express from 'express'
 import type { Router, RequestHandler } from 'express'
+import { RECAPTCHA_PARAM } from './middleware/recaptcha'
 import cors from 'cors'
 import compression from 'compression'
 import type { Middleware } from './routes/services'
@@ -61,6 +62,18 @@ function createApp({ middleware, routes, apiBase }: CreateAppOptions) {
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
       // Null empty strings in JSON body
       req.body = null_empty_strings(req.body)
+    }
+    // Move g-recaptcha-response from body or query to header
+    if (!req.headers[RECAPTCHA_PARAM]) {
+      const body = req.body as Record<string, string> | undefined
+      const query = req.query as Record<string, string> | undefined
+      if (body?.[RECAPTCHA_PARAM]) {
+        req.headers[RECAPTCHA_PARAM] = body[RECAPTCHA_PARAM]
+        delete body[RECAPTCHA_PARAM]
+      } else if (query?.[RECAPTCHA_PARAM]) {
+        req.headers[RECAPTCHA_PARAM] = query[RECAPTCHA_PARAM]
+        delete query[RECAPTCHA_PARAM]
+      }
     }
     return void next()
   }
