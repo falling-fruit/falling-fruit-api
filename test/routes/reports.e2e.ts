@@ -65,12 +65,40 @@ test('POST /reports defaults the email to the authenticated user', async () => {
   assert.equal(body.reporter_id, user.id)
 })
 
+test('POST /reports defaults email and name when authenticated and they are null', async () => {
+  const locationId = await seedLocation()
+  const user = await setup.createUser({ email: 'owner@example.com' })
+
+  const result = await setup.request('/reports', {
+    method: 'POST',
+    body: { location_id: locationId, problem_code: 1, email: null, name: null },
+    headers: user.authHeaders,
+  })
+
+  assert.equal(result.status, 200)
+  const body = result.body as { email: string; reporter_id: number }
+  assert.equal(body.email, 'owner@example.com')
+  assert.equal(body.reporter_id, user.id)
+})
+
 test('POST /reports requires an email when not authenticated', async () => {
   const locationId = await seedLocation()
 
   const result = await setup.request('/reports', {
     method: 'POST',
     body: { location_id: locationId, problem_code: 1 },
+  })
+
+  assert.equal(result.status, 400)
+  assert.deepEqual(result.body, { error: 'An email is required' })
+})
+
+test('POST /reports requires an email when not authenticated and email is null', async () => {
+  const locationId = await seedLocation()
+
+  const result = await setup.request('/reports', {
+    method: 'POST',
+    body: { location_id: locationId, problem_code: 1, email: null },
   })
 
   assert.equal(result.status, 400)

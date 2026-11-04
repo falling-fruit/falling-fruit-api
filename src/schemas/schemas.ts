@@ -722,7 +722,7 @@ export const EditReport = register(
         description: 'Comment. Required if `problem_code` is 5.',
         example: 'This tree was cut down.',
       }),
-      email: emailProp.optional().openapi({
+      email: emailProp.nullable().optional().openapi({
         description:
           "Email to use for correspondence. If authenticated, defaults to the user's email. Otherwise, it is required.",
       }),
