@@ -1,10 +1,28 @@
 import sqlModule from '../sql'
 import type { Protocol, Pgp } from '../types'
-import type { EditReport, Report, OpenReport } from '../../schemas/schemas'
+import type {
+  EditReport,
+  Report,
+  AdminReport,
+  ResolvedReport,
+} from '../../schemas/schemas'
 
 const sql = sqlModule.reports
 
-type Viewer = { id: number; roles: string[] } | null
+type ListResolvedParams = {
+  q?: string
+  problem_code?: number
+  resolution_code?: number
+  sort?: 'newest' | 'oldest'
+  limit?: number
+  offset?: number
+}
+
+type ResolveParams = {
+  resolution_code: number
+  response: string | null
+  responder_id: number
+}
 
 class Reports {
   db: Protocol
@@ -25,29 +43,76 @@ class Reports {
     return this.db.one<Report>(sql.add, values)
   }
 
-  listOpenForLocation(
-    locationId: number | string,
-    viewer: Viewer,
-  ): Promise<OpenReport[]> {
-    const isAdmin = !!viewer && viewer.roles.includes('admin')
-    const columnFragments: string[] = []
-    if (viewer) {
-      columnFragments.push(
-        this.pgp.as.format(
-          ', COALESCE(p.reporter_id = ${user_id}, false) AS reported_by_me',
-          { user_id: viewer.id },
-        ),
-      )
-    }
-    if (isAdmin) {
-      columnFragments.push(
-        ", p.comment AS comment, json_build_object('user_id', p.reporter_id, 'name', p.name, 'email', p.email) AS reporter",
-      )
-    }
-    return this.db.any<OpenReport>(sql.listOpenForLocation, {
-      location_id: parseInt(String(locationId)),
-      columns: columnFragments.join(''),
+  listOpen(): Promise<AdminReport[]> {
+    return this.db.any<AdminReport>(sql.listOpen)
+  }
+
+  listResolved({
+    q,
+    problem_code,
+    resolution_code,
+    sort = 'newest',
+    limit = 100,
+    offset = 0,
+  }: ListResolvedParams): Promise<ResolvedReport[]> {
+    const search = q && q.trim() !== '' ? q.trim() : null
+    return this.db.any<ResolvedReport>(sql.listResolved, {
+      problem_code: problem_code ?? null,
+      resolution_code: resolution_code ?? null,
+      search,
+      search_like: search === null ? null : `%${search}%`,
+      sort_direction: sort === 'oldest' ? 'ASC' : 'DESC',
+      limit,
+      offset,
     })
+  }
+
+  listByIds(ids: number[]): Promise<Report[]> {
+    if (!ids.length) {
+      return Promise.resolve([])
+    }
+    return this.db.any<Report>(sql.listByIds, { ids })
+  }
+
+  resolveMany(ids: number[], obj: ResolveParams): Promise<Report[]> {
+    if (!ids.length) {
+      return Promise.resolve([])
+    }
+    return this.db.any<Report>(sql.resolveMany, {
+      ids,
+      resolution_code: obj.resolution_code,
+      response: obj.response,
+      responder_id: obj.responder_id,
+    })
+  }
+
+  async photoLocationId(photoId: number): Promise<number | null> {
+    const row = await this.db.oneOrNone<{ location_id: number | null }>(
+      sql.photoLocationId,
+      { id: photoId },
+    )
+    if (!row) {
+      throw Error(`Photo ${photoId} not found`)
+    }
+    return row.location_id
+  }
+
+  async reviewLocationIds(
+    reviewIds: number[],
+  ): Promise<Map<number, number | null>> {
+    const rows = await this.db.any<{ id: number; location_id: number | null }>(
+      sql.reviewLocationIds,
+      { ids: reviewIds },
+    )
+    const byId = new Map<number, number | null>()
+    for (const row of rows) {
+      byId.set(row.id, row.location_id)
+    }
+    const missing = reviewIds.filter((id) => !byId.has(id))
+    if (missing.length) {
+      throw Error(`Review(s) ${missing.join(', ')} not found`)
+    }
+    return byId
   }
 }
 

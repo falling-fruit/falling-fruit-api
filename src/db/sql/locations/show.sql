@@ -15,6 +15,24 @@ WITH lists AS (
   JOIN routes ON routes.id = locations_routes.route_id
   WHERE routes.user_id = ${user_id} AND locations_routes.location_id = ${id}
   GROUP BY locations_routes.location_id
+),
+open_reports AS (
+  SELECT
+    p.location_id,
+    json_agg(
+      json_build_object(
+        'created_at',
+        to_char(
+          p.created_at AT TIME ZONE 'UTC',
+          'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+        ),
+        'problem_code', COALESCE(p.problem_code, 5)
+      )
+      ORDER BY p.created_at ASC
+    ) AS open_reports
+  FROM problems p
+  WHERE p.location_id = ${id} AND p.resolution_code IS NULL
+  GROUP BY p.location_id
 )
 SELECT
   l.id,
@@ -30,6 +48,7 @@ SELECT
   l.access,
   l.description,
   l.unverified,
+  l.hidden,
   l.created_at,
   l.updated_at,
   l.address,
@@ -38,10 +57,13 @@ SELECT
   l.country,
   l.muni,
   l.invasive,
-  coalesce(lists.lists, '[]'::json) AS lists
+  coalesce(lists.lists, '[]'::json) AS lists,
+  coalesce(open_reports.open_reports, '[]'::json) AS open_reports
 FROM locations l
 LEFT JOIN users u
   ON l.user_id = u.id
 LEFT JOIN lists
   ON lists.location_id = l.id
+LEFT JOIN open_reports
+  ON open_reports.location_id = l.id
 WHERE l.id = ${id}

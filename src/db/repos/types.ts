@@ -20,42 +20,30 @@ type TypeColumn = Extract<keyof TypesRow, string>
 class Types {
   db: Protocol
   pgp: Pgp
-  names: TypeColumn[]
   default_names: TypeColumn[]
-  ready: Promise<void>
 
   constructor(db: Protocol, pgp: Pgp) {
     this.db = db
     this.pgp = pgp
-    this.names = []
-    this.ready = db
-      .any<{ column_name: string }>(
-        `SELECT column_name FROM information_schema.columns
-       WHERE table_schema = 'public' AND table_name = 'types'`,
-      )
-      .then((result) => {
-        this.names = result
-          .map((row) => row.column_name)
-          .filter((key) => key.endsWith('_name')) as TypeColumn[]
-      })
     this.default_names = ['en_name', 'scientific_name']
   }
 
-  locale_to_names(value: string): string[] {
-    const column = Type.locale_to_name(value)
-    if (this.names.some((name) => name === column)) {
-      return [column, ...this.default_names].filter(
-        (value, index, array) => array.indexOf(value) === index,
-      )
-    }
-    return this.default_names
+  async nameColumns(): Promise<TypeColumn[]> {
+    const result = await this.db.any<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'types'`,
+    )
+    return result
+      .map((row) => row.column_name)
+      .filter((key) => key.endsWith('_name')) as TypeColumn[]
   }
 
   async add(
     obj: Partial<SubmitType> & Record<string, unknown>,
   ): Promise<ApiType> {
+    const nameColumns = await this.nameColumns()
     const values = Type.toRow(obj, {
-      nameColumns: this.names,
+      nameColumns,
       defaultNames: this.default_names,
     })
     const type = await this.db.one<TypeRow>(sql.add, values)

@@ -5,6 +5,7 @@ import {
   delimitedQuery,
   numberArrayQuery,
 } from './query'
+import { problemCodeProp, resolutionCodeProp } from './properties'
 
 const BOUNDS_ITEM_PATTERN = '^(-?\\d+\\.?(\\d+)?),(-?\\d+\\.?(\\d+)?)$'
 
@@ -99,6 +100,14 @@ export const reviewIdParam = idPathParam('review_id', 'id', 'Review ID.')
 export const userIdParam = idPathParam('user_id', 'id', 'User ID.')
 export const importIdParam = idPathParam('import_id', 'id', 'Import ID.')
 
+export const notifyReportersParam = registry.registerParameter(
+  'notify_reporters',
+  boolQuery(z.boolean().default(false)).openapi('notify_reporters', {
+    param: { name: 'notify_reporters', in: 'query' },
+    description: 'Whether to email the reporters about the resolution.',
+  }),
+)
+
 export const recaptchaParam = registry.registerParameter(
   'recaptcha',
   z.string().min(1).openapi('recaptcha', {
@@ -114,4 +123,56 @@ export const offsetParam = registry.registerParameter(
     param: { name: 'offset', in: 'query' },
     description: 'Offset from which to apply `limit`.',
   }),
+)
+
+export const limitParam = registry.registerParameter(
+  'limit',
+  intQuery(z.number().int().min(1).max(1000).default(100)).openapi('limit', {
+    param: { name: 'limit', in: 'query' },
+    description: 'Maximum number of results to return.',
+  }),
+)
+
+export const reportSearchParam = registry.registerParameter(
+  'report_search',
+  z
+    .string()
+    .trim()
+    .min(1)
+    .optional()
+    .openapi('report_search', {
+      param: { name: 'q', in: 'query' },
+      description:
+        'Free-text search matched (case-insensitively) against the report ' +
+        'comment, resolution response, and reporter name and email.',
+      example: 'duplicate',
+    }),
+)
+
+export const reportProblemCodeParam = registry.registerParameter(
+  'report_problem_code',
+  intQuery(problemCodeProp.optional()).openapi('report_problem_code', {
+    param: { name: 'problem_code', in: 'query' },
+    description: 'Only return Reports with this problem code.',
+  }),
+)
+
+export const reportResolutionCodeParam = registry.registerParameter(
+  'report_resolution_code',
+  intQuery(resolutionCodeProp.optional()).openapi('report_resolution_code', {
+    param: { name: 'resolution_code', in: 'query' },
+    description: 'Only return Reports resolved with this resolution code.',
+  }),
+)
+
+export const reportSortParam = registry.registerParameter(
+  'report_sort',
+  z
+    .enum(['newest', 'oldest'])
+    .default('newest')
+    .openapi('report_sort', {
+      param: { name: 'sort', in: 'query' },
+      description:
+        'Sort order by resolution date.\n- `newest`: Most recently resolved first.\n- `oldest`: Least recently resolved first.\n',
+    }),
 )

@@ -40,11 +40,42 @@ export const bioProp = register(
   }),
 )
 
+export const PROBLEM_CODE_LABELS = [
+  'Location is spam',
+  'Location does not exist',
+  'Location is a duplicate',
+  'Inappropriate review photo',
+  'Inappropriate review comment',
+  'Other (explain below)',
+] as const
+
+export const RESOLUTION_CODE_LABELS = [
+  'Made no changes',
+  'Edited the location',
+  'Deleted the location',
+  'Deleted the photo',
+  'Deleted the review',
+  'Hid the location',
+] as const
+
+const codeListDescription = (prefix: string, labels: readonly string[]) =>
+  `${prefix}\n${labels.map((label, code) => `- ${code}: ${label}`).join('\n')}\n`
+
 export const problemCodeProp = register(
   'problem_code',
   intEnum([0, 1, 2, 3, 4, 5]).openapi({
-    description:
-      'Problem code.\n- 0: Location is spam\n- 1: Location does not exist\n- 2: Location is a duplicate\n- 3: Inappropriate review photo\n- 4: Inappropriate review comment\n- 5: Other (explain below)\n',
+    description: codeListDescription('Problem code.', PROBLEM_CODE_LABELS),
     example: 1,
+  }),
+)
+
+export const resolutionCodeProp = register(
+  'resolution_code',
+  intEnum([0, 1, 2, 3, 4, 5]).openapi({
+    description: codeListDescription(
+      'Resolution code.',
+      RESOLUTION_CODE_LABELS,
+    ),
+    example: 2,
   }),
 )
