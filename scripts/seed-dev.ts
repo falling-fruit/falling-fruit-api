@@ -8,9 +8,9 @@ if (process.env.NODE_ENV !== 'development') {
   )
 }
 
-const key = process.env.DEV_API_KEY
+const key = process.env.API_KEY
 if (!key) {
-  throw new Error('DEV_API_KEY must be set to seed a development API key')
+  throw new Error('API_KEY must be set to seed an API key')
 }
 
 const databaseUrl = process.env.DATABASE_URL
