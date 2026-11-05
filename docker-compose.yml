@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: fallingfruit_db
     ports:
       - "${DB_HOST_PORT:-5433}:5432"
-    volumes:
-      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U fallingfruit -d fallingfruit_db"]
       interval: 2s
