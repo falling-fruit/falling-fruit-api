@@ -1425,4 +1425,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 
 -- migrate:down
--- irreversible
+-- irreversible, throw error
+SELECT 1/0
