@@ -80,7 +80,7 @@ function parseBlock<Schema extends z.ZodObject, Block>(
 
 export function Config(env: NodeJS.ProcessEnv = process.env): Config {
   const core = coreSchema.parse(env)
-  const local = core.NODE_ENV === 'development'
+  const local = core.NODE_ENV !== 'production'
 
   return {
     local,

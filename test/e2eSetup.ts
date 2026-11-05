@@ -1,10 +1,7 @@
+import 'dotenv/config'
 import test from 'node:test'
 import type { Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
-
-import dotenv from 'dotenv'
-
-dotenv.config()
 
 import makeDb from '../src/db'
 import { seedApiKey, seedUser } from '../src/db/seed'
@@ -137,7 +134,7 @@ class E2ESetup {
   private async doStart() {
     const { middleware, routes } = createDependenciesForClients(
       Config({
-        NODE_ENV: 'development',
+        NODE_ENV: 'test',
         PORT: '0',
         WEB_ORIGIN: 'http://localhost',
         DATABASE_URL: TEST_DATABASE_URL,

@@ -2,9 +2,9 @@ import 'dotenv/config'
 import makeDb from '../src/db'
 import { seedApiKey, seedUser } from '../src/db/seed'
 
-if (process.env.NODE_ENV !== 'development') {
+if (process.env.NODE_ENV === 'production') {
   throw new Error(
-    'seed-dev refuses to run outside development (NODE_ENV must be "development")',
+    'seed-dev refuses to run in production (NODE_ENV must not be "production")',
   )
 }
 
