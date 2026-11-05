@@ -37,6 +37,9 @@ jobs:
             exit 1
           fi
 
+      - name: Use default environment variables
+        run: cp .env.example .env
+
       - name: Start database server
         run: yarn docker:up
 
