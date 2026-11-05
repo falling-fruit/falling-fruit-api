@@ -1,14 +1,10 @@
-import path from 'path'
-import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import type { Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 
 import dotenv from 'dotenv'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-dotenv.config({ path: path.resolve(__dirname, '..', '.env.test'), override: true, quiet: false })
+dotenv.config()
 
 import makeDb from '../src/db'
 import { seedApiKey, seedUser } from '../src/db/seed'
@@ -24,7 +20,7 @@ const JWT_SECRET = 'test-secret'
 const API_BASE = ''
 const TEST_API_KEY = 'test-api-key'
 
-const DATABASE_URL = process.env.DATABASE_URL || 'should be set in .env.test'
+const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || 'should be set in .env'
 
 type Email = { Subject: string; [key: string]: unknown }
 
@@ -111,7 +107,7 @@ class E2ESetup {
 
   constructor() {
     this.tables = new Set()
-    this.db = makeDb(DATABASE_URL, false)
+    this.db = makeDb(TEST_DATABASE_URL, false)
     this.postmark = new FakePostmarkClient()
     this.s3 = new FakeS3Client()
     this.tokenizer = new Tokenizer(JWT_SECRET)
@@ -144,7 +140,7 @@ class E2ESetup {
         NODE_ENV: 'development',
         PORT: '0',
         WEB_ORIGIN: 'http://localhost',
-        DATABASE_URL,
+        DATABASE_URL: TEST_DATABASE_URL,
         JWT_SECRET,
       }),
       {

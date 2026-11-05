@@ -25,7 +25,7 @@
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "node --import tsx --test 'test/**/*.test.ts'",
     "test:e2e": "yarn e2edb:up && node --import tsx --test --experimental-test-isolation=none 'test/**/*.e2e.ts'",
-    "e2edb:up": "docker compose up -d --wait && yarn dbmate --env-file .env.test up",
+    "e2edb:up": "docker compose up -d --wait && yarn dbmate --env TEST_DATABASE_URL up",
     "e2edb:down": "docker compose down -v",
     "codegen": "yarn e2edb:up && yarn codegen:generate",
     "codegen:generate": "kanel",
