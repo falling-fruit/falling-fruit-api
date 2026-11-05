@@ -37,12 +37,12 @@ jobs:
             exit 1
           fi
 
-      - name: Start database
-        run: yarn testdb:up
+      - name: Start database server
+        run: yarn docker:up
 
       - name: Check generated DB types are up to date
         run: |
-          yarn codegen:generate
+          yarn codegen
           if ! git diff --exit-code --stat src/db/generated; then
           echo "::error::Generated DB types are stale. Run 'yarn codegen' and commit the result."
             exit 1
