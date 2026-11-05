@@ -38,7 +38,7 @@ jobs:
           fi
 
       - name: Start database
-        run: yarn e2edb:up
+        run: yarn testdb:up
 
       - name: Check generated DB types are up to date
         run: |

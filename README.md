@@ -44,12 +44,20 @@ cp .env.example .env
 
 - Install [Docker](https://docs.docker.com/get-docker/) (with Compose). It is
   not required to run the API itself, but is used to provision a disposable
-  [PostGIS](https://postgis.net) database for the end-to-end tests
+  [PostgreSQL](https://postgresql.org) test database for the end-to-end tests
   (`yarn test:e2e`) and for generating database types (`yarn codegen`).
 
-- If you want to use the test database in development, set `DATABASE_URL` to the value of `TEST_DATABASE_URL` in `.env` and run `yarn e2edb:up`.
+- If you want to use the test database in development, set `DATABASE_URL` to the value of `TEST_DATABASE_URL` in `.env` and run `yarn testdb:up`.
 
-- You can also provision your own PostGIS database - see `.github/workflows/ci.yml` for a setup to recreate.
+- You can also use your own database.
+  Install [PostgreSQL](https://postgresql.org), set `DATABASE_URL`, and use [dbmate](https://github.com/amacneil/dbmate):
+
+```bash
+# Create and migrate the database
+yarn dbmate up
+# Drop the database
+yarn dbmate drop
+```
 
 ## Usage
 
@@ -67,9 +75,8 @@ Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner,
 - `yarn test:unit`: run unit tests only (`test/**/*.test.ts`).
 - `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.ts`).
 
-e2e tests require a database. `yarn test:e2e` starts the dockerized PostGIS
-database (`yarn e2edb:up`), migrates it, and runs them. Tear it down afterwards
-with `yarn e2edb:down`.
+The e2e tests require a database. `yarn test:e2e` starts and migrates the dockerized test
+database (`yarn testdb:up`) and runs the tests. Tear it down afterwards with `yarn testdb:down`.
 
 ## Database migrations
 
