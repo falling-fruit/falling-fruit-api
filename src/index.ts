@@ -4,7 +4,12 @@ import createApp from './app'
 
 const config = Config()
 const { middleware, routes } = createDependencies(config)
-const app = createApp({ middleware, routes, apiBase: process.env.API_BASE || '' })
+const app = createApp({
+  middleware,
+  routes,
+  apiBase: config.apiBase,
+  serveFolderPhotos: config.s3 == null,
+})
 
 // Start server
 app.listen(config.port, () => {

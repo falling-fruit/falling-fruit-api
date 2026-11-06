@@ -6,24 +6,24 @@ import makeAuth from './auth'
 import Mailer from './mail/mailer'
 import { createEmailClient } from './mail/email_client'
 import Photos from './photos/photos'
-import { createS3Client } from './photos/s3_client'
+import { createPhotoStorage } from './photos/storage'
 import makeMiddleware from './middleware'
 import makeRoutes from './routes'
 import type { Config } from './config'
 import type { Db } from './db/types'
 import type { EmailClient } from './mail/email_client'
-import type { S3Client } from './photos/s3_client'
+import type { PhotoStorage } from './photos/storage'
 
 function createDependencies(config: Config) {
   const db = makeDb(config.dbUrl, true)
   const postmarkClient = createEmailClient(config)
-  const s3Client = createS3Client(config)
+  const photoStorage = createPhotoStorage(config)
   const recaptcha = makeMiddleware.createRecaptcha(config)
 
   return createDependenciesForClients(config, {
     db,
     postmarkClient,
-    s3Client,
+    photoStorage,
     recaptcha,
   })
 }
@@ -33,12 +33,12 @@ function createDependenciesForClients(
   {
     db,
     postmarkClient,
-    s3Client,
+    photoStorage,
     recaptcha,
   }: {
     db: Db
     postmarkClient: EmailClient
-    s3Client: S3Client
+    photoStorage: PhotoStorage
     recaptcha: RecaptchaV2 | null
   },
 ) {
@@ -49,8 +49,7 @@ function createDependenciesForClients(
     webOrigin: config.webOrigin,
   })
   const photos = new Photos({
-    s3: s3Client,
-    bucket: config.s3?.bucket ?? 'stub-bucket',
+    storage: photoStorage,
   })
   const middleware = makeMiddleware({
     db,

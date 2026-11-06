@@ -49,35 +49,20 @@ class FakePostmarkClient {
   }
 }
 
-type S3Params = { Key: string; [key: string]: unknown }
-
-class FakeS3Client {
-  uploads: S3Params[]
+class FakePhotoStorage {
+  uploads: { sourcePath: string; key: string }[]
 
   constructor() {
     this.uploads = []
   }
 
-  upload(params: S3Params) {
-    this.uploads.push(params)
-    const body = params.Body as NodeJS.ReadableStream | undefined
-    const drained = body
-      ? new Promise<void>((resolve, reject) => {
-          body.on('data', () => {})
-          body.on('end', () => resolve())
-          body.on('error', reject)
-        })
-      : Promise.resolve()
-    return {
-      promise: () =>
-        drained.then(() => ({
-          Location: `https://example.com/${params.Key}`,
-        })),
-    }
+  upload(sourcePath: string, key: string): Promise<string> {
+    this.uploads.push({ sourcePath, key })
+    return Promise.resolve(`https://example.com/${key}`)
   }
 
-  copyObject(_params: S3Params) {
-    return { promise: () => Promise.resolve({}) }
+  copy(_sourceKey: string, _destinationKey: string): Promise<void> {
+    return Promise.resolve()
   }
 
   reset() {
@@ -102,7 +87,7 @@ class E2ESetup {
   tables: Set<string>
   db: Db
   postmark: FakePostmarkClient
-  s3: FakeS3Client
+  photoStorage: FakePhotoStorage
   tokenizer: Tokenizer
   server: Server | null
   url: string | null
@@ -113,7 +98,7 @@ class E2ESetup {
     this.tables = new Set()
     this.db = makeDb(DATABASE_URL, false)
     this.postmark = new FakePostmarkClient()
-    this.s3 = new FakeS3Client()
+    this.photoStorage = new FakePhotoStorage()
     this.tokenizer = new Tokenizer(JWT_SECRET)
     this.server = null
     this.url = null
@@ -150,7 +135,7 @@ class E2ESetup {
       {
         db: this.db,
         postmarkClient: this.postmark,
-        s3Client: this.s3,
+        photoStorage: this.photoStorage,
         recaptcha: null,
       },
     )
@@ -166,7 +151,7 @@ class E2ESetup {
 
   async reset() {
     this.postmark.reset()
-    this.s3.reset()
+    this.photoStorage.reset()
     const tables = ['api_keys', ...this.tables]
     await this.db.none(`TRUNCATE ${tables.join(', ')} RESTART IDENTITY CASCADE`)
     await seedApiKey(this.db, { key: TEST_API_KEY, type: 'web', name: 'e2e' })
