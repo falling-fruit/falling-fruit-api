@@ -19,16 +19,17 @@
   "license": "GPL-3.0",
   "scripts": {
     "start": "tsx scripts/seed-dev.ts && tsx src/index.ts",
+    "precommit": "yarn lint && yarn knip && yarn typecheck && yarn docs && yarn codegen && yarn test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
     "knip": "knip",
     "test": "yarn test:unit && yarn test:e2e",
+    "docker:up": "docker compose up -d --wait",
+    "docker:down": "docker compose down -v",
+    "dbmate-test": "dbmate --env TEST_DATABASE_URL",
     "test:unit": "node --import tsx --test 'test/**/*.test.ts'",
-    "test:e2e": "yarn e2edb:up && node --import tsx --test --experimental-test-isolation=none 'test/**/*.e2e.ts'",
-    "e2edb:up": "docker compose up -d --wait && yarn dbmate --env-file .env.test up",
-    "e2edb:down": "docker compose down -v",
-    "codegen": "yarn e2edb:up && yarn codegen:generate",
-    "codegen:generate": "kanel",
+    "test:e2e": "yarn dbmate-test up && node --import tsx --test --experimental-test-isolation=none 'test/**/*.e2e.ts'",
+    "codegen": "yarn dbmate-test up && kanel",
     "docs:build": "tsx scripts/build-openapi.ts",
     "docs": "yarn docs:build && yarn swagger-cli validate docs/openapi.yml",
     "postinstall": "git rev-parse --git-dir > /dev/null 2>&1 && git config core.hooksPath scripts/hooks || true"
@@ -76,5 +77,6 @@
   },
   "resolutions": {
     "@types/express-serve-static-core": "^4.17.33"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
