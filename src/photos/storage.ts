@@ -3,78 +3,92 @@ import path from 'path'
 import aws from 'aws-sdk'
 import type { Config } from '../config'
 
-export type PhotoStorage = {
+export interface PhotoStorage {
   upload(sourcePath: string, key: string): Promise<string>
   copy(sourceKey: string, destinationKey: string): Promise<void>
 }
 
-function createFolderStorage(baseUrl: string, uploadsDir: string): PhotoStorage {
-  function keyToLocalPath(key: string): string {
-    return path.join(uploadsDir, ...key.split('/'))
+class FolderStorage implements PhotoStorage {
+  private readonly baseUrl: string
+  private readonly uploadsDir: string
+
+  constructor({ baseUrl, uploadsDir }: { baseUrl: string; uploadsDir: string }) {
+    this.baseUrl = baseUrl
+    this.uploadsDir = uploadsDir
   }
 
-  function keyToUrl(key: string): string {
-    const relative = key.startsWith('photos/') ? key.slice('photos/'.length) : key
-    return `${baseUrl}/${relative}`
+  private keyToLocalPath(key: string): string {
+    return path.join(this.uploadsDir, ...key.split('/'))
   }
 
-  return {
-    async upload(sourcePath, key) {
-      const destination = keyToLocalPath(key)
-      const url = keyToUrl(key)
-      console.log(`[folder storage] upload ${key} -> ${url}`)
-      await fs.promises.mkdir(path.dirname(destination), { recursive: true })
-      await fs.promises.copyFile(sourcePath, destination)
-      return url
-    },
-    async copy(sourceKey, destinationKey) {
-      console.log(`[folder storage] copy ${sourceKey} -> ${destinationKey}`)
-      const source = keyToLocalPath(sourceKey)
-      const destination = keyToLocalPath(destinationKey)
-      await fs.promises.mkdir(path.dirname(destination), { recursive: true })
-      await fs.promises.copyFile(source, destination)
-    },
+  private keyToUrl(key: string): string {
+    const relative = key.startsWith('photos/')
+      ? key.slice('photos/'.length)
+      : key
+    return `${this.baseUrl}/${relative}`
+  }
+
+  async upload(sourcePath: string, key: string): Promise<string> {
+    const destination = this.keyToLocalPath(key)
+    const url = this.keyToUrl(key)
+    console.log(`[folder storage] upload ${key} -> ${url}`)
+    await fs.promises.mkdir(path.dirname(destination), { recursive: true })
+    await fs.promises.copyFile(sourcePath, destination)
+    return url
+  }
+
+  async copy(sourceKey: string, destinationKey: string): Promise<void> {
+    console.log(`[folder storage] copy ${sourceKey} -> ${destinationKey}`)
+    const source = this.keyToLocalPath(sourceKey)
+    const destination = this.keyToLocalPath(destinationKey)
+    await fs.promises.mkdir(path.dirname(destination), { recursive: true })
+    await fs.promises.copyFile(source, destination)
   }
 }
 
-function createS3Storage(config: NonNullable<Config['s3']>): PhotoStorage {
-  const s3 = new aws.S3({
-    region: config.region,
-    accessKeyId: config.accessKeyId,
-    secretAccessKey: config.secretAccessKey,
-    apiVersion: '2006-03-01',
-  })
+class S3Storage implements PhotoStorage {
+  private readonly s3: aws.S3
+  private readonly bucket: string
 
-  return {
-    async upload(sourcePath, key) {
-      const { Location } = await s3
-        .upload({
-          ACL: 'public-read',
-          Bucket: config.bucket,
-          Body: fs.createReadStream(sourcePath),
-          Key: key,
-          ContentType: 'image/jpeg',
-        })
-        .promise()
-      return Location
-    },
-    async copy(sourceKey, destinationKey) {
-      await s3
-        .copyObject({
-          CopySource: `${config.bucket}/${sourceKey}`,
-          Bucket: config.bucket,
-          Key: destinationKey,
-          ACL: 'public-read',
-        })
-        .promise()
-    },
+  constructor(config: NonNullable<Config['s3']>) {
+    this.bucket = config.bucket
+    this.s3 = new aws.S3({
+      region: config.region,
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+      apiVersion: '2006-03-01',
+    })
+  }
+
+  async upload(sourcePath: string, key: string): Promise<string> {
+    const { Location } = await this.s3
+      .upload({
+        ACL: 'public-read',
+        Bucket: this.bucket,
+        Body: fs.createReadStream(sourcePath),
+        Key: key,
+        ContentType: 'image/jpeg',
+      })
+      .promise()
+    return Location
+  }
+
+  async copy(sourceKey: string, destinationKey: string): Promise<void> {
+    await this.s3
+      .copyObject({
+        CopySource: `${this.bucket}/${sourceKey}`,
+        Bucket: this.bucket,
+        Key: destinationKey,
+        ACL: 'public-read',
+      })
+      .promise()
   }
 }
 
 export function createPhotoStorage(config: Config): PhotoStorage {
   if (!config.s3) {
     const baseUrl = `http://localhost:${config.port ?? '3300'}${config.apiBase}/photos`
-    return createFolderStorage(baseUrl, 'uploads')
+    return new FolderStorage({ baseUrl, uploadsDir: 'uploads' })
   }
-  return createS3Storage(config.s3)
+  return new S3Storage(config.s3)
 }
