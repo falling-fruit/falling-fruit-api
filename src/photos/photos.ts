@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import sharp from 'sharp'
-import type { S3Client } from './s3_client'
+import type { PhotoStorage } from './storage'
 
 type PhotoKeys = {
   thumb: string
@@ -55,12 +55,10 @@ export async function sync_legacy_first_photo(
 }
 
 class Photos implements PhotosApi {
-  private readonly s3: S3Client
-  private readonly bucket: string
+  private readonly storage: PhotoStorage
 
-  constructor({ s3, bucket }: { s3: S3Client; bucket: string }) {
-    this.s3 = s3
-    this.bucket = bucket
+  constructor({ storage }: { storage: PhotoStorage }) {
+    this.storage = storage
   }
 
   private async resize_photo(
@@ -95,15 +93,7 @@ class Photos implements PhotosApi {
   }
 
   private async upload_photo(input: string, output: string) {
-    return this.s3
-      .upload({
-        ACL: 'public-read',
-        Bucket: this.bucket,
-        Body: fs.createReadStream(input),
-        Key: output,
-        ContentType: 'image/jpeg',
-      })
-      .promise()
+    return this.storage.upload(input, output)
   }
 
   // ---- For backwards compatibility only ----
@@ -144,14 +134,7 @@ class Photos implements PhotosApi {
     const keys = this.build_s3_photo_keys(observation_id)
     const promises = (['thumb', 'medium', 'original'] as const).map((style) => {
       const parsed = this.parse_s3_url(urls[style])
-      return this.s3
-        .copyObject({
-          CopySource: `${parsed.bucket}/${parsed.key}`,
-          Bucket: this.bucket,
-          Key: keys[style],
-          ACL: 'public-read',
-        })
-        .promise()
+      return this.storage.copy(parsed.key, keys[style])
     })
     return Promise.all(promises)
   }
@@ -170,11 +153,11 @@ class Photos implements PhotosApi {
         const resized = `${input}-${style}.jpg`
         const to_upload = await this.resize_photo(input, resized, sizes[style])
         const output = path.join('photos', path.basename(input), `${style}.jpg`)
-        const upload = await this.upload_photo(to_upload, output)
+        const url = await this.upload_photo(to_upload, output)
         if (to_upload === resized) {
           await fs.promises.unlink(resized)
         }
-        return upload.Location
+        return url
       }
       promises.push(job())
     }

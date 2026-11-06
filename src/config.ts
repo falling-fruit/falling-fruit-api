@@ -6,6 +6,7 @@ dotenv.config()
 const coreSchema = z.object({
   NODE_ENV: z.string().optional(),
   PORT: z.string().optional(),
+  API_BASE: z.string().default(''),
   WEB_ORIGIN: z.url(),
   DATABASE_URL: z.url(),
   JWT_SECRET: z.string(),
@@ -52,6 +53,7 @@ export type RecaptchaConfig = {
 export type Config = {
   local: boolean
   port?: string
+  apiBase: string
   webOrigin: string
   dbUrl: string
   jwtSecret?: string
@@ -85,6 +87,7 @@ export function Config(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     local,
     port: core.PORT,
+    apiBase: core.API_BASE,
     webOrigin: core.WEB_ORIGIN,
     dbUrl: core.DATABASE_URL,
     jwtSecret: core.JWT_SECRET,

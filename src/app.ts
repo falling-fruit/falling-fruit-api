@@ -11,6 +11,7 @@ type CreateAppOptions = {
   middleware: Middleware
   routes: Routes
   apiBase: string
+  serveFolderPhotos?: boolean
 }
 
 function is_object(x: unknown): x is Record<string, unknown> {
@@ -32,7 +33,12 @@ function null_empty_strings(obj: unknown): unknown {
   return out
 }
 
-function createApp({ middleware, routes, apiBase }: CreateAppOptions) {
+function createApp({
+  middleware,
+  routes,
+  apiBase,
+  serveFolderPhotos,
+}: CreateAppOptions) {
   const app = express()
   app.use(compression())
   app.use(express.json())
@@ -66,8 +72,12 @@ function createApp({ middleware, routes, apiBase }: CreateAppOptions) {
   }
   app.use(defaultHandler)
 
-  // Routes: Docs
+  // Routes
   app.use(`${apiBase}/openapi.yml`, express.static('docs/openapi.yml'))
+
+  if (serveFolderPhotos) {
+    app.use(`${apiBase}/photos`, express.static('uploads/photos'))
+  }
 
   // Pre-route middleware
   const preRouteHandler: RequestHandler = (req, res, next) => {
