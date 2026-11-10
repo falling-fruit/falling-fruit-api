@@ -18,7 +18,7 @@
   },
   "license": "GPL-3.0",
   "scripts": {
-    "start": "tsx scripts/seed-dev.ts && tsx src/index.ts",
+    "start": "yarn dbmate up && tsx scripts/seed-dev.ts && tsx src/index.ts",
     "precommit": "yarn lint && yarn knip && yarn typecheck && yarn docs && yarn codegen && yarn test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
