@@ -9,26 +9,6 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
 
-    services:
-      db:
-        image: postgis/postgis:14-3.4
-        env:
-          POSTGRES_USER: fallingfruit
-          POSTGRES_PASSWORD: fallingfruit
-          POSTGRES_DB: fallingfruit_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U fallingfruit -d fallingfruit_db"
-          --health-interval 2s
-          --health-timeout 5s
-          --health-retries 30
-
-    env:
-      DATABASE_URL: postgres://fallingfruit:fallingfruit@localhost:5432/fallingfruit_db?sslmode=disable
-      DBMATE_NO_DUMP_SCHEMA: "1"
-      NODE_ENV: test
-
     steps:
       - uses: actions/checkout@v4
 
@@ -40,24 +20,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Create PostGIS extensions
-        env:
-          PGPASSWORD: fallingfruit
-        run: |
-          psql -h localhost -U fallingfruit -d fallingfruit_db \
-            -f db/init/01-extensions.sql
-
-      - name: Apply migrations
-        run: yarn dbmate up
-
-      - name: Check generated DB types are up to date
-        run: |
-          yarn codegen:generate
-          if ! git diff --exit-code --stat src/db/generated; then
-          echo "::error::Generated DB types are stale. Run 'yarn codegen' and commit the result."
-            exit 1
-          fi
-
       - name: Lint
         run: yarn lint
 
@@ -67,13 +29,27 @@ jobs:
       - name: Type-check
         run: yarn typecheck
 
-      - name: Run tests
-        run: yarn test
-
       - name: Validate OpenAPI
         run: |
           yarn docs
           if ! git diff --exit-code --stat docs/openapi.yml; then
             echo "::error::Committed docs/openapi.yml is stale. Run 'yarn docs:build' and commit the result."
             exit 1
-          fi 
+          fi
+
+      - name: Use default environment variables
+        run: cp .env.example .env
+
+      - name: Start database server
+        run: yarn docker:up
+
+      - name: Check generated DB types are up to date
+        run: |
+          yarn codegen
+          if ! git diff --exit-code --stat src/db/generated; then
+          echo "::error::Generated DB types are stale. Run 'yarn codegen' and commit the result."
+            exit 1
+          fi
+
+      - name: Run tests
+        run: yarn test

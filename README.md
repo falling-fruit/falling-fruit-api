@@ -38,18 +38,32 @@ Live at https://fallingfruit.org/api/0.3 and powers https://fallingfruit.org ([f
 
 - Copy `.env.example` to `.env` and update the values as needed.
 
+  ```sh
+  cp .env.example .env
+  ```
+
+### Database management
+
+The API requires a [PostgreSQL](https://postgresql.org) database for development and testing. Two options:
+
+- Either install [PostgreSQL](https://postgresql.org/download/) directly and set `DATABASE_URL` and `TEST_DATABASE_URL` accordingly in `.env`,
+
+- or install [Docker](https://docs.docker.com/get-docker/) and start the PostgreSQL container configured in [`docker-compose.yml`](docker-compose.yml) with:
+
+  ```sh
+  yarn docker:up
+  ```
+
+  The server is accessible at `postgres://fallingfruit:fallingfruit@localhost:5433`, which `DATABASE_URL` and `TEST_DATABASE_URL` point to by default.
+
+Databases are managed with [`dbmate`](https://github.com/amacneil/dbmate). Use `yarn dbmate` for the development database (`DATABASE_URL`) and `yarn dbmate-test` for the short-lived test database (`TEST_DATABASE_URL`).
+
 ```bash
-cp .env.example .env
+# Create (if needed) and migrate (if needed) the database
+yarn dbmate up
+# Drop the database
+yarn dbmate drop
 ```
-
-- Install [Docker](https://docs.docker.com/get-docker/) (with Compose). It is
-  not required to run the API itself, but is used to provision a disposable
-  [PostGIS](https://postgis.net) database for the end-to-end tests
-  (`yarn test:e2e`) and for generating database types (`yarn codegen`).
-
-- If you want to use the e2e database in the API, set DATABASE_URL to the value in `.env.test` and run `yarn e2edb:up`.
-
-- You can also provision your own PostGIS database - see `.github/workflows/ci.yml` for a setup to recreate.
 
 ## Usage
 
@@ -63,13 +77,12 @@ Visit http://localhost:3300.
 
 Tests use the built-in [`node --test`](https://nodejs.org/api/test.html) runner, split by file naming convention:
 
-- `yarn test`: run everything (unit and e2e).
+- `yarn test`: run everything in [`test/`](test/) (unit and e2e).
 - `yarn test:unit`: run unit tests only (`test/**/*.test.ts`).
 - `yarn test:e2e`: run e2e tests only (`test/**/*.e2e.ts`).
 
-e2e tests require a database. `yarn test:e2e` starts the dockerized PostGIS
-database (`yarn e2edb:up`), migrates it, and runs them. Tear it down afterwards
-with `yarn e2edb:down`.
+The e2e tests require a test database. `yarn test:e2e` prepares the test
+database (`yarn dbmate-test up`) and runs the tests.
 
 ## Database migrations
 
@@ -80,13 +93,13 @@ Create a new migration with:
 yarn dbmate new <migration_name>
 ```
 
-Add SQL statements in the `-- migrate:up` and (optional) `-- migrate:down` sections, then run `yarn codegen`. 
+Add SQL statements in the `-- migrate:up` and `-- migrate:down` sections, then run `yarn codegen` (see below). If the migration is irreversible, write `select 1/0` below `-- migrate:down` so that rolling back will throw an error.
 
 ## Database types
 
-Row types in `src/db/generated/` are derived from the live Postgres schema by
+Row types in [`src/db/generated/`](src/db/generated/) are derived from the database schema using
 [`kanel`](https://github.com/kristiandupont/kanel) (configured in
-`.kanelrc.cjs`). Regenerate after any schema change (migration):
+[`.kanelrc.cjs`](.kanelrc.cjs)). Regenerate after any schema change (migration) with:
 
 ```sh
 yarn codegen
@@ -97,16 +110,16 @@ yarn codegen
 The OpenAPI spec is generated from Zod schemas, which are the single source of
 truth for both runtime validation and the documentation:
 
-- `src/schemas/`: Zod component schemas, parameters, and security schemes,
+- [`src/schemas/`](src/schemas/): Zod component schemas, parameters, and security schemes,
   registered with [`@asteasolutions/zod-to-openapi`](https://github.com/asteasolutions/zod-to-openapi).
-- `src/routes/*.ts`: Each route declares its OpenAPI operation inline via a
+- [`src/routes/*.ts`](src/routes/): Each route declares its OpenAPI operation inline via a
   compact spec alongside its handler. The same schemas drive runtime request
   validation and compile-time response typing: a handler's return type is bound
   to its documented 2xx response schema.
-- `docs/base.yml`: Static metadata (`info`, `tags`, `servers`).
+- [`docs/base.yml`](docs/base.yml): Static metadata (`info`, `tags`, `servers`).
 
-`scripts/build-openapi.ts` registers every schema and route operation, merges
-`base.yml`, and writes the bundled `docs/openapi.yml`.
+[`scripts/build-openapi.ts`](scripts/build-openapi.ts) registers every schema and route operation, merges
+[`docs/base.yml`](docs/base.yml), and writes the bundled [`docs/openapi.yml`](docs/openapi.yml).
 
 Build and validate the spec:
 

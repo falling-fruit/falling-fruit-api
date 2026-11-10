@@ -1,9 +1,8 @@
-const { resolve } = require('path')
-require('dotenv').config({ path: resolve(__dirname, '.env.test') })
+require('dotenv').config()
 
 /** @type {import('kanel').Config} */
 module.exports = {
-  connection: process.env.DATABASE_URL,
+  connection: process.env.TEST_DATABASE_URL,
   schemas: ['public'],
   outputPath: './src/db/generated',
   preDeleteOutputFolder: true,

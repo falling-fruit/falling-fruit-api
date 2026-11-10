@@ -4,8 +4,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.7 (Homebrew)
--- Dumped by pg_dump version 14.7 (Homebrew)
+-- Dumped from database version 15.5 (Ubuntu 15.5-1.pgdg20.04+1)
+-- Dumped by pg_dump version 15.5 (Ubuntu 15.5-1.pgdg20.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -17,6 +17,9 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+CREATE EXTENSION IF NOT EXISTS intarray WITH SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 
 
 --
@@ -58,11 +61,9 @@ CREATE FUNCTION public.st_buffer_meters(public.geometry, double precision) RETUR
 DECLARE
 orig_srid int;
 utm_srid int;
-
 BEGIN
 orig_srid:= ST_SRID($1);
 utm_srid:= utmzone(ST_Centroid($1));
-
 RETURN ST_transform(ST_Buffer(ST_transform($1, utm_srid), $2), orig_srid);
 END;
 $_$;
@@ -79,16 +80,13 @@ DECLARE
 geomgeog geometry;
 zone int;
 pref int;
-
 BEGIN
 geomgeog:= ST_Transform($1,4326);
-
 IF (ST_Y(geomgeog))>0 THEN
 pref:=32600;
 ELSE
 pref:=32700;
 END IF;
-
 zone:=floor((ST_X(geomgeog)+180)/6)+1;
 RETURN zone+pref;
 END;
@@ -119,7 +117,6 @@ CREATE TABLE public.api_keys (
 --
 
 CREATE SEQUENCE public.api_keys_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -156,7 +153,6 @@ CREATE TABLE public.api_logs (
 --
 
 CREATE SEQUENCE public.api_logs_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -190,8 +186,8 @@ CREATE TABLE public.changes (
     former_type_others character varying(255)[] DEFAULT '{}'::character varying[],
     former_location public.geography(Point,4326),
     spam boolean DEFAULT false,
-    location json,
-    review json
+    location jsonb,
+    review jsonb
 );
 
 
@@ -200,7 +196,6 @@ CREATE TABLE public.changes (
 --
 
 CREATE SEQUENCE public.changes_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -220,7 +215,6 @@ ALTER SEQUENCE public.changes_id_seq OWNED BY public.changes.id;
 --
 
 CREATE TABLE public.clusters (
-    id integer NOT NULL,
     geohash text NOT NULL,
     muni boolean NOT NULL,
     x real NOT NULL,
@@ -228,6 +222,7 @@ CREATE TABLE public.clusters (
     count integer NOT NULL,
     zoom integer NOT NULL,
     type_id integer NOT NULL,
+    id integer NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     updated_at timestamp without time zone DEFAULT now() NOT NULL
 );
@@ -278,7 +273,6 @@ CREATE TABLE public.imports (
 --
 
 CREATE SEQUENCE public.imports_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -310,7 +304,6 @@ CREATE TABLE public.invasives (
 --
 
 CREATE SEQUENCE public.invasives_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -364,7 +357,6 @@ CREATE TABLE public.locations (
 --
 
 CREATE SEQUENCE public.locations_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -398,7 +390,6 @@ CREATE TABLE public.locations_routes (
 --
 
 CREATE SEQUENCE public.locations_routes_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -411,6 +402,61 @@ CREATE SEQUENCE public.locations_routes_id_seq
 --
 
 ALTER SEQUENCE public.locations_routes_id_seq OWNED BY public.locations_routes.id;
+
+
+--
+-- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.refresh_tokens (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    jti text NOT NULL,
+    exp integer NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    email character varying(255) DEFAULT ''::character varying NOT NULL,
+    encrypted_password character varying(255) DEFAULT ''::character varying NOT NULL,
+    reset_password_token character varying(255),
+    reset_password_sent_at timestamp without time zone,
+    remember_created_at timestamp without time zone,
+    sign_in_count integer DEFAULT 0,
+    current_sign_in_at timestamp without time zone,
+    last_sign_in_at timestamp without time zone,
+    current_sign_in_ip character varying(255),
+    last_sign_in_ip character varying(255),
+    confirmation_token character varying(255),
+    confirmed_at timestamp without time zone,
+    confirmation_sent_at timestamp without time zone,
+    unconfirmed_email character varying(255),
+    authentication_token character varying(255),
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    range public.geography(Polygon,4326),
+    name character varying(255),
+    bio text,
+    roles_mask integer DEFAULT 10 NOT NULL,
+    range_updates_email boolean DEFAULT false NOT NULL,
+    add_anonymously boolean DEFAULT false NOT NULL,
+    announcements_email boolean DEFAULT true,
+    address text,
+    lat numeric,
+    lng numeric,
+    range_radius numeric,
+    range_radius_unit character varying(255),
+    location public.geography(Point,4326),
+    roles text[] DEFAULT ARRAY['user'::text] NOT NULL,
+    private boolean DEFAULT false NOT NULL
+);
 
 
 --
@@ -444,7 +490,6 @@ CREATE TABLE public.observations (
 --
 
 CREATE SEQUENCE public.observations_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -481,7 +526,6 @@ CREATE TABLE public.photos (
 --
 
 CREATE SEQUENCE public.photos_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -521,7 +565,6 @@ CREATE TABLE public.problems (
 --
 
 CREATE SEQUENCE public.problems_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -537,25 +580,10 @@ ALTER SEQUENCE public.problems_id_seq OWNED BY public.problems.id;
 
 
 --
--- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.refresh_tokens (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    jti text NOT NULL,
-    exp integer NOT NULL,
-    created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL
-);
-
-
---
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.refresh_tokens_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -582,7 +610,8 @@ CREATE TABLE public.routes (
     updated_at timestamp without time zone DEFAULT now() NOT NULL,
     is_public boolean DEFAULT true NOT NULL,
     access_key character varying(255),
-    transport_type integer DEFAULT 0
+    transport_type integer DEFAULT 0,
+    description text
 );
 
 
@@ -591,7 +620,6 @@ CREATE TABLE public.routes (
 --
 
 CREATE SEQUENCE public.routes_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -624,7 +652,6 @@ CREATE TABLE public.sessions (
 --
 
 CREATE SEQUENCE public.sessions_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -679,7 +706,11 @@ CREATE TABLE public.types (
     pt_name text,
     zh_hant_name text,
     zh_hans_name text,
-    uk_name text
+    uk_name text,
+    user_id integer,
+    ru_name text,
+    ja_name text,
+    cs_name text
 );
 
 
@@ -688,7 +719,6 @@ CREATE TABLE public.types (
 --
 
 CREATE SEQUENCE public.types_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -704,55 +734,10 @@ ALTER SEQUENCE public.types_id_seq OWNED BY public.types.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.users (
-    id integer NOT NULL,
-    email character varying(255) DEFAULT ''::character varying NOT NULL,
-    encrypted_password character varying(255) DEFAULT ''::character varying NOT NULL,
-    reset_password_token character varying(255),
-    reset_password_sent_at timestamp without time zone,
-    remember_created_at timestamp without time zone,
-    sign_in_count integer DEFAULT 0,
-    current_sign_in_at timestamp without time zone,
-    last_sign_in_at timestamp without time zone,
-    current_sign_in_ip character varying(255),
-    last_sign_in_ip character varying(255),
-    confirmation_token character varying(255),
-    confirmed_at timestamp without time zone,
-    confirmation_sent_at timestamp without time zone,
-    unconfirmed_email character varying(255),
-    authentication_token character varying(255),
-    created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    range public.geography(Polygon,4326),
-    name character varying(255),
-    bio text,
-    roles_mask integer DEFAULT 10 NOT NULL,
-    range_updates_email boolean DEFAULT false NOT NULL,
-    add_anonymously boolean DEFAULT false NOT NULL,
-    announcements_email boolean DEFAULT true,
-    address text,
-    lat numeric,
-    lng numeric,
-    range_radius numeric,
-    range_radius_unit character varying(255),
-    location public.geography(Point,4326),
-    roles text[] GENERATED ALWAYS AS (
-CASE
-    WHEN ((roles_mask & ('0001'::"bit")::integer) > 0) THEN ARRAY['user'::text, 'admin'::text]
-    ELSE ARRAY['user'::text]
-END) STORED NOT NULL
-);
-
-
---
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.users_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -944,6 +929,22 @@ ALTER TABLE ONLY public.locations_routes
 
 
 --
+-- Name: locations_routes locations_routes_route_id_location_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations_routes
+    ADD CONSTRAINT locations_routes_route_id_location_id_key UNIQUE (route_id, location_id);
+
+
+--
+-- Name: locations_routes locations_routes_route_id_position_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations_routes
+    ADD CONSTRAINT locations_routes_route_id_position_key UNIQUE (route_id, "position");
+
+
+--
 -- Name: observations observations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1000,6 +1001,14 @@ ALTER TABLE ONLY public.types
 
 
 --
+-- Name: clusters unique_clusters_on_geohash_muni_type_id; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clusters
+    ADD CONSTRAINT unique_clusters_on_geohash_muni_type_id UNIQUE (geohash, muni, type_id);
+
+
+--
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1029,10 +1038,31 @@ CREATE INDEX index_changes_on_former_location ON public.changes USING gist (form
 
 
 --
--- Name: index_clusters_on_type_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_clusters_on_geohash; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_clusters_on_type_id ON public.clusters USING btree (type_id);
+CREATE INDEX index_clusters_on_geohash ON public.clusters USING btree (geohash);
+
+
+--
+-- Name: index_clusters_on_muni_zoom_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_clusters_on_muni_zoom_type_id ON public.clusters USING btree (muni, zoom, type_id);
+
+
+--
+-- Name: index_clusters_on_x; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_clusters_on_x ON public.clusters USING btree (x);
+
+
+--
+-- Name: index_clusters_on_y; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_clusters_on_y ON public.clusters USING btree (y);
 
 
 --
@@ -1224,6 +1254,12 @@ CREATE INDEX photos_user_id_idx ON public.photos USING btree (user_id);
 CREATE INDEX refresh_tokens_user_id_idx ON public.refresh_tokens USING btree (user_id);
 
 
+--
+-- Name: unique_schema_migrations; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX unique_schema_migrations ON public.schema_migrations USING btree (version);
+
 
 --
 -- Name: observations add_observation_photo_trigger; Type: TRIGGER; Schema: public; Owner: -
@@ -1262,6 +1298,22 @@ ALTER TABLE ONLY public.changes
 
 ALTER TABLE ONLY public.locations
     ADD CONSTRAINT locations_import_id_fkey FOREIGN KEY (import_id) REFERENCES public.imports(id) ON DELETE SET NULL;
+
+
+--
+-- Name: locations_routes locations_routes_location_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations_routes
+    ADD CONSTRAINT locations_routes_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: locations_routes locations_routes_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations_routes
+    ADD CONSTRAINT locations_routes_route_id_fkey FOREIGN KEY (route_id) REFERENCES public.routes(id) ON DELETE CASCADE;
 
 
 --
@@ -1337,6 +1389,14 @@ ALTER TABLE ONLY public.refresh_tokens
 
 
 --
+-- Name: routes routes_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.routes
+    ADD CONSTRAINT routes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: types types_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1345,26 +1405,19 @@ ALTER TABLE ONLY public.types
 
 
 --
--- PostgreSQL database dump complete
+-- Name: types types_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY public.types
+    ADD CONSTRAINT types_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
 --
--- PostgreSQL database dump
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: -
 --
 
--- Dumped from database version 14.7 (Homebrew)
--- Dumped by pg_dump version 14.7 (Homebrew)
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
+REVOKE USAGE ON SCHEMA public FROM PUBLIC;
+GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
@@ -1372,4 +1425,5 @@ SET row_security = off;
 --
 
 -- migrate:down
--- irreversible
+-- irreversible, throw error
+SELECT 1/0

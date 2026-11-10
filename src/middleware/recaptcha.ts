@@ -2,6 +2,8 @@ import type { Request, Response, NextFunction } from 'express'
 import { RecaptchaV2 } from 'express-recaptcha'
 import type { Config } from '../config'
 
+export const RECAPTCHA_PARAM = 'g-recaptcha-response'
+
 /** Request with the optional authenticated user and a mutable body. */
 type RecaptchaRequest = Request & { user?: unknown }
 
@@ -14,10 +16,10 @@ function makeRecaptcha({ recaptcha }: { recaptcha: RecaptchaV2 | null }) {
     if (req.user || !recaptcha) {
       return void next()
     }
-    const header = req.header('g-recaptcha-response')
+    const header = req.header(RECAPTCHA_PARAM)
     if (header) {
       const body = (req.body ?? {}) as Record<string, unknown>
-      body['g-recaptcha-response'] = header
+      body[RECAPTCHA_PARAM] = header
       req.body = body
     }
     recaptcha.verify(req, (error) => {

@@ -2,15 +2,15 @@ import 'dotenv/config'
 import makeDb from '../src/db'
 import { seedApiKey, seedUser } from '../src/db/seed'
 
-if (process.env.NODE_ENV !== 'development') {
+if (process.env.NODE_ENV === 'production') {
   throw new Error(
-    'seed-dev refuses to run outside development (NODE_ENV must be "development")',
+    'seed-dev refuses to run in production (NODE_ENV must not be "production")',
   )
 }
 
-const key = process.env.DEV_API_KEY
+const key = process.env.API_KEY
 if (!key) {
-  throw new Error('DEV_API_KEY must be set to seed a development API key')
+  throw new Error('API_KEY must be set to seed an API key')
 }
 
 const databaseUrl = process.env.DATABASE_URL
