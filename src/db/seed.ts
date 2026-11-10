@@ -27,10 +27,9 @@ export async function seedUser(
   },
 ): Promise<{ id: number }> {
   const user = await db.users.add({ body: { email, password, name } })
-  const rolesMask = roles.includes('admin') ? 11 : 10
-  await db.none('UPDATE users SET roles_mask = ${rolesMask} WHERE id = ${id}', {
+  await db.none('UPDATE users SET roles = ${roles} WHERE id = ${id}', {
     id: user.id,
-    rolesMask,
+    roles,
   })
   if (confirmed) {
     await db.users.confirm(user.id)
