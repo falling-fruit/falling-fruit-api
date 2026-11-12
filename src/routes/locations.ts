@@ -6,7 +6,7 @@ import { sync_legacy_first_photo } from '../photos/photos'
 import {
   Location,
   ListLocation,
-  EditLocation,
+  PatchLocation,
   AddLocation,
   LocationChange,
   LocationList,
@@ -361,7 +361,9 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
         review.photos = photos ?? []
         location.reviews = [review]
       }
-      await db.clusters.increment(location)
+      if (!location.hidden) {
+        await db.clusters.increment(location)
+      }
       return location
     },
   )
@@ -466,7 +468,8 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
           ).openapi({
             param: { name: 'embed', in: 'query', explode: false },
             description:
-              'Additional information to include.\n- reviews: Location reviews.\n- import: Imported dataset.\n',
+              'Additional information to include.\n- reviews: Location reviews (deprecated).\n- import: Imported dataset (deprecated).\n',
+            deprecated: true,
           }),
         }),
       },
@@ -495,12 +498,14 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     {
       path: '/locations/:id',
       summary: 'Edit a Location.',
+      description:
+        'Only the provided fields are updated; omitted fields are left unchanged.',
       tags: ['Locations'],
       security: [{ key: [] }, { key: [], token: [] }],
       request: {
         params: z.object({ id: locationIdParam }),
         headers: [recaptchaParam],
-        body: { schema: EditLocation, required: true },
+        body: { schema: PatchLocation, required: true },
       },
       responses: {
         '200': { description: 'Success', schema: Location },
@@ -510,18 +515,35 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     middleware.recaptcha,
     async (req, user) => {
       const old = await db.locations.show(req.params.id, null)
+      const unhidden = req.body.hidden === false && old.hidden
+      const hidden = unhidden ? false : old.hidden
       const updated = await db.locations.edit(
         req.params.id,
-        req.body,
+        {
+          lat: old.lat,
+          lng: old.lng,
+          type_ids: old.type_ids,
+          unverified: old.unverified,
+          access: old.access,
+          description: old.description,
+          season_start: old.season_start,
+          season_stop: old.season_stop,
+          ...req.body,
+          hidden,
+        },
         user,
       )
-      if (
+      const was_clustered = !old.hidden
+      const is_clustered = !updated.hidden
+      const geometry_changed =
         updated.lat != old.lat ||
         updated.lng != old.lng ||
         updated.muni != old.muni ||
         !set_equal(updated.type_ids, old.type_ids)
-      ) {
+      if (was_clustered && geometry_changed) {
         await db.clusters.decrement(old)
+      }
+      if (is_clustered && (unhidden || geometry_changed)) {
         await db.clusters.increment(updated)
       }
       return updated
@@ -572,6 +594,9 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
         }
       }
       await db.locations.delete(req.params.id)
+      if (!original.hidden) {
+        await db.clusters.decrement(original)
+      }
       return void res.status(204).send()
     },
   )

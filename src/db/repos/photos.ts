@@ -86,6 +86,10 @@ class Photos {
     // Unlink photos with ids NOT in photo_ids
     await this.db.none(sql.unlink, { id: review_id, ids: photo_ids })
   }
+
+  delete(id: number) {
+    return this.db.none(sql.delete, { id })
+  }
 }
 
 export default Photos

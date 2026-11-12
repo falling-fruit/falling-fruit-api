@@ -71,6 +71,10 @@ class Reviews {
       id: parseInt(String(id)),
     })
   }
+
+  deleteMany(ids: number[]) {
+    return this.db.none(sql.deleteMany, { ids })
+  }
 }
 
 export default Reviews

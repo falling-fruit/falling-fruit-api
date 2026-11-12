@@ -113,6 +113,42 @@ components:
       minLength: 1
       description: Bio ('about you').
       example: Mulberries are my favorite fruit.
+    problem_code:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+      description: |
+        Problem code.
+        - 0: Location is spam
+        - 1: Location does not exist
+        - 2: Location is a duplicate
+        - 3: Inappropriate review photo
+        - 4: Inappropriate review comment
+        - 5: Other (explain below)
+      example: 1
+    resolution_code:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+      description: |
+        Resolution code.
+        - 0: Made no changes
+        - 1: Edited the location
+        - 2: Deleted the location
+        - 3: Deleted the photo
+        - 4: Deleted the review
+        - 5: Hid the location
+      example: 2
     Point:
       type: array
       items:
@@ -186,6 +222,9 @@ components:
           maximum: 180
           description: Longitude in WGS84 decimal degrees.
           example: -123.45678
+      required:
+        - lat
+        - lng
     DateFields:
       type: object
       properties:
@@ -207,22 +246,12 @@ components:
         - $ref: '#/components/schemas/LatLngFields'
         - type: object
           properties:
-            lat:
-              type: number
-              minimum: -85.0511
-              maximum: 85.0511
-            lng:
-              type: number
-              minimum: -180
-              maximum: 180
             count:
               type: integer
               minimum: 1
               description: Number of Locations. Locations with multiple Types are counted as their number of Types.
               example: 768
           required:
-            - lat
-            - lng
             - count
     TypeCount:
       type: object
@@ -424,14 +453,6 @@ components:
         - $ref: '#/components/schemas/LatLngFields'
         - type: object
           properties:
-            lat:
-              type: number
-              minimum: -85.0511
-              maximum: 85.0511
-            lng:
-              type: number
-              minimum: -180
-              maximum: 180
             type_ids:
               type: array
               items:
@@ -462,22 +483,25 @@ components:
                 - Apple
                 - Pear
           required:
-            - lat
-            - lng
             - type_ids
-    EditLocation:
+    PatchLocation:
       allOf:
-        - $ref: '#/components/schemas/LatLngFields'
         - type: object
           properties:
             lat:
               type: number
               minimum: -85.0511
               maximum: 85.0511
+              description: Latitude in WGS84 decimal degrees.
+              example: 45.6789
             lng:
               type: number
               minimum: -180
               maximum: 180
+              description: Longitude in WGS84 decimal degrees.
+              example: -123.45678
+        - type: object
+          properties:
             type_ids:
               type: array
               items:
@@ -490,6 +514,12 @@ components:
             unverified:
               type: boolean
               description: Whether suspected to be wrong in some way and requires verification.
+              example: false
+            hidden:
+              type: boolean
+              enum:
+                - false
+              description: 'Whether hidden from public map tiles, clusters, and search results.'
               example: false
             access:
               type: integer
@@ -528,10 +558,6 @@ components:
               maximum: 11
               description: Last month in season (zero-based).
               example: 8
-          required:
-            - lat
-            - lng
-            - type_ids
     BaseReview:
       type: object
       properties:
@@ -760,6 +786,39 @@ components:
         - name
       title: Location List (edit)
       description: Location List properties that can be edited.
+    ReportLocation:
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/LatLngFields'
+        - type: object
+          properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+            type_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+              description: Type IDs.
+              example:
+                - 97
+                - 92
+            address:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Address.
+              example: '748 10th Street, Boulder CO 80302, USA'
+          required:
+            - lat
+            - lng
+            - type_ids
     LocationListLocation:
       allOf:
         - $ref: '#/components/schemas/IdField'
@@ -783,11 +842,6 @@ components:
               example:
                 - 97
                 - 92
-            added_at:
-              type: string
-              format: date-time
-              description: 'Date and time added to list, in format YYYY-MM-DDThh:mm:ss.sssZ.'
-              example: '2014-06-19T01:02:03.456Z'
             address:
               type: string
               nullable: true
@@ -798,6 +852,14 @@ components:
             - lat
             - lng
             - type_ids
+        - type: object
+          properties:
+            added_at:
+              type: string
+              format: date-time
+              description: 'Date and time added to list, in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              example: '2014-06-19T01:02:03.456Z'
+          required:
             - added_at
     LocationList:
       allOf:
@@ -830,14 +892,6 @@ components:
         - $ref: '#/components/schemas/LatLngFields'
         - type: object
           properties:
-            lat:
-              type: number
-              minimum: -85.0511
-              maximum: 85.0511
-            lng:
-              type: number
-              minimum: -180
-              maximum: 180
             type_ids:
               type: array
               items:
@@ -850,6 +904,12 @@ components:
             unverified:
               type: boolean
               description: Whether suspected to be wrong in some way and requires verification.
+              example: false
+            hidden:
+              type: boolean
+              enum:
+                - false
+              description: 'Whether hidden from public map tiles, clusters, and search results.'
               example: false
             access:
               type: integer
@@ -888,9 +948,18 @@ components:
               maximum: 11
               description: Last month in season (zero-based).
               example: 8
+        - type: object
+          properties:
+            type_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+              description: Type IDs.
+              example:
+                - 97
+                - 92
           required:
-            - lat
-            - lng
             - type_ids
         - type: object
           properties:
@@ -899,20 +968,40 @@ components:
                 - $ref: '#/components/schemas/EditReview'
                 - title: Review (edit)
                   description: Review properties that can be edited.
+    OpenReport:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
+          example: '2014-06-19T01:02:03.456Z'
+        problem_code:
+          $ref: '#/components/schemas/problem_code'
+      required:
+        - created_at
+        - problem_code
+      title: Open report
+      description: An unresolved Report of a problem with a Location.
     Location:
       allOf:
         - $ref: '#/components/schemas/IdField'
-        - $ref: '#/components/schemas/LatLngFields'
         - type: object
           properties:
             lat:
               type: number
               minimum: -85.0511
               maximum: 85.0511
+              description: Latitude in WGS84 decimal degrees.
+              example: 45.6789
             lng:
               type: number
               minimum: -180
               maximum: 180
+              description: Longitude in WGS84 decimal degrees.
+              example: -123.45678
+        - type: object
+          properties:
             type_ids:
               type: array
               items:
@@ -925,6 +1014,12 @@ components:
             unverified:
               type: boolean
               description: Whether suspected to be wrong in some way and requires verification.
+              example: false
+            hidden:
+              type: boolean
+              enum:
+                - false
+              description: 'Whether hidden from public map tiles, clusters, and search results.'
               example: false
             access:
               type: integer
@@ -963,21 +1058,10 @@ components:
               maximum: 11
               description: Last month in season (zero-based).
               example: 8
-          required:
-            - lat
-            - lng
-            - type_ids
+        - $ref: '#/components/schemas/LatLngFields'
         - $ref: '#/components/schemas/DateFields'
         - type: object
           properties:
-            lat:
-              type: number
-              minimum: -85.0511
-              maximum: 85.0511
-            lng:
-              type: number
-              minimum: -180
-              maximum: 180
             type_ids:
               type: array
               items:
@@ -985,6 +1069,10 @@ components:
                 minimum: 1
             unverified:
               type: boolean
+            hidden:
+              type: boolean
+              description: 'Whether hidden from public map tiles, clusters, and search results.'
+              example: false
             access:
               type: integer
               enum:
@@ -1073,11 +1161,15 @@ components:
                   - title: Location List
                     description: List of saved locations.
               description: User's lists that include the Location.
+            open_reports:
+              type: array
+              items:
+                $ref: '#/components/schemas/OpenReport'
+              description: Unresolved reports of problems with the Location. Empty if there are none.
           required:
-            - lat
-            - lng
             - type_ids
             - unverified
+            - hidden
             - access
             - description
             - season_start
@@ -1089,6 +1181,7 @@ components:
             - country
             - muni
             - lists
+            - open_reports
     LocationChange:
       allOf:
         - $ref: '#/components/schemas/LatLngFields'
@@ -1309,23 +1402,7 @@ components:
           description: Location ID.
           example: 3383
         problem_code:
-          type: integer
-          enum:
-            - 0
-            - 1
-            - 2
-            - 3
-            - 4
-            - 5
-          description: |
-            Problem code.
-            - 0: Location is spam
-            - 1: Location does not exist
-            - 2: Location is a duplicate
-            - 3: Inappropriate review photo
-            - 4: Inappropriate review comment
-            - 5: Other (explain below)
-          example: 1
+          $ref: '#/components/schemas/problem_code'
         comment:
           type: string
           nullable: true
@@ -1364,24 +1441,9 @@ components:
               description: ID of reporting User (if authenticated).
               example: 321
             resolution_code:
-              type: integer
-              enum:
-                - 0
-                - 1
-                - 2
-                - 3
-                - 4
-                - 5
-              nullable: true
-              description: |
-                Resolution code.
-                - 0: Made no changes
-                - 1: Edited the location
-                - 2: Deleted the location
-                - 3: Deleted the photo
-                - 4: Deleted the review
-                - 5: Hid the location
-              example: 2
+              allOf:
+                - $ref: '#/components/schemas/resolution_code'
+                - nullable: true
             response:
               type: string
               nullable: true
@@ -1393,6 +1455,344 @@ components:
               nullable: true
               minimum: 1
               description: ID of responding User.
+    ReportResolution:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/resolution_code'
+        response:
+          type: string
+          nullable: true
+          minLength: 1
+          description: Response comment.
+          example: Merged into the existing location.
+        responder:
+          type: object
+          properties:
+            id:
+              type: integer
+              minimum: 1
+              description: ID of the responding admin.
+              example: 7
+            name:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Name of the responding admin.
+              example: Ethan
+          required:
+            - id
+            - name
+          description: The admin who resolved the Report.
+      required:
+        - code
+        - responder
+      title: Report resolution
+      description: How a Report was resolved.
+    ResolutionAction:
+      oneOf:
+        - type: object
+          properties:
+            code:
+              type: number
+              enum:
+                - 0
+            response:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Response comment recorded on each resolved Report.
+              example: Merged into the existing location.
+          required:
+            - code
+          title: Made no changes
+        - type: object
+          properties:
+            code:
+              type: number
+              enum:
+                - 1
+            response:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Response comment recorded on each resolved Report.
+              example: Merged into the existing location.
+          required:
+            - code
+          title: Edited the location
+        - type: object
+          properties:
+            code:
+              type: number
+              enum:
+                - 2
+            response:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Response comment recorded on each resolved Report.
+              example: Merged into the existing location.
+          required:
+            - code
+          title: Deleted the location
+        - type: object
+          properties:
+            code:
+              type: number
+              enum:
+                - 3
+            response:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Response comment recorded on each resolved Report.
+              example: Merged into the existing location.
+            photo_id:
+              type: integer
+              minimum: 1
+              description: ID of the photo to delete. Its review must belong to the reported Location.
+              example: 77
+          required:
+            - code
+            - photo_id
+          title: Deleted the photo
+        - type: object
+          properties:
+            code:
+              type: number
+              enum:
+                - 4
+            response:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Response comment recorded on each resolved Report.
+              example: Merged into the existing location.
+            review_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+              minItems: 1
+              description: IDs of the reviews to delete. Each must belong to the reported Location.
+              example:
+                - 88
+                - 89
+          required:
+            - code
+            - review_ids
+          title: Deleted the review
+        - type: object
+          properties:
+            code:
+              type: number
+              enum:
+                - 5
+            response:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Response comment recorded on each resolved Report.
+              example: Merged into the existing location.
+          required:
+            - code
+          title: Hid the location
+      title: Resolution action
+      description: |
+        The action to perform when resolving Reports, discriminated by `code`.
+        - 0: Made no changes (records the resolution only).
+        - 1: Edited the location (records the resolution only; the admin edited the Location separately).
+        - 2: Deleted the location.
+        - 3: Deleted the photo (requires `photo_id` belonging to the reported Location).
+        - 4: Deleted the review (requires `review_ids`, each belonging to the reported Location).
+        - 5: Hid the location.
+    ReportBatchResolution:
+      type: object
+      properties:
+        report_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          minItems: 1
+          description: IDs of the open Reports to resolve with this action.
+          example:
+            - 101
+            - 102
+            - 103
+        resolution:
+          $ref: '#/components/schemas/ResolutionAction'
+      required:
+        - report_ids
+        - resolution
+      title: Report batch resolution
+      description: 'Resolve one or more Reports by applying a single action. Location-wide actions (delete, hide) apply once per distinct reported Location; target-specific actions (delete photo, delete review) require the Reports to resolve to a single Location.'
+    AdminReport:
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - type: object
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              example: '2014-06-19T01:02:03.456Z'
+            location:
+              allOf:
+                - $ref: '#/components/schemas/ReportLocation'
+                - title: Report Location
+                  description: 'Summary of the reported Location, for display in a table. Null if the Location was since deleted.'
+            problem_code:
+              $ref: '#/components/schemas/problem_code'
+            comment:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Comment.
+              example: 'Same tree as #1230'
+            reporter:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                  description: ID of reporting User (if authenticated).
+                  example: 55
+                name:
+                  type: string
+                  nullable: true
+                  minLength: 1
+                  description: Name of the reporter.
+                  example: Jane
+                email:
+                  allOf:
+                    - $ref: '#/components/schemas/email'
+                    - description: Email of the reporter.
+              required:
+                - user_id
+                - name
+                - email
+              description: Reporter details.
+          required:
+            - created_at
+            - location
+            - problem_code
+            - comment
+            - reporter
+    ResolvedReport:
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - type: object
+          properties:
+            created_at:
+              type: string
+              format: date-time
+              description: 'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              example: '2014-06-19T01:02:03.456Z'
+            location:
+              allOf:
+                - $ref: '#/components/schemas/ReportLocation'
+                - title: Report Location
+                  description: 'Summary of the reported Location, for display in a table. Null if the Location was since deleted.'
+            problem_code:
+              $ref: '#/components/schemas/problem_code'
+            comment:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Comment.
+              example: 'Same tree as #1230'
+            reporter:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                  description: ID of reporting User (if authenticated).
+                  example: 55
+                name:
+                  type: string
+                  nullable: true
+                  minLength: 1
+                  description: Name of the reporter.
+                  example: Jane
+                email:
+                  allOf:
+                    - $ref: '#/components/schemas/email'
+                    - description: Email of the reporter.
+              required:
+                - user_id
+                - name
+                - email
+              description: Reporter details.
+          required:
+            - created_at
+            - location
+            - problem_code
+            - comment
+            - reporter
+        - type: object
+          properties:
+            resolved_at:
+              type: string
+              format: date-time
+              description: 'Date and time resolved in format YYYY-MM-DDThh:mm:ss.sssZ.'
+              example: '2014-07-20T12:34:56.789Z'
+            resolution:
+              allOf:
+                - $ref: '#/components/schemas/ReportResolution'
+                - description: How the Report was resolved.
+          required:
+            - resolved_at
+            - resolution
+    ReportResolutionResult:
+      type: object
+      properties:
+        resolved:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Report'
+              - title: Report
+                description: Report of a problem with a Location.
+          description: The Reports that were resolved by this action.
+        emails:
+          type: object
+          properties:
+            sent:
+              type: array
+              items:
+                $ref: '#/components/schemas/email'
+              description: Reporter emails that were notified successfully. Empty unless `notify_reporters` was true.
+            failed:
+              type: array
+              items:
+                type: object
+                properties:
+                  email:
+                    allOf:
+                      - $ref: '#/components/schemas/email'
+                      - description: Reporter email that could not be notified.
+                  error:
+                    type: string
+                    description: Why the notification failed.
+                    example: Inactive recipient
+                required:
+                  - email
+                  - error
+              description: Reporter notifications that failed to send. Resolution still succeeded; sending is best-effort.
+          required:
+            - sent
+            - failed
+          description: Outcome of reporter notifications. Both lists are empty unless `notify_reporters` was true.
+      required:
+        - resolved
+        - emails
+      title: Report resolution result
+      description: 'The result of resolving one or more Reports: the resolved Reports and the per-recipient outcome of any reporter notifications.'
     Token:
       type: object
       properties:
@@ -1539,6 +1939,15 @@ components:
       description: Import ID.
       name: id
       in: path
+    notify_reporters:
+      schema:
+        type: boolean
+        default: false
+        description: Whether to email the reporters about the resolution.
+      required: false
+      description: Whether to email the reporters about the resolution.
+      name: notify_reporters
+      in: query
     recaptcha:
       schema:
         type: string
@@ -1563,6 +1972,77 @@ components:
       required: false
       description: Offset from which to apply `limit`.
       name: offset
+      in: query
+    limit:
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+        description: Maximum number of results to return.
+      required: false
+      description: Maximum number of results to return.
+      name: limit
+      in: query
+    report_search:
+      schema:
+        type: string
+        minLength: 1
+        description: 'Free-text search matched (case-insensitively) against the report comment, resolution response, and reporter name and email.'
+        example: duplicate
+      required: false
+      description: 'Free-text search matched (case-insensitively) against the report comment, resolution response, and reporter name and email.'
+      name: q
+      in: query
+    report_problem_code:
+      schema:
+        type: integer
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+        description: Only return Reports with this problem code.
+        example: 1
+      required: false
+      description: Only return Reports with this problem code.
+      name: problem_code
+      in: query
+    report_resolution_code:
+      schema:
+        type: integer
+        enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+        description: Only return Reports resolved with this resolution code.
+        example: 2
+      required: false
+      description: Only return Reports resolved with this resolution code.
+      name: resolution_code
+      in: query
+    report_sort:
+      schema:
+        type: string
+        enum:
+          - newest
+          - oldest
+        default: newest
+        description: |
+          Sort order by resolution date.
+          - `newest`: Most recently resolved first.
+          - `oldest`: Least recently resolved first.
+      required: false
+      description: |
+        Sort order by resolution date.
+        - `newest`: Most recently resolved first.
+        - `oldest`: Least recently resolved first.
+      name: sort
       in: query
 paths:
   /clusters:
@@ -2092,13 +2572,14 @@ paths:
                 - import
             description: |
               Additional information to include.
-              - reviews: Location reviews.
-              - import: Imported dataset.
+              - reviews: Location reviews (deprecated).
+              - import: Imported dataset (deprecated).
+            deprecated: true
           required: false
           description: |
             Additional information to include.
-            - reviews: Location reviews.
-            - import: Imported dataset.
+            - reviews: Location reviews (deprecated).
+            - import: Imported dataset (deprecated).
           name: embed
           in: query
           explode: false
@@ -2114,6 +2595,7 @@ paths:
                     description: All Location properties.
     put:
       summary: Edit a Location.
+      description: Only the provided fields are updated; omitted fields are left unchanged.
       tags:
         - Locations
       security:
@@ -2129,9 +2611,9 @@ paths:
           application/json:
             schema:
               allOf:
-                - $ref: '#/components/schemas/EditLocation'
-                - title: Location (edit)
-                  description: Location properties that can be edited.
+                - $ref: '#/components/schemas/PatchLocation'
+                - title: Location (patch)
+                  description: Location properties that can be edited. All fields are optional; omitted fields are left unchanged.
       responses:
         '200':
           description: Success
@@ -2290,8 +2772,8 @@ paths:
                   - title: Review
                     description: Observations of and opinions about a Location.
     delete:
-      summary: Delete a Review.
-      description: Restricted to the same user that created the review.
+      summary: Delete a Review (author only).
+      description: Restricted to the same user that created the review. Admins delete Reviews by resolving a Report instead.
       tags:
         - Reviews
       security:
@@ -2758,6 +3240,90 @@ paths:
                   - $ref: '#/components/schemas/Report'
                   - title: Report
                     description: Report of a problem with a Location.
+  /reports/open:
+    get:
+      summary: List open Reports.
+      description: 'List all unresolved Reports of problems with Locations, with full details. Not paginated. Admin only.'
+      tags:
+        - Reports
+      security:
+        - key: []
+          token: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/AdminReport'
+                    - title: Report (admin)
+                      description: 'An open Report of a problem with a Location, with full details for admins.'
+  /reports/resolved:
+    get:
+      summary: List resolved Reports.
+      description: 'List resolved Reports of problems with Locations, with full details including how each was resolved. Supports free-text search, filtering by problem and resolution code, sorting by resolution date, and pagination. Admin only.'
+      tags:
+        - Reports
+      security:
+        - key: []
+          token: []
+      parameters:
+        - $ref: '#/components/parameters/report_search'
+        - $ref: '#/components/parameters/report_problem_code'
+        - $ref: '#/components/parameters/report_resolution_code'
+        - $ref: '#/components/parameters/report_sort'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/ResolvedReport'
+                    - title: Report (resolved)
+                      description: 'A resolved Report of a problem with a Location, with full details for admins.'
+  /reports/resolution:
+    post:
+      summary: Resolve one or more Reports with an action.
+      description: |-
+        Resolve one or more Reports by applying a single action, transactionally. Admin only.
+
+        The action is discriminated by `code`:
+        - 0: Records the resolution only.
+        - 1: Records the resolution only; the admin edited the Location separately.
+        - 2: Deletes each distinct reported Location.
+        - 3: Deletes a photo (requires `photo_id`); its review must belong to the reported Location, so all Reports must target that single Location.
+        - 4: Deletes one or more reviews (requires `review_ids`); each must belong to the reported Location, so all Reports must target that single Location.
+        - 5: Hides each distinct reported Location.
+
+        If `notify_reporters` is true, each distinct reporter is emailed once about all of their resolved Reports. Sending is best-effort: a failed email does not roll back the resolution or stop other emails. The response reports which notifications were sent and which failed.
+      tags:
+        - Reports
+      security:
+        - key: []
+          token: []
+      parameters:
+        - $ref: '#/components/parameters/notify_reporters'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportBatchResolution'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResolutionResult'
   /imports:
     get:
       summary: Fetch Imports.

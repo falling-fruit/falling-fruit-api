@@ -8,8 +8,8 @@ import {
   invasive_to_sql,
 } from '../../sql_formatters'
 import Changes from './changes'
-import Types from './types'
 import Location from '../../mappers/location'
+import Type from '../../mappers/type'
 import { parse_bounds } from '../../parsers/bounds'
 import type { Protocol, Pgp } from '../types'
 import type {
@@ -40,17 +40,17 @@ class Locations {
   db: Protocol
   pgp: Pgp
   changes: Changes
-  types: Types
 
   constructor(db: Protocol, pgp: Pgp) {
     this.db = db
     this.pgp = pgp
     this.changes = new Changes(db, pgp)
-    this.types = new Types(db, pgp)
   }
 
   async add(
-    obj: Partial<AddLocation> & Record<string, unknown>,
+    obj: Omit<Partial<AddLocation>, 'hidden'> & {
+      hidden?: boolean
+    } & Record<string, unknown>,
   ): Promise<ApiLocation> {
     const values = Location.toRow(obj)
     const location = await this.db.one<LocationRow>(sql.add, values)
@@ -134,7 +134,7 @@ class Locations {
       offset: number
       distance: { column: string; order: string }
       in_list: string
-      names?: string
+      locale_column?: string
     } = {
       where: filters.filter(Boolean).join(' AND '),
       limit: limit,
@@ -167,8 +167,11 @@ class Locations {
       return this.db.any<ListLocation>(sql.listphoto, values)
     }
     if (!center && locale) {
-      const names = this.types.locale_to_names(locale).join(', ')
-      return this.db.any<ListLocation>(sql.listname, { ...values, names: names })
+      const locale_column = Type.locale_to_name(locale)
+      return this.db.any<ListLocation>(sql.listname, {
+        ...values,
+        locale_column,
+      })
     }
     return this.db.any<ListLocation>(sql.list, values)
   }

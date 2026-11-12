@@ -1,16 +1,17 @@
 import postmark from 'postmark'
 import type { Config } from '../config'
 
-/** Minimal email client contract (satisfied by Postmark's ServerClient). */
+export type EmailMessage = {
+  From: string
+  To: string
+  Subject: string
+  HtmlBody: string
+  MessageStream: string
+  Tag: string | null
+}
+
 export type EmailClient = {
-  sendEmail(message: {
-    From: string
-    To: string
-    Subject: string
-    HtmlBody: string
-    MessageStream: string
-    Tag: string | null
-  }): unknown
+  sendEmail(message: EmailMessage): unknown
 }
 
 function createLoggingEmailClient(): EmailClient {

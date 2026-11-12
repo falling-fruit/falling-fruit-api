@@ -1,6 +1,6 @@
 import { z, register, allOf, inlineAllOf, intEnum } from './registry'
 import { Polygon } from './geojson'
-import { emailProp, nameProp, bioProp } from './properties'
+import { emailProp, nameProp, bioProp, problemCodeProp, resolutionCodeProp } from './properties'
 
 const normalizeLongitude = (lng: number) => ((((lng + 180) % 360) + 360) % 360) - 180
 
@@ -8,11 +8,6 @@ const normalizeLng = (value: unknown) =>
   typeof value === 'number' ? normalizeLongitude(value) : value
 
 const submitLng = z.preprocess(normalizeLng, z.number().min(-180).max(180))
-
-const submitLngOptional = z.preprocess(
-  normalizeLng,
-  z.number().min(-180).max(180).optional(),
-)
 
 // Shared field fragments (composed via allOf)
 
@@ -29,11 +24,11 @@ export const IdField = register(
 export const LatLngFields = register(
   'LatLngFields',
   z.object({
-    lat: z.number().min(-85.0511).max(85.0511).optional().openapi({
+    lat: z.number().min(-85.0511).max(85.0511).openapi({
       description: 'Latitude in WGS84 decimal degrees.',
       example: 45.6789,
     }),
-    lng: submitLngOptional.openapi({
+    lng: submitLng.openapi({
       description: 'Longitude in WGS84 decimal degrees.',
       example: -123.45678,
     }),
@@ -63,8 +58,6 @@ export const DateFields = register(
 export const Cluster = allOf('Cluster', [
   LatLngFields,
   z.object({
-    lat: z.number().min(-85.0511).max(85.0511),
-    lng: z.number().min(-180).max(180),
     count: z.number().int().min(1).openapi({
       description:
         'Number of Locations. Locations with multiple Types are counted as their number of Types.',
@@ -220,8 +213,6 @@ export const ListLocation = allOf('ListLocation', [
   IdField,
   LatLngFields,
   z.object({
-    lat: z.number().min(-85.0511).max(85.0511),
-    lng: z.number().min(-180).max(180),
     type_ids: z.array(z.number().int().min(1)).openapi({
       description: 'Type IDs.',
       example: [97, 92],
@@ -247,44 +238,54 @@ export const ListLocation = allOf('ListLocation', [
   title: 'Location (list)',
 })
 
-export const EditLocation = allOf('EditLocation', [
-  LatLngFields,
-  z.object({
-    lat: z.number().min(-85.0511).max(85.0511),
-    lng: submitLng,
-    type_ids: z.array(z.number().int().min(1)).openapi({
-      description: 'Type IDs.',
-      example: [97, 92],
-    }),
-    unverified: z.boolean().optional().openapi({
-      description:
-        'Whether suspected to be wrong in some way and requires verification.',
-      example: false,
-    }),
-    access: intEnum([0, 1, 2, 3, 4], { nullable: true })
-      .optional()
-      .openapi({
-        description:
-          'Access level.\n- 0: Location is on my property.\n- 1: I have permission from the owner to add this Location.\n- 2: Location is on public land.\n- 3: Location is on private property but overhangs public property.\n- 4: Location is on private property.\n',
-        example: 3,
-      }),
-    description: z.string().min(1).nullable().optional().openapi({
-      description: 'Description.',
-      example:
-        'Two mulberry trees with a few low branches overhanging the sidewalk.',
-    }),
-    season_start: z.number().int().min(0).max(11).nullable().optional().openapi({
-      description: 'First month in season (zero-based).',
-      example: 6,
-    }),
-    season_stop: z.number().int().min(0).max(11).nullable().optional().openapi({
-      description: 'Last month in season (zero-based).',
-      example: 8,
-    }),
+const EditLocationFields = z.object({
+  type_ids: z.array(z.number().int().min(1)).openapi({
+    description: 'Type IDs.',
+    example: [97, 92],
   }),
+  unverified: z.boolean().optional().openapi({
+    description:
+      'Whether suspected to be wrong in some way and requires verification.',
+    example: false,
+  }),
+  hidden: z.literal(false).optional().openapi({
+    description:
+      'Whether hidden from public map tiles, clusters, and search results.',
+    example: false,
+  }),
+  access: intEnum([0, 1, 2, 3, 4], { nullable: true })
+    .optional()
+    .openapi({
+      description:
+        'Access level.\n- 0: Location is on my property.\n- 1: I have permission from the owner to add this Location.\n- 2: Location is on public land.\n- 3: Location is on private property but overhangs public property.\n- 4: Location is on private property.\n',
+      example: 3,
+    }),
+  description: z.string().min(1).nullable().optional().openapi({
+    description: 'Description.',
+    example:
+      'Two mulberry trees with a few low branches overhanging the sidewalk.',
+  }),
+  season_start: z.number().int().min(0).max(11).nullable().optional().openapi({
+    description: 'First month in season (zero-based).',
+    example: 6,
+  }),
+  season_stop: z.number().int().min(0).max(11).nullable().optional().openapi({
+    description: 'Last month in season (zero-based).',
+    example: 8,
+  }),
+})
+
+export const PatchLocation = allOf('PatchLocation', [
+  LatLngFields.partial(),
+  EditLocationFields.partial(),
 ]).openapi({
-  title: 'Location (edit)',
-  description: 'Location properties that can be edited.',
+  title: 'Location (patch)',
+  description:
+    'Location properties that can be edited. All fields are optional; omitted fields are left unchanged.',
+})
+
+const RequiredLocationFields = EditLocationFields.pick({
+  type_ids: true,
 })
 
 // Reviews
@@ -459,7 +460,7 @@ export const EditLocationList = register(
     }),
 )
 
-export const LocationListLocation = allOf('LocationListLocation', [
+export const ReportLocation = allOf('ReportLocation', [
   IdField,
   LatLngFields,
   z.object({
@@ -469,15 +470,26 @@ export const LocationListLocation = allOf('LocationListLocation', [
       description: 'Type IDs.',
       example: [97, 92],
     }),
+    address: z.string().min(1).nullable().optional().openapi({
+      description: 'Address.',
+      example: '748 10th Street, Boulder CO 80302, USA',
+    }),
+  }),
+]).openapi({
+  title: 'Report Location',
+  description:
+    'Summary of the reported Location, in the same shape used to display a ' +
+    'saved location in a Location List.',
+})
+
+export const LocationListLocation = allOf('LocationListLocation', [
+  ReportLocation,
+  z.object({
     added_at: z.string().datetime({ offset: true }).openapi({
       description:
         'Date and time added to list, in format YYYY-MM-DDThh:mm:ss.sssZ.',
       format: 'date-time',
       example: '2014-06-19T01:02:03.456Z',
-    }),
-    address: z.string().min(1).nullable().optional().openapi({
-      description: 'Address.',
-      example: '748 10th Street, Boulder CO 80302, USA',
     }),
   }),
 ]).openapi({
@@ -509,7 +521,9 @@ export const LocationList = allOf('LocationList', [
 })
 
 export const AddLocation = allOf('AddLocation', [
-  EditLocation,
+  LatLngFields,
+  EditLocationFields.partial(),
+  RequiredLocationFields,
   z.object({
     review: EditReview.optional(),
   }),
@@ -518,15 +532,37 @@ export const AddLocation = allOf('AddLocation', [
   description: 'Location properties that can be added.',
 })
 
+export const OpenReport = register(
+  'OpenReport',
+  z
+    .object({
+      created_at: z.string().datetime({ offset: true }).openapi({
+        description:
+          'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.',
+        format: 'date-time',
+        example: '2014-06-19T01:02:03.456Z',
+      }),
+      problem_code: problemCodeProp,
+    })
+    .openapi({
+      title: 'Open report',
+      description: 'An unresolved Report of a problem with a Location.',
+    }),
+)
+
 export const Location = allOf('Location', [
   IdField,
-  EditLocation,
+  PatchLocation,
+  LatLngFields,
   DateFields,
   z.object({
-    lat: z.number().min(-85.0511).max(85.0511),
-    lng: z.number().min(-180).max(180),
     type_ids: z.array(z.number().int().min(1)),
     unverified: z.boolean(),
+    hidden: z.boolean().openapi({
+      description:
+        'Whether hidden from public map tiles, clusters, and search results.',
+      example: false,
+    }),
     access: intEnum([0, 1, 2, 3, 4], { nullable: true }),
     description: z.string().min(1).nullable(),
     season_start: z.number().int().min(0).max(11),
@@ -571,6 +607,10 @@ export const Location = allOf('Location', [
     }),
     lists: z.array(LocationList).openapi({
       description: "User's lists that include the Location.",
+    }),
+    open_reports: z.array(OpenReport).openapi({
+      description:
+        'Unresolved reports of problems with the Location. Empty if there are none.',
     }),
   }),
 ]).openapi({
@@ -713,11 +753,7 @@ export const EditReport = register(
         description: 'Location ID.',
         example: 3383,
       }),
-      problem_code: intEnum([0, 1, 2, 3, 4, 5]).openapi({
-        description:
-          'Problem code.\n- 0: Location is spam\n- 1: Location does not exist\n- 2: Location is a duplicate\n- 3: Inappropriate review photo\n- 4: Inappropriate review comment\n- 5: Other (explain below)\n',
-        example: 1,
-      }),
+      problem_code: problemCodeProp,
       comment: z.string().min(1).nullable().optional().openapi({
         description: 'Comment. Required if `problem_code` is 5.',
         example: 'This tree was cut down.',
@@ -747,13 +783,7 @@ export const Report = allOf('Report', [
       description: 'ID of reporting User (if authenticated).',
       example: 321,
     }),
-    resolution_code: intEnum([0, 1, 2, 3, 4, 5], { nullable: true })
-      .optional()
-      .openapi({
-        description:
-          'Resolution code.\n- 0: Made no changes\n- 1: Edited the location\n- 2: Deleted the location\n- 3: Deleted the photo\n- 4: Deleted the review\n- 5: Hid the location\n',
-        example: 2,
-      }),
+    resolution_code: resolutionCodeProp.nullable().optional(),
     response: z.string().min(1).nullable().optional().openapi({
       description: 'Response comment.',
       example: 'Thank you for alerting us!',
@@ -766,6 +796,241 @@ export const Report = allOf('Report', [
   title: 'Report',
   description: 'Report of a problem with a Location.',
 })
+
+export const ReportResolution = register(
+  'ReportResolution',
+  z
+    .object({
+      code: resolutionCodeProp,
+      response: z.string().min(1).nullable().optional().openapi({
+        description: 'Response comment.',
+        example: 'Merged into the existing location.',
+      }),
+      responder: z
+        .object({
+          id: z.number().int().min(1).openapi({
+            description: 'ID of the responding admin.',
+            example: 7,
+          }),
+          name: z.string().min(1).nullable().openapi({
+            description: 'Name of the responding admin.',
+            example: 'Ethan',
+          }),
+        })
+        .openapi({
+          description: 'The admin who resolved the Report.',
+        }),
+    })
+    .openapi({
+      title: 'Report resolution',
+      description: 'How a Report was resolved.',
+    }),
+)
+
+const responseField = z.string().min(1).nullable().optional().openapi({
+  description: 'Response comment recorded on each resolved Report.',
+  example: 'Merged into the existing location.',
+})
+
+export const ResolutionAction = register(
+  'ResolutionAction',
+  z
+    .discriminatedUnion('code', [
+      z
+        .object({
+          code: z.literal(0),
+          response: responseField,
+        })
+        .openapi({ title: 'Made no changes' }),
+      z
+        .object({
+          code: z.literal(1),
+          response: responseField,
+        })
+        .openapi({ title: 'Edited the location' }),
+      z
+        .object({
+          code: z.literal(2),
+          response: responseField,
+        })
+        .openapi({ title: 'Deleted the location' }),
+      z
+        .object({
+          code: z.literal(3),
+          response: responseField,
+          photo_id: z.number().int().min(1).openapi({
+            description:
+              'ID of the photo to delete. Its review must belong to the reported Location.',
+            example: 77,
+          }),
+        })
+        .openapi({ title: 'Deleted the photo' }),
+      z
+        .object({
+          code: z.literal(4),
+          response: responseField,
+          review_ids: z
+            .array(z.number().int().min(1))
+            .min(1)
+            .openapi({
+              description:
+                'IDs of the reviews to delete. Each must belong to the reported Location.',
+              example: [88, 89],
+            }),
+        })
+        .openapi({ title: 'Deleted the review' }),
+      z
+        .object({
+          code: z.literal(5),
+          response: responseField,
+        })
+        .openapi({ title: 'Hid the location' }),
+    ])
+    .openapi({
+      title: 'Resolution action',
+      description:
+        'The action to perform when resolving Reports, discriminated by `code`.\n' +
+        '- 0: Made no changes (records the resolution only).\n' +
+        '- 1: Edited the location (records the resolution only; the admin edited the Location separately).\n' +
+        '- 2: Deleted the location.\n' +
+        '- 3: Deleted the photo (requires `photo_id` belonging to the reported Location).\n' +
+        '- 4: Deleted the review (requires `review_ids`, each belonging to the reported Location).\n' +
+        '- 5: Hid the location.\n',
+    }),
+)
+
+export const ReportBatchResolution = register(
+  'ReportBatchResolution',
+  z
+    .object({
+      report_ids: z
+        .array(z.number().int().min(1))
+        .min(1)
+        .openapi({
+          description: 'IDs of the open Reports to resolve with this action.',
+          example: [101, 102, 103],
+        }),
+      resolution: ResolutionAction,
+    })
+    .openapi({
+      title: 'Report batch resolution',
+      description:
+        'Resolve one or more Reports by applying a single action. Location-wide ' +
+        'actions (delete, hide) apply once per distinct reported Location; ' +
+        'target-specific actions (delete photo, delete review) require ' +
+        'the Reports to resolve to a single Location.',
+    }),
+)
+
+export const AdminReport = allOf('AdminReport', [
+  IdField,
+  z.object({
+    created_at: z.string().datetime({ offset: true }).openapi({
+      description:
+        'Date and time created in format YYYY-MM-DDThh:mm:ss.sssZ.',
+      format: 'date-time',
+      example: '2014-06-19T01:02:03.456Z',
+    }),
+    location: ReportLocation.nullable().openapi({
+      description:
+        'Summary of the reported Location, for display in a table. ' +
+        'Null if the Location was since deleted.',
+    }),
+    problem_code: problemCodeProp,
+    comment: z.string().min(1).nullable().openapi({
+      description: 'Comment.',
+      example: 'Same tree as #1230',
+    }),
+    reporter: z
+      .object({
+        user_id: z.number().int().min(1).nullable().openapi({
+          description: 'ID of reporting User (if authenticated).',
+          example: 55,
+        }),
+        name: z.string().min(1).nullable().openapi({
+          description: 'Name of the reporter.',
+          example: 'Jane',
+        }),
+        email: emailProp.openapi({
+          description: 'Email of the reporter.',
+        }),
+      })
+      .openapi({
+        description: 'Reporter details.',
+      }),
+  }),
+]).openapi({
+  title: 'Report (admin)',
+  description:
+    'An open Report of a problem with a Location, with full details for admins.',
+})
+
+export const ResolvedReport = allOf('ResolvedReport', [
+  AdminReport,
+  z.object({
+    resolved_at: z.string().datetime({ offset: true }).openapi({
+      description:
+        'Date and time resolved in format YYYY-MM-DDThh:mm:ss.sssZ.',
+      format: 'date-time',
+      example: '2014-07-20T12:34:56.789Z',
+    }),
+    resolution: ReportResolution.openapi({
+      description: 'How the Report was resolved.',
+    }),
+  }),
+]).openapi({
+  title: 'Report (resolved)',
+  description:
+    'A resolved Report of a problem with a Location, with full details for admins.',
+})
+
+export const ReportResolutionResult = register(
+  'ReportResolutionResult',
+  z
+    .object({
+      resolved: z.array(Report).openapi({
+        description: 'The Reports that were resolved by this action.',
+      }),
+      emails: z
+        .object({
+          sent: z
+            .array(emailProp)
+            .openapi({
+              description:
+                'Reporter emails that were notified successfully. Empty unless ' +
+                '`notify_reporters` was true.',
+            }),
+          failed: z
+            .array(
+              z.object({
+                email: emailProp.openapi({
+                  description: 'Reporter email that could not be notified.',
+                }),
+                error: z.string().openapi({
+                  description: 'Why the notification failed.',
+                  example: 'Inactive recipient',
+                }),
+              }),
+            )
+            .openapi({
+              description:
+                'Reporter notifications that failed to send. Resolution still ' +
+                'succeeded; sending is best-effort.',
+            }),
+        })
+        .openapi({
+          description:
+            'Outcome of reporter notifications. Both lists are empty unless ' +
+            '`notify_reporters` was true.',
+        }),
+    })
+    .openapi({
+      title: 'Report resolution result',
+      description:
+        'The result of resolving one or more Reports: the resolved Reports and ' +
+        'the per-recipient outcome of any reporter notifications.',
+    }),
+)
 
 // Token
 
@@ -800,7 +1065,7 @@ export type BaseType = z.infer<typeof BaseType>
 export type SubmitType = z.infer<typeof SubmitType>
 export type Type = z.infer<typeof Type>
 export type ListLocation = z.infer<typeof ListLocation>
-export type EditLocation = z.infer<typeof EditLocation>
+export type PatchLocation = z.infer<typeof PatchLocation>
 export type AddLocation = z.infer<typeof AddLocation>
 export type Location = z.infer<typeof Location>
 export type LocationChange = z.infer<typeof LocationChange>
@@ -818,4 +1083,10 @@ export type PublicUser = z.infer<typeof PublicUser>
 export type User = z.infer<typeof User>
 export type EditReport = z.infer<typeof EditReport>
 export type Report = z.infer<typeof Report>
+export type OpenReport = z.infer<typeof OpenReport>
+export type ReportResolution = z.infer<typeof ReportResolution>
+export type ResolutionAction = z.infer<typeof ResolutionAction>
+export type AdminReport = z.infer<typeof AdminReport>
+export type ResolvedReport = z.infer<typeof ResolvedReport>
+export type ReportResolutionResult = z.infer<typeof ReportResolutionResult>
 export type Token = z.infer<typeof Token>

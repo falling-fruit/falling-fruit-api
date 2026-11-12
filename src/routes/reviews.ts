@@ -70,8 +70,9 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
   drop(
     {
       path: '/reviews/:id',
-      summary: 'Delete a Review.',
-      description: 'Restricted to the same user that created the review.',
+      summary: 'Delete a Review (author only).',
+      description:
+        'Restricted to the same user that created the review. Admins delete Reviews by resolving a Report instead.',
       tags: ['Reviews'],
       security: [{ key: [], token: [] }],
       request: { params: z.object({ id: reviewIdParam }) },
