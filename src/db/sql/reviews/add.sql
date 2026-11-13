@@ -1,33 +1,36 @@
-INSERT INTO observations (
-  location_id,
-  user_id,
-  author,
-  comment,
-  quality_rating,
-  yield_rating,
-  fruiting,
-  observed_on
+WITH o AS (
+  INSERT INTO observations (
+    location_id,
+    user_id,
+    comment,
+    quality_rating,
+    yield_rating,
+    fruiting,
+    observed_on
+  )
+  VALUES (
+    ${location_id},
+    ${user_id},
+    ${comment},
+    ${quality_rating},
+    ${yield_rating},
+    ${fruiting},
+    ${observed_on}
+  )
+  RETURNING *
 )
-VALUES (
-  ${location_id},
-  ${user_id},
-  -- TEMP: Hardcode author from user name for old website
-  (SELECT name FROM users WHERE id = ${user_id}),
-  ${comment},
-  ${quality_rating},
-  ${yield_rating},
-  ${fruiting},
-  ${observed_on}
-)
-RETURNING
-  id,
-  location_id,
-  user_id,
-  author,
-  comment,
-  quality_rating,
-  yield_rating,
-  fruiting,
-  observed_on,
-  created_at,
-  updated_at
+SELECT
+  o.id,
+  o.location_id,
+  o.user_id,
+  CASE WHEN o.user_id IS NULL THEN o.author ELSE u.name END AS author,
+  o.comment,
+  o.quality_rating,
+  o.yield_rating,
+  o.fruiting,
+  o.observed_on,
+  o.created_at,
+  o.updated_at
+FROM o
+LEFT JOIN users u
+  ON o.user_id = u.id
