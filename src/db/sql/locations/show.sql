@@ -67,3 +67,4 @@ LEFT JOIN lists
 LEFT JOIN open_reports
   ON open_reports.location_id = l.id
 WHERE l.id = ${id}
+  AND (l.hidden IS NOT TRUE OR ${include_hidden})

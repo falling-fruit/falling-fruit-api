@@ -194,10 +194,10 @@ export default function ({ db, middleware, auth, mailer }: Services) {
 
           if (resolution.code === 2) {
             for (const locationId of locationIds) {
-              const old = await t.locations.show(locationId, null)
+              const old = await t.locations.show(locationId, null, true)
               for (const report of reports) {
                 if (report.location_id === locationId) {
-                  reportLocations.set(report.id, { deleted: old })
+                  reportLocations.set(report.id, { described: old })
                 }
               }
               await t.locations.delete(locationId)
@@ -231,7 +231,12 @@ export default function ({ db, middleware, auth, mailer }: Services) {
             await t.reviews.deleteMany(resolution.review_ids)
           } else if (resolution.code === 5) {
             for (const locationId of locationIds) {
-              const old = await t.locations.show(locationId, null)
+              const old = await t.locations.show(locationId, null, true)
+              for (const report of reports) {
+                if (report.location_id === locationId) {
+                  reportLocations.set(report.id, { described: old })
+                }
+              }
               if (!old.hidden) {
                 await t.locations.edit(
                   locationId,

@@ -482,6 +482,18 @@ export const ReportLocation = allOf('ReportLocation', [
     'saved location in a Location List.',
 })
 
+export const AdminReportLocation = allOf('AdminReportLocation', [
+  ReportLocation,
+  z.object({
+    hidden: z.boolean().openapi({
+      description: 'Whether the Location is hidden.',
+    }),
+  }),
+]).openapi({
+  title: 'Admin Report Location',
+  description: 'Summary of the reported Location, including whether it is hidden.',
+})
+
 export const LocationListLocation = allOf('LocationListLocation', [
   ReportLocation,
   z.object({
@@ -931,7 +943,7 @@ export const AdminReport = allOf('AdminReport', [
       format: 'date-time',
       example: '2014-06-19T01:02:03.456Z',
     }),
-    location: ReportLocation.nullable().openapi({
+    location: AdminReportLocation.nullable().openapi({
       description:
         'Summary of the reported Location, for display in a table. ' +
         'Null if the Location was since deleted.',

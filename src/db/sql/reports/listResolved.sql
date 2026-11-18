@@ -9,7 +9,8 @@ SELECT
       'lat', l.lat,
       'lng', l.lng,
       'type_ids', l.type_ids,
-      'address', l.address
+      'address', l.address,
+      'hidden', l.hidden IS TRUE
     )
   END AS location,
   COALESCE(p.problem_code, 5) AS problem_code,

@@ -6,7 +6,7 @@ import {
 } from '../schemas/properties'
 import type { Location, ResolutionAction } from '../schemas/schemas'
 
-export type ReportLocation = { id: number } | { deleted: Location }
+export type ReportLocation = { id: number } | { described: Location }
 
 type EnrichedReport = {
   location_id: number | null
@@ -42,8 +42,8 @@ const enrichReport = (
 ): EnrichedReport => {
   const location = reportLocations.get(report.id)
   const description =
-    location && 'deleted' in location
-      ? describeLocation(location.deleted)
+    location && 'described' in location
+      ? describeLocation(location.described)
       : null
   return {
     location_id:

@@ -80,10 +80,12 @@ class Locations {
   async show(
     id: number | string,
     user: { id: number } | null,
+    includeHidden: boolean,
   ): Promise<ApiLocation> {
     const location = await this.db.one<LocationRow>(sql.show, {
       id: parseInt(String(id)),
       user_id: user ? user.id : null,
+      include_hidden: includeHidden,
     })
     return Location.fromRow(location)
   }
@@ -101,7 +103,7 @@ class Locations {
       photo = false,
       locale = undefined,
     }: LocationListParams,
-    user: { id: number } | null,
+    user: { id: number; roles?: string[] } | null,
   ): Promise<ListLocation[]> {
     const hasIds = ids !== undefined
     const hasBounds = bounds !== undefined
@@ -114,7 +116,10 @@ class Locations {
     }
     let filters
     if (ids && ids.length) {
-      filters = [ids_to_sql(ids)]
+      filters = [
+        ids_to_sql(ids),
+        user?.roles?.includes('admin') ? null : 'NOT hidden',
+      ]
     } else {
       filters = [
         'NOT hidden',

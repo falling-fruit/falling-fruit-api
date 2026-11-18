@@ -114,7 +114,7 @@ test('report resolution describes a deleted location by address/coords instead o
     responder: { name: 'Admin Ada' },
     reports: [{ id: 1, problem_code: 1, comment: null }],
     reportLocations: new Map([
-      [1, { deleted: { lat: 1.2, lng: 3.4, address: '123 Main St' } as Location }],
+      [1, { described: { lat: 1.2, lng: 3.4, address: '123 Main St' } as Location }],
     ]),
   })
   const [email] = sent

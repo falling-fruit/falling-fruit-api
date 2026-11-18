@@ -3,6 +3,7 @@ import type { Services } from './services'
 import { z } from '../schemas/registry'
 import { delimitedQuery, intQuery, numberArrayQuery, boolQuery } from '../schemas/query'
 import { sync_legacy_first_photo } from '../photos/photos'
+import { isAdmin } from '../auth'
 import {
   Location,
   ListLocation,
@@ -182,10 +183,13 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
           .status(403)
           .json({ error: 'Insufficient permissions' })
       }
-      await db.locationLists.addLocationToList(
+      const found = await db.locationLists.addLocationToList(
         req.params.id,
         req.params.list_id,
       )
+      if (!found) {
+        return void res.status(404).json({ error: 'Not found' })
+      }
       return void res.status(204).send()
     },
   )
@@ -478,12 +482,16 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
       },
     },
     auth.optional,
-    async (req, user) => {
-      const location = await db.locations.show(req.params.id, user)
+    async (req, user, res) => {
+      const location = await db.locations.show(
+        req.params.id,
+        user,
+        isAdmin(user),
+      )
       const embedded = req.query.embed
       if (embedded) {
         if (embedded.includes('reviews')) {
-          location.reviews = await db.reviews.list(req.params.id)
+          location.reviews = await db.reviews.list(req.params.id, isAdmin(user))
         }
         if (embedded.includes('import') && location.import_id) {
           location.import = await db.imports.show(location.import_id)
@@ -513,8 +521,18 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     },
     auth.optional,
     middleware.recaptcha,
-    async (req, user) => {
-      const old = await db.locations.show(req.params.id, null)
+    async (req, user, res) => {
+      const old = await db.locations.show(req.params.id, null, isAdmin(user))
+      if (old.hidden) {
+        const editsOtherFields = Object.entries(req.body).some(
+          ([key, value]) => key !== 'hidden' && value !== undefined,
+        )
+        if (req.body.hidden !== false || editsOtherFields) {
+          return void res
+            .status(400)
+            .json({ error: 'A hidden location can only be unhidden' })
+        }
+      }
       const unhidden = req.body.hidden === false && old.hidden
       const hidden = unhidden ? false : old.hidden
       const updated = await db.locations.edit(
@@ -565,13 +583,13 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     },
     auth.required_role('user'),
     async (req, user, res) => {
-      const original = await db.locations.show(req.params.id, null)
+      const original = await db.locations.show(req.params.id, null, isAdmin(user))
       if (user.id != original.user_id) {
         return void res
           .status(403)
           .json({ error: 'Location was created by another user' })
       }
-      const reviews = await db.reviews.list(req.params.id)
+      const reviews = await db.reviews.list(req.params.id, true)
       for (const review of reviews) {
         if (review.user_id != user.id) {
           return void res
@@ -607,14 +625,14 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
       path: '/locations/:id/reviews',
       summary: "Fetch a Location's Reviews.",
       tags: ['Reviews'],
-      security: [{ key: [] }],
+      security: [{ key: [] }, { key: [], token: [] }],
       request: { params: z.object({ id: locationIdParam }) },
       responses: {
         '200': { description: 'Success', schema: z.array(Review) },
       },
     },
-    auth.none,
-    (req) => db.reviews.list(req.params.id),
+    auth.optional,
+    (req, user) => db.reviews.list(req.params.id, isAdmin(user)),
   )
 
   post(
@@ -646,7 +664,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     auth.optional,
     middleware.recaptcha,
     middleware.test_review((body: EditReview) => body),
-    async (req, user) => {
+    async (req, user, res) => {
       // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
       const photos = await db.photos.test_unlinked(req.body.photo_ids)
       const review = await db.reviews.add(req.params.id, {

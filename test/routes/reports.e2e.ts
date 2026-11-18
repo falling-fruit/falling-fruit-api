@@ -45,6 +45,7 @@ test('reports can be created, listed as open, resolved, and listed as resolved',
     lng: -88,
     type_ids: [1],
     address: null,
+    hidden: false,
   })
 
   const resolvedEmpty = await setup.request('/reports/resolved', {

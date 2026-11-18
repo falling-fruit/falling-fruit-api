@@ -13,7 +13,7 @@ with lists as (
     order by locations_routes.position
   ) as locations
   from locations_routes
-  left join locations on locations.id = locations_routes.location_id
+  join locations on locations.id = locations_routes.location_id and locations.hidden is not true
   left join routes on routes.id = locations_routes.route_id
   where routes.user_id = ${user_id}
   group by locations_routes.route_id

@@ -30,6 +30,13 @@ WITH o AS (
   LEFT JOIN photos p
     ON o.id = p.observation_id
   WHERE o.location_id = ${id}
+    AND (
+      ${include_hidden}
+      OR EXISTS (
+        SELECT 1 FROM locations l
+        WHERE l.id = o.location_id AND l.hidden IS NOT TRUE
+      )
+    )
   GROUP BY o.id
 )
 SELECT

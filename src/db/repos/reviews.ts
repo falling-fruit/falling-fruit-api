@@ -40,8 +40,11 @@ class Reviews {
     return review
   }
 
-  show(id: number | string): Promise<Review> {
-    return this.db.one<Review>(sql.show, { id: parseInt(String(id)) })
+  show(id: number | string, includeHidden: boolean): Promise<Review> {
+    return this.db.one<Review>(sql.show, {
+      id: parseInt(String(id)),
+      include_hidden: includeHidden,
+    })
   }
 
   async edit(
@@ -62,8 +65,11 @@ class Reviews {
     return review
   }
 
-  list(id: number | string): Promise<Review[]> {
-    return this.db.any<Review>(sql.list, { id: parseInt(String(id)) })
+  list(id: number | string, includeHidden: boolean): Promise<Review[]> {
+    return this.db.any<Review>(sql.list, {
+      id: parseInt(String(id)),
+      include_hidden: includeHidden,
+    })
   }
 
   delete(id: number | string) {

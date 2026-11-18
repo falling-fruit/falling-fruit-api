@@ -819,6 +819,46 @@ components:
             - lat
             - lng
             - type_ids
+    AdminReportLocation:
+      allOf:
+        - $ref: '#/components/schemas/IdField'
+        - $ref: '#/components/schemas/LatLngFields'
+        - type: object
+          properties:
+            lat:
+              type: number
+              minimum: -85.0511
+              maximum: 85.0511
+            lng:
+              type: number
+              minimum: -180
+              maximum: 180
+            type_ids:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+              description: Type IDs.
+              example:
+                - 97
+                - 92
+            address:
+              type: string
+              nullable: true
+              minLength: 1
+              description: Address.
+              example: '748 10th Street, Boulder CO 80302, USA'
+          required:
+            - lat
+            - lng
+            - type_ids
+        - type: object
+          properties:
+            hidden:
+              type: boolean
+              description: Whether the Location is hidden.
+          required:
+            - hidden
     LocationListLocation:
       allOf:
         - $ref: '#/components/schemas/IdField'
@@ -1640,8 +1680,8 @@ components:
               example: '2014-06-19T01:02:03.456Z'
             location:
               allOf:
-                - $ref: '#/components/schemas/ReportLocation'
-                - title: Report Location
+                - $ref: '#/components/schemas/AdminReportLocation'
+                - title: Admin Report Location
                   description: 'Summary of the reported Location, for display in a table. Null if the Location was since deleted.'
             problem_code:
               $ref: '#/components/schemas/problem_code'
@@ -1693,8 +1733,8 @@ components:
               example: '2014-06-19T01:02:03.456Z'
             location:
               allOf:
-                - $ref: '#/components/schemas/ReportLocation'
-                - title: Report Location
+                - $ref: '#/components/schemas/AdminReportLocation'
+                - title: Admin Report Location
                   description: 'Summary of the reported Location, for display in a table. Null if the Location was since deleted.'
             problem_code:
               $ref: '#/components/schemas/problem_code'
@@ -2644,6 +2684,8 @@ paths:
         - Reviews
       security:
         - key: []
+        - key: []
+          token: []
       parameters:
         - $ref: '#/components/parameters/location_id'
       responses:
@@ -2730,6 +2772,8 @@ paths:
         - Reviews
       security:
         - key: []
+        - key: []
+          token: []
       parameters:
         - $ref: '#/components/parameters/review_id'
       responses:
