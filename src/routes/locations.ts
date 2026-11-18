@@ -482,7 +482,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
       },
     },
     auth.optional,
-    async (req, user, res) => {
+    async (req, user, _res) => {
       const location = await db.locations.show(
         req.params.id,
         user,
@@ -664,7 +664,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     auth.optional,
     middleware.recaptcha,
     middleware.test_review((body: EditReview) => body),
-    async (req, user, res) => {
+    async (req, user, _res) => {
       // TODO: Perform within transaction (https://stackoverflow.com/a/43800783)
       const photos = await db.photos.test_unlinked(req.body.photo_ids)
       const review = await db.reviews.add(req.params.id, {
