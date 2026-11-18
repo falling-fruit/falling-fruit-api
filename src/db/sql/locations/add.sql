@@ -10,6 +10,7 @@ INSERT INTO locations (
   access,
   description,
   unverified,
+  hidden,
   -- TODO: Remove once using generated column
   location
 )
@@ -25,6 +26,7 @@ VALUES (
   ${access},
   ${description},
   ${unverified},
+  ${hidden},
   ST_SetSrid(ST_MakePoint(${lng}, ${lat}), 4326)
 )
 RETURNING
@@ -41,6 +43,7 @@ RETURNING
   access,
   description,
   unverified,
+  hidden,
   created_at,
   updated_at,
   address,

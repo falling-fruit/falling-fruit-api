@@ -8,8 +8,8 @@ INSERT INTO observations (
   fruiting,
   observed_on
 )
-VALUES (
-  ${location_id},
+SELECT
+  l.id,
   ${user_id},
   -- TEMP: Hardcode author from user name for old website
   (SELECT name FROM users WHERE id = ${user_id}),
@@ -18,7 +18,9 @@ VALUES (
   ${yield_rating},
   ${fruiting},
   ${observed_on}
-)
+FROM locations l
+WHERE l.id = ${location_id}
+  AND l.hidden IS NOT TRUE
 RETURNING
   id,
   location_id,

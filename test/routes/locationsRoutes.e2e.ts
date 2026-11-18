@@ -30,6 +30,12 @@ async function seedLocation(
   })
 }
 
+async function countClusters(): Promise<number> {
+  const result = await setup.request('/clusters?bounds=-80,-170|80,170')
+  const body = result.body as { count: number }[]
+  return body.reduce((total, cluster) => total + cluster.count, 0)
+}
+
 // Routes: Locations
 
 test('GET /locations returns summaries within bounds', async () => {
@@ -104,13 +110,28 @@ test('GET /locations/count counts locations within bounds', async () => {
 
 test('GET /locations/:id fetches a location', async () => {
   const location = await seedLocation()
+  await setup.db.none(
+    `INSERT INTO problems (location_id, email, problem_code)
+     VALUES (\${location_id}, 'reporter@example.com', 1)`,
+    { location_id: location.id },
+  )
 
   const result = await setup.request(`/locations/${location.id}`)
 
   assert.equal(result.status, 200)
-  const body = result.body as { id: number; lat: number; lng: number }
+  const body = result.body as {
+    id: number
+    lat: number
+    lng: number
+    open_reports: { created_at: string; problem_code: number }[]
+  }
   assert.equal(body.id, location.id)
   assert.equal(body.lat, 40)
+  assert.equal(body.open_reports.length, 1)
+  assert.deepEqual(Object.keys(body.open_reports[0]).sort(), [
+    'created_at',
+    'problem_code',
+  ])
 })
 
 test('GET /locations/:id?embed=reviews includes reviews', async () => {
@@ -158,6 +179,21 @@ test('DELETE /locations/:id lets the author delete their location', async () => 
   assert.equal(row, null)
 })
 
+test('DELETE /locations/:id decrements clusters for a non-hidden location', async () => {
+  const author = await setup.createUser({ email: 'author@example.com' })
+  const location = await seedLocation({ user_id: author.id })
+  await setup.db.clusters.increment(location)
+  assert.equal(await countClusters(), 1)
+
+  const result = await setup.request(`/locations/${location.id}`, {
+    method: 'DELETE',
+    headers: author.authHeaders,
+  })
+
+  assert.equal(result.status, 204)
+  assert.equal(await countClusters(), 0)
+})
+
 test('DELETE /locations/:id is forbidden for a non-author', async () => {
   const author = await setup.createUser({ email: 'author@example.com' })
   const other = await setup.createUser({ email: 'other@example.com' })
@@ -172,6 +208,34 @@ test('DELETE /locations/:id is forbidden for a non-author', async () => {
   assert.deepEqual(result.body, {
     error: 'Location was created by another user',
   })
+})
+
+test('DELETE /locations/:id is forbidden for an admin who is not the author', async () => {
+  const author = await setup.createUser({ email: 'author@example.com' })
+  const admin = await setup.createUser({
+    email: 'admin@example.com',
+    roles: ['user', 'admin'],
+  })
+  const location = await seedLocation({ user_id: author.id })
+  await setup.db.reviews.add(location.id, {
+    comment: 'From the author.',
+    user_id: author.id,
+  })
+
+  const result = await setup.request(`/locations/${location.id}`, {
+    method: 'DELETE',
+    headers: admin.authHeaders,
+  })
+
+  assert.equal(result.status, 403)
+  assert.deepEqual(result.body, {
+    error: 'Location was created by another user',
+  })
+  const row = await setup.db.oneOrNone<{ id: number }>(
+    'SELECT id FROM locations WHERE id = ${id}',
+    { id: location.id },
+  )
+  assert.notEqual(row, null)
 })
 
 // Routes: Location changes

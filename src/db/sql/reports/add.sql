@@ -6,14 +6,18 @@ INSERT INTO problems (
   problem_code,
   comment
 )
-VALUES (
+SELECT
   ${location_id},
   ${reporter_id},
   ${name},
   ${email},
   ${problem_code},
   ${comment}
-)
+WHERE ${location_id} IS NULL
+  OR EXISTS (
+    SELECT 1 FROM locations l
+    WHERE l.id = ${location_id} AND l.hidden IS NOT TRUE
+  )
 RETURNING
   id,
   location_id,

@@ -3,6 +3,7 @@ import { z } from '../schemas/registry'
 import { Review, EditReview } from '../schemas/schemas'
 import { reviewIdParam } from '../schemas/parameters'
 import { sync_legacy_first_photo } from '../photos/photos'
+import { isAdmin } from '../auth'
 import type { Services } from './services'
 
 export default function ({ db, middleware, auth, photos: photosService }: Services) {
@@ -13,15 +14,15 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
       path: '/reviews/:id',
       summary: 'Fetch a Review.',
       tags: ['Reviews'],
-      security: [{ key: [] }],
+      security: [{ key: [] }, { key: [], token: [] }],
       request: { params: z.object({ id: reviewIdParam }) },
       responses: {
         '200': { description: 'Success', schema: Review },
       },
     },
-    auth.none,
-    async (req) => {
-      const review = await db.reviews.show(req.params.id)
+    auth.optional,
+    async (req, user) => {
+      const review = await db.reviews.show(req.params.id, isAdmin(user))
       review.photos = await db.photos.list(req.params.id)
       return review
     },
@@ -45,7 +46,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     auth.required_role('user'),
     middleware.test_review((body: EditReview) => body),
     async (req, user, res) => {
-      const original = await db.reviews.show(req.params.id)
+      const original = await db.reviews.show(req.params.id, isAdmin(user))
       if (user.id != original.user_id) {
         return void res
           .status(403)
@@ -70,8 +71,9 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
   drop(
     {
       path: '/reviews/:id',
-      summary: 'Delete a Review.',
-      description: 'Restricted to the same user that created the review.',
+      summary: 'Delete a Review (author only).',
+      description:
+        'Restricted to the same user that created the review. Admins delete Reviews by resolving a Report instead.',
       tags: ['Reviews'],
       security: [{ key: [], token: [] }],
       request: { params: z.object({ id: reviewIdParam }) },
@@ -81,7 +83,7 @@ export default function ({ db, middleware, auth, photos: photosService }: Servic
     },
     auth.required_role('user'),
     async (req, user, res) => {
-      const original = await db.reviews.show(req.params.id)
+      const original = await db.reviews.show(req.params.id, isAdmin(user))
       if (user.id != original.user_id) {
         return void res
           .status(403)

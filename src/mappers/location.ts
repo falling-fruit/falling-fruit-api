@@ -33,7 +33,9 @@ export default {
    * @returns Location row, ready to insert.
    */
   toRow(
-    obj: Partial<AddLocation> & Record<string, unknown>,
+    obj: Omit<Partial<AddLocation>, 'hidden'> & {
+      hidden?: boolean
+    } & Record<string, unknown>,
   ): LocationsInitializer & Record<string, unknown> {
     return {
       season_start: null,
@@ -41,6 +43,7 @@ export default {
       access: null,
       description: null,
       unverified: false,
+      hidden: false,
       user_id: null,
       ...obj,
     }

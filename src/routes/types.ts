@@ -1,5 +1,6 @@
 import makeRouter from './makeRouter'
 import type { Services } from './services'
+import { isAdmin } from '../auth'
 import { z } from '../schemas/registry'
 import { Type, TypeCount, SubmitType } from '../schemas/schemas'
 import {
@@ -44,10 +45,7 @@ export default function ({ db, middleware, auth }: Services) {
     auth.optional,
     middleware.recaptcha,
     (req, user, res) => {
-      if (
-        req.body.pending === false &&
-        (!user || !user.roles.includes('admin'))
-      ) {
+      if (req.body.pending === false && !isAdmin(user)) {
         return void res
           .status(403)
           .json({ error: 'Only admins can approve a type (pending: false)' })

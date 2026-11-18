@@ -9,6 +9,7 @@ WITH l AS (
     access,
     description,
     unverified,
+    hidden,
     updated_at,
     -- TODO: Remove once using generated column
     location
@@ -21,6 +22,7 @@ WITH l AS (
     ${access},
     ${description},
     ${unverified},
+    ${hidden},
     NOW(),
     ST_SetSrid(ST_MakePoint(${lng}, ${lat}), 4326)
   )
@@ -41,6 +43,7 @@ SELECT
   l.access,
   l.description,
   l.unverified,
+  l.hidden,
   l.created_at,
   l.updated_at,
   l.address,

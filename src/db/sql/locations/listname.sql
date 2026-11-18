@@ -14,7 +14,13 @@ SELECT
   locations.lat,
   locations.lng,
   ARRAY_AGG(locations.type_ids) as type_ids,
-  ARRAY_AGG(COALESCE(${names:raw})) AS type_names
+  ARRAY_AGG(
+    COALESCE(
+      to_jsonb(types) ->> ${locale_column},
+      types.en_name,
+      types.scientific_name
+    )
+  ) AS type_names
   ${in_list:raw}
 FROM locations, types
 WHERE types.id = locations.type_ids

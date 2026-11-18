@@ -64,11 +64,18 @@ class LocationLists {
     return this.db.none(sql.deleteList, { id: parseInt(String(id)) })
   }
 
-  addLocationToList(location_id: number | string, list_id: number | string) {
-    return this.db.none(sql.addLocationToList, {
-      location_id: parseInt(String(location_id)),
-      list_id: parseInt(String(list_id)),
-    })
+  async addLocationToList(
+    location_id: number | string,
+    list_id: number | string,
+  ): Promise<boolean> {
+    const { found } = await this.db.one<{ found: boolean }>(
+      sql.addLocationToList,
+      {
+        location_id: parseInt(String(location_id)),
+        list_id: parseInt(String(list_id)),
+      },
+    )
+    return found
   }
 
   dropLocationFromList(location_id: number | string, list_id: number | string) {

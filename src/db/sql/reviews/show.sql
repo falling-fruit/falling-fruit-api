@@ -14,3 +14,10 @@ FROM observations o
 LEFT JOIN users u
   ON o.user_id = u.id
 WHERE o.id = ${id}
+  AND (
+    ${include_hidden}
+    OR EXISTS (
+      SELECT 1 FROM locations l
+      WHERE l.id = o.location_id AND l.hidden IS NOT TRUE
+    )
+  )
